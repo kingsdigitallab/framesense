@@ -9,7 +9,7 @@ FrameSense is command line tool to process your video collections.
 
 ## Initial set Up
 
-1. Copy docs/collections.json to the folder containing your video collections and adapt its contents.
+1. Copy docs/collections.json to the folder containing your video collections and adapt its contents to your needs.
 2. Copy docs/.env in this folder and adapt the values to your environment.
 3. Create the virtual environment: `python3 -m venv venv`
 4. Activate the virtual environment: `source venv/bin/activate`
