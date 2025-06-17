@@ -9,7 +9,7 @@ import inspect
 
 load_dotenv()
 
-class CollectionToolkit:
+class FrameSense:
     def __init__(self):
         pass
 
@@ -106,10 +106,10 @@ class CollectionToolkit:
 
     def _read_collections_file(self):
         '''read collection file'''
-        # get the path to the collections.json from env var "COLKIT_COLLECTIONS_PATH"
-        collections_path = os.getenv('COLKIT_COLLECTIONS', None)
+        # get the path to the collections.json from env var "FRAMESENSE_COLLECTIONS_PATH"
+        collections_path = os.getenv('FRAMESENSE_COLLECTIONS', None)
         if collections_path is None or not Path(collections_path).exists():
-            self._error('COLKIT_COLLECTIONS environment variable should contain the path to a collections.json.')        
+            self._error('FRAMESENSE_COLLECTIONS environment variable should contain the path to a collections.json.')        
         
         self.collections_path = Path(collections_path).absolute().resolve()
         self.collections = json.loads(self.collections_path.read_text())
@@ -130,5 +130,6 @@ class CollectionToolkit:
         print(f'ERROR: {message}', file=sys.stderr)
         sys.exit(1)
 
-colkit = CollectionToolkit()
-colkit.process_command_line()
+framesense = FrameSense()
+framesense.process_command_line()
+

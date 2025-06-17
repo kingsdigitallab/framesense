@@ -11,7 +11,7 @@ FrameSense is command line tool to process your video collections.
 
 1. Copy docs/collections.json to the folder containing your video collections and adapt its contents.
 2. Copy docs/.env in this folder and adapt the values to your environment.
-3. Create the virtual environment: `python -venv venv`
+3. Create the virtual environment: `python3 -m venv venv`
 4. Activate the virtual environment: `source venv/bin/activate`
 5. Install the required packages: `pip install -r requirements.txt`
 
@@ -36,11 +36,11 @@ The tool offers a command-line interface to a series of modular operators acting
 
 To see the list of available operators:
 
-`python colkit.py operators`
+`python framesense.py operators`
 
 For instance, to see the collections and the videos they contain:
 
-`python colkit.py collections -v`
+`python framesense.py collections -v`
 
 ## Principles
 
