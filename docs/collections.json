@@ -1,0 +1,31 @@
+{
+    "meta": {
+        "type": "collection",
+        "comment": "DO NOT CHANGE THIS FILE HERE. It is a sample template. To be copied in your collections folder and adapted to your needs."
+    },
+    "data": [
+        {
+            "type": "collection",
+            "id": "movieclips",
+            "attributes": {
+                "name": "MovieCLips",
+                "collector": "Rotten Tomatoes",
+                "description": "Clips from ~360 movies selected from the MovieClips collection.",
+                "origin": "https://www.movieclips.com/",
+                "path": "videos",
+                "path_annotations": null
+            }            
+        },
+        {
+            "type": "collection",
+            "id": "stic_control",
+            "attributes": {
+                "name": "STiC Control Group",
+                "collector": "STiC Project Team",
+                "origin": null,
+                "path": "control_vids",
+                "path_annotations": "control_annotations"
+            }            
+        }
+    ]
+}
