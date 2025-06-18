@@ -69,11 +69,13 @@ FrameSense comes with a battery of built-in operators.
 It is expected that each operator:
 * is atomic or minimal ("does one thing and does it well");
 * implements one method or strategy;
+* should only process the input of its output doesn't already exist;
 * uses containers isolate its software dependencies;
 * works on all files at one specific level in the hierarchy (e.g. make_shots splits all your clips into shots);
 * has a name which reflects what it does, on what unit, with which method (e.g. make_clips_ffmpeg);
-* is written as Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`)
+* is written as Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
+
 
 ## TODO
 
