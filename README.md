@@ -83,5 +83,9 @@ It is expected that each operator:
 
 ## Feature and Bugs
 
-Please use 
+Please use [github issue tracker](https://github.com/kingsdigitallab/framesense/issues) to report bugs or request new features.
 
+This tool is currently being developped primarily to serve the needs of the [ISSA research project](https://github.com/kingsdigitallab/issa). 
+Tickets related to ISSA will therefore take priority. 
+Unrelated tickets are welcome but we can't guarantee that they will be addressed promptly or at all
+until FrameSense receives more dedicated support (external contributors or additional funding).
