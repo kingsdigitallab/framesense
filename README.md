@@ -2,6 +2,8 @@
 
 FrameSense is command line tool to process your video collections.
 
+Status: alpha
+
 ## Requirements
 
 * python 3.10+
@@ -18,7 +20,7 @@ FrameSense is command line tool to process your video collections.
 
 ## Concepts
 
-In FrameSense your collection is broken down into a hierachy of smaller units. A `Collection` contains `videos`, which are made of `Clips`. Each Clip is a string of `Shots`. And each Shot is composed of a series of `Frames`.
+In FrameSense your collection is broken down into a hierachy of smaller units. A `Collection` contains `videos`, which are made of `Clips`. Each Clip is a sequence of `Shots`. And each Shot is composed of a series of still `Frames`.
 
 Each operation provided by FrameSense works at on a particular unit in that hierarchy.
 
@@ -38,6 +40,8 @@ A video can be manually annotated in an `annotation file` that contains a list o
                         * 01-XXX.jpg # first frame
                         * 02-XXX.jpg # middle frame
                         * 03-XXX.jpg # last frame
+    * ANNOTATIONS1
+        * VIDEO1.json
 
 In the above tree, a file or folder name in capital can be name whichever way you like. 
 File or folder with an asterisk are mandatory. Names in lowercase are predefined, you can't change them.
@@ -69,19 +73,15 @@ FrameSense comes with a battery of built-in operators.
 It is expected that each operator:
 * is atomic or minimal ("does one thing and does it well");
 * implements one method or strategy;
-* should only process the input of its output doesn't already exist;
-* uses containers isolate its software dependencies;
+* should only process the input if its output doesn't already exist;
+* uses containers to isolate its software dependencies;
 * works on all files at one specific level in the hierarchy (e.g. make_shots splits all your clips into shots);
 * has a name which reflects what it does, on what unit, with which method (e.g. make_clips_ffmpeg);
-* is written as Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
+* is written as a Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
 
 
-## TODO
+## Feature and Bugs
 
-* make_clips_ffmpeg: test with Singularity
-* make_clips_ffmpeg: docker -rm to delete container on exit
-* make_frames: new operator
-* make_clips_ffmpeg: remove clip folders which are no longer annotated
-* add filter options
+Please use 
 
