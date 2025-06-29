@@ -46,19 +46,17 @@ class Operator(ABC):
                 operator_folder_path
             ])
 
-        # exit()
-
-        # self.__module__.__
-        # engine = _detect_installed_container_engine()
-        # self._run_command(['docker'])
-        # docker build -t framesense/make_shots_pyscene .
-        # pass
-
-    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None):
+    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
         args = [self._get_container_image_name()] + command_args[:]
-        self._run_in_container(args, binding)
+        self._run_in_container(args, binding, same_user)
 
-    def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None):
+    def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
+        '''Runs a command in a new container.
+        command_args: list of items
+            the first item is the image name
+            the second is the command to pass to the container
+            the rest are arguments to the command
+        '''
         engine = self._detect_installed_container_engine()
         if not engine:
             self._error('Container engine is not installed. Please install Docker or Singularity.')
@@ -66,7 +64,10 @@ class Operator(ABC):
         # command_args = [engine, 'run'] + command_args
         engine_command_args = [engine, 'run']
 
-        engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
+        # to ensure that all files are writable by the current user
+        # but... not all images will like this
+        if same_user:
+            engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
 
         if binding:
             mounted_path = binding[0].absolute().resolve()

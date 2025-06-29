@@ -37,7 +37,7 @@ class MakeShotsSceneDetect(Operator):
                 'list-scenes', # creates a CSV files with one row per shot
                 'split-video'  # creates a mp4 file per shot
             ]
-            self._run_in_operator_container(command_args, binding)
+            self._run_in_operator_container(command_args, binding, same_user=True)
 
         # rename and move the files
         # 1. 00.58.16-298-Scene-003.mp4 => 003/shot.mp4
