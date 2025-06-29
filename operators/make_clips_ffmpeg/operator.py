@@ -42,28 +42,13 @@ class MakeClipsFFMPEG(MakeClips):
                         for annotation in self._read_annotations(annotations_path):
                             self._make_clip(annotation, video_folder_path)
 
-        print('MakeClipsFFMPEG.apply()')
         return ret
-
-    def _get_video_path(self, video_folder_path: Path):
-        video_extensions = [".mp4", ".mkv"]        
-        
-        video_folder_path.stat
-        videos = [
-            p for p in video_folder_path.glob("**/*") 
-            if any(
-                p.suffix.lower() == ext 
-                for ext in video_extensions
-            )
-        ]
-        
-        return max(videos, key=lambda v: v.stat().st_size) if videos else None
 
     def _make_clip(self, annotation, video_folder_path):
         clip_info = self._get_annotation_info(annotation, video_folder_path)
         if not clip_info: return
 
-        video_path = self._get_video_path(video_folder_path)
+        video_path = self._get_video_file_path(video_folder_path)
         if not video_path: return
 
         if not clip_info['path'].parent.exists():

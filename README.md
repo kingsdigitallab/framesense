@@ -37,6 +37,7 @@ A video can be manually annotated in an `annotation file` that contains a list o
                 * CLIP1.mp4
                 * shots
                     * SHOT_INDEX # three digits, zero-padded
+                        * shot.mp4
                         * 01-XXX.jpg # first frame
                         * 02-XXX.jpg # middle frame
                         * 03-XXX.jpg # last frame
@@ -45,7 +46,7 @@ A video can be manually annotated in an `annotation file` that contains a list o
 
 In the above tree, a file or folder name in capital can be name whichever way you like. 
 File or folder with an asterisk are mandatory. Names in lowercase are predefined, you can't change them.
-Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or one (or more) clips (e.g. godfather/godfather/baptism/baptism.mp4).
+Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or at least one clip file (e.g. godfather/godfather/baptism/baptism.mp4).
 
 ## Usage
 
