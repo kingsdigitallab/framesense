@@ -22,6 +22,7 @@ class Operator(ABC):
             'filter': False,
             'verbose': False,
             'redo': False,
+            'dry_run': False,
         }
 
     def get_unsupported_arguments(self):
@@ -66,6 +67,10 @@ class Operator(ABC):
                 ])
                 singularity_file_path = operator_folder_path / 'Singularity.def'
                 singularity_file_path.write_text(res.stdout)
+
+                # TODO: don't build if not needed
+                # then build the image
+                # singularity_file_path.write_text(res.stdout)
 
             if engine == 'docker':
                 self._run_command([
@@ -123,12 +128,17 @@ class Operator(ABC):
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
         res = None
 
+        error_message = f'Execution of the command has failed: {command_args}'
+
         try:
             res = subprocess.run(command_args, capture_output=True, text=True)
             if res.returncode > 0:
-                raise Exception(f'return code is not 0')
+                print('[START COMMAND ERROR--------------------')
+                print(res.stderr)
+                print('END COMMAND ERROR----------------------]')
+                self._error(error_message)
         except Exception as e:
-            print(f'ERROR: Execution of the command has failed: {command_args}')
+            print(f'ERROR: {error_message}')
             raise e
         
         return res

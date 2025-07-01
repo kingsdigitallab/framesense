@@ -35,7 +35,8 @@ class FrameSense:
         parser.add_argument("-f", "--filter", help="filter paths", default='')
         parser.add_argument("-v", "--verbose", action='store_true', help="enable verbose output")
         parser.add_argument("-r", "--redo", action='store_true', help="redo")
-
+        parser.add_argument("-n", "--dry-run", action='store_true', help="perform a trial run with no changes made")
+       
         args = parser.parse_args()
         self.args = args
 
