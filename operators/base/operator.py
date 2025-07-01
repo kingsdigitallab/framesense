@@ -7,8 +7,8 @@ from pathlib import Path
 import sys
 import os
 
-# ENGINES = ['docker', 'singularity']
-ENGINES = ['singularity', 'docker']
+ENGINES = ['docker', 'singularity']
+# ENGINES = ['singularity', 'docker']
 
 class Operator(ABC):
 
@@ -56,7 +56,7 @@ class Operator(ABC):
             image_name = self._get_container_image_name()
             engine = self._detect_installed_container_engine()
 
-            print(f'Update container image {image_name}')
+            print(f'Update {engine} image {image_name}')
 
             if engine == 'singularity':
 
@@ -77,10 +77,7 @@ class Operator(ABC):
                     singularity_file_path = operator_folder_path / 'Singularity.def'
                     singularity_file_path.write_text(res.stdout)
 
-
-                    # TODO: don't build if not needed
                     # then build the image
-                    # singularity_file_path.write_text(res.stdout)
                     # TODO: consider --remote instead of --fakeroot
                     res = self._run_command([
                         'singularity',
@@ -105,7 +102,7 @@ class Operator(ABC):
             args = [self._get_container_image_name()] + command_args[:]
         if engine == 'singularity':
             args = [str(self._get_operator_folder_path() / 'operator.sif')] + command_args[:]
-        self._run_in_container(args, binding, same_user)
+        return self._run_in_container(args, binding, same_user)
 
     def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
         '''Runs a command in a new container.
@@ -151,7 +148,7 @@ class Operator(ABC):
 
         # print(engine_command_args)
         # subprocess.run(engine_command_args)
-        self._run_command(engine_command_args)
+        return self._run_command(engine_command_args)
 
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
         res = None
