@@ -59,18 +59,36 @@ class Operator(ABC):
             print(f'Update container image {image_name}')
 
             if engine == 'singularity':
-                # first convert the Dockerfile to a Singularity.def
-                res = self._run_command([
-                    'spython',
-                    'recipe',
-                    dockerfile_path,
-                ])
-                singularity_file_path = operator_folder_path / 'Singularity.def'
-                singularity_file_path.write_text(res.stdout)
 
-                # TODO: don't build if not needed
-                # then build the image
-                # singularity_file_path.write_text(res.stdout)
+                singularity_image_path = operator_folder_path / f'operator.sif'
+
+                if not singularity_image_path.is_file() or (
+                    singularity_image_path.stat().st_mtime < dockerfile_path.stat().st_mtime
+                ):
+                    if singularity_image_path.is_file():
+                        singularity_image_path.unlink()
+
+                    # first convert the Dockerfile to a Singularity.def
+                    res = self._run_command([
+                        'spython',
+                        'recipe',
+                        dockerfile_path,
+                    ])
+                    singularity_file_path = operator_folder_path / 'Singularity.def'
+                    singularity_file_path.write_text(res.stdout)
+
+
+                    # TODO: don't build if not needed
+                    # then build the image
+                    # singularity_file_path.write_text(res.stdout)
+                    # TODO: consider --remote instead of --fakeroot
+                    res = self._run_command([
+                        'singularity',
+                        'build', 
+                        '--fakeroot', 
+                        singularity_image_path,
+                        singularity_file_path
+                    ])                
 
             if engine == 'docker':
                 self._run_command([
@@ -82,7 +100,11 @@ class Operator(ABC):
                 ])
 
     def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
-        args = [self._get_container_image_name()] + command_args[:]
+        engine = self._detect_installed_container_engine()
+        if engine == 'docker':
+            args = [self._get_container_image_name()] + command_args[:]
+        if engine == 'singularity':
+            args = [str(self._get_operator_folder_path() / 'operator.sif')] + command_args[:]
         self._run_in_container(args, binding, same_user)
 
     def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
@@ -95,12 +117,18 @@ class Operator(ABC):
         engine = self._detect_installed_container_engine()
 
         # command_args = [engine, 'run'] + command_args
-        engine_command_args = [engine, 'run']
+        engine_command_args = [engine]
+        
+        if engine == 'docker':
+            engine_command_args.append('run')
+        if engine == 'singularity':
+            engine_command_args.append('exec')
 
         # to ensure that all files are writable by the current user
         # but... not all images will like this
         if same_user:
-            engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
+            if engine == 'docker':
+                engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
 
         if binding:
             mounted_path = binding[0].absolute().resolve()
@@ -112,7 +140,7 @@ class Operator(ABC):
         
             flag = '-v'
             if engine == 'singularity':
-                flag = '-b'
+                flag = '-B'
             if engine == 'docker':
                 engine_command_args.append('--rm')
 
@@ -167,6 +195,9 @@ class Operator(ABC):
 
     def _is_verbose(self):
         return bool(self._get_command_argument('verbose'))
+
+    def _is_redo(self):
+        return bool(self._get_command_argument('redo'))
 
     def _get_command_argument(self, arg_name, default=''):
         ret = getattr(self.context['command_args'], arg_name, default)
