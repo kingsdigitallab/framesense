@@ -6,6 +6,7 @@ import sys
 import json
 from importlib import import_module
 import inspect
+import time
 
 load_dotenv()
 
@@ -14,6 +15,8 @@ class FrameSense:
         pass
 
     def process_command_line(self):
+        t0 = time.time()
+
         actions = {}
         epilog = 'Action:\n'
 
@@ -24,23 +27,26 @@ class FrameSense:
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=epilog,
-            description='Create and maintain a copy of a site.'
+            description='Apply an operator to a video collection'
         )
         
-        parser.add_argument("action", help="action to perform", choices=actions.keys())
+        parser.add_argument("operator", help="operator to apply", choices=actions.keys())
         # parser.add_argument("-o", "--operator", help="operator to apply")
-        parser.add_argument("-u", "--url", help="root url of site to copy")
+        parser.add_argument("-f", "--filter", help="filter paths", default='')
         parser.add_argument("-v", "--verbose", action='store_true', help="enable verbose output")
+        parser.add_argument("-r", "--redo", action='store_true', help="redo")
 
         args = parser.parse_args()
         self.args = args
 
         self._read_collections_file()
-        self.run_action(args.action)
+        self.run_action(args.operator)
 
         # actions[args.action]['function'](args)
-        
-        print(f'done ({args.action})')
+
+        duration = time.time() - t0
+
+        print(f'done ({args.operator}, in {int(duration)} s.)')
 
     def run_action(self, operator_name):
         operator = self._get_operator(operator_name)
@@ -59,19 +65,6 @@ class FrameSense:
 
         return ret
 
-
-    # def _get_actions_info(self):
-    #     ret = {}
-    #     for member_name in dir(self):
-    #         if member_name.startswith('action_'):
-    #             action_name = member_name[7:]
-    #             method = getattr(self, member_name)
-    #             ret[action_name] = {
-    #                 'function': method,
-    #                 'description': (method.__doc__ or '').split('\n')[0],
-    #             }        
-    #     return ret
-    
     def _get_operator(self, operator_name):
         ret = None
 

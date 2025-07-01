@@ -136,3 +136,10 @@ class Operator(ABC):
         ]
         
         return max(videos, key=lambda v: v.stat().st_size) if videos else None
+    
+    def _is_path_selected(self, path: Path):
+        ret = True
+        filter = self.context['command_args'].filter
+        if filter:
+            ret = filter.lower() in str(path).lower()
+        return ret
