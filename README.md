@@ -1,6 +1,6 @@
 # FrameSense
 
-FrameSense is command line tool to process your video collections.
+FrameSense is command line tool to pre-process your video collections.
 
 Status: alpha
 
