@@ -38,11 +38,14 @@ class Operator(ABC):
             image_name = self._get_container_image_name()
             engine = self._detect_installed_container_engine()
 
+            print(f'Update container image {image_name}')
+
             # TODO: adapt for Singularity
             self._run_command([
                 engine,
                 'build',
                 '-t', image_name,
+                '--progress', 'quiet',
                 operator_folder_path
             ])
 
