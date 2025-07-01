@@ -6,7 +6,13 @@ import inspect
 class Collections(Operator):
     '''List all collections'''
 
+    def get_supported_arguments(self):
+        ret = super().get_supported_arguments()
+        ret['verbose'] = True
+        return ret
+
     def apply(self, *args, **kwargs):
+        ret = super().apply(*args, **kwargs)
 
         for col in self.context['collections']:
             col_path = col["attributes"]["path"]
@@ -25,3 +31,4 @@ class Collections(Operator):
                 for video_path in sorted(video_paths):
                     print(f'  {video_path.name}')
 
+        return ret

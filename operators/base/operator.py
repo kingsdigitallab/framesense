@@ -7,12 +7,29 @@ from pathlib import Path
 import sys
 import os
 
-ENGINES = ['docker', 'singularity']
+# ENGINES = ['docker', 'singularity']
+ENGINES = ['singularity', 'docker']
 
 class Operator(ABC):
 
     def set_context(self, context):
         self.context = context
+
+    def get_supported_arguments(self) -> dict[str, bool]:
+        '''Returned dict specifies which framesense arguments 
+        are supported (True) by this operator.'''
+        return {
+            'filter': False,
+            'verbose': False,
+            'redo': False,
+        }
+
+    def get_unsupported_arguments(self):
+        ret = []
+        for arg_name, is_supported in self.get_supported_arguments().items():
+            if not is_supported and self._get_command_argument(arg_name):
+                ret.append(arg_name)
+        return ret
 
     @abstractmethod
     def apply(self, *args, **kwargs):
@@ -40,14 +57,24 @@ class Operator(ABC):
 
             print(f'Update container image {image_name}')
 
-            # TODO: adapt for Singularity
-            self._run_command([
-                engine,
-                'build',
-                '-t', image_name,
-                '--progress', 'quiet',
-                operator_folder_path
-            ])
+            if engine == 'singularity':
+                # first convert the Dockerfile to a Singularity.def
+                res = self._run_command([
+                    'spython',
+                    'recipe',
+                    dockerfile_path,
+                ])
+                singularity_file_path = operator_folder_path / 'Singularity.def'
+                singularity_file_path.write_text(res.stdout)
+
+            if engine == 'docker':
+                self._run_command([
+                    engine,
+                    'build',
+                    '-t', image_name,
+                    '--progress', 'quiet',
+                    operator_folder_path
+                ])
 
     def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
         args = [self._get_container_image_name()] + command_args[:]
@@ -61,8 +88,6 @@ class Operator(ABC):
             the rest are arguments to the command
         '''
         engine = self._detect_installed_container_engine()
-        if not engine:
-            self._error('Container engine is not installed. Please install Docker or Singularity.')
 
         # command_args = [engine, 'run'] + command_args
         engine_command_args = [engine, 'run']
@@ -95,15 +120,21 @@ class Operator(ABC):
         # subprocess.run(engine_command_args)
         self._run_command(engine_command_args)
 
-    def _run_command(self, command_args: [str]):
+    def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
+        res = None
+
         try:
-            subprocess.run(command_args)
+            res = subprocess.run(command_args, capture_output=True, text=True)
+            if res.returncode > 0:
+                raise Exception(f'return code is not 0')
         except Exception as e:
             print(f'ERROR: Execution of the command has failed: {command_args}')
             raise e
+        
+        return res
 
     @functools.lru_cache()
-    def _detect_installed_container_engine(self):
+    def _detect_installed_container_engine(self, ignore_if_not_found=False):
         ret = None
         for engine in ENGINES:
             try:
@@ -114,6 +145,10 @@ class Operator(ABC):
                 pass
             except FileNotFoundError:
                 pass
+
+        if not ret and not ignore_if_not_found:
+            self._error(f'Container engine is not installed. Please install one of these applications: {', '.join(ENGINES)}.')
+
         return ret
 
     def _error(self, message):
@@ -121,7 +156,11 @@ class Operator(ABC):
         sys.exit(1)
 
     def _is_verbose(self):
-        return self.context['command_args'].verbose
+        return bool(self._get_command_argument('verbose'))
+
+    def _get_command_argument(self, arg_name, default=''):
+        ret = getattr(self.context['command_args'], arg_name, default)
+        return ret
 
     def _sluggify(self, string):
         return re.sub(r'\W+', '-', str(string).lower()).strip('-')
@@ -142,7 +181,7 @@ class Operator(ABC):
     
     def _is_path_selected(self, path: Path):
         ret = True
-        filter = self.context['command_args'].filter
+        filter = self._get_command_argument('filter')
         if filter:
             ret = filter.lower() in str(path).lower()
         return ret

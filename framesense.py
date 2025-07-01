@@ -52,6 +52,10 @@ class FrameSense:
         operator = self._get_operator(operator_name)
         context = self._get_context()
         operator.set_context(context)
+        unsupported_args = operator.get_unsupported_arguments()
+        if unsupported_args:
+            self._error(f'The operator "{operator_name}" does not support these arguments: {', '.join(list(unsupported_args))}')
+
         operator.apply()
 
     def _get_actions_info(self):

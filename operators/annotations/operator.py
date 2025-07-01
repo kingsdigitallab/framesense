@@ -9,7 +9,13 @@ NO_VIDEO_FOLDER = 'NO VIDEO FOLDER'
 class Annotations(Operator):
     '''List all annotation files'''
 
+    def get_supported_arguments(self):
+        ret = super().get_supported_arguments()
+        ret['verbose'] = True
+        return ret
+
     def apply(self, *args, **kwargs):
+        ret = super().apply(*args, **kwargs)
 
         for col in self.context['collections']:
             print(f'{col["id"]}')
@@ -38,3 +44,5 @@ class Annotations(Operator):
                     print(f'  {len(clips):3} clips {match_message:15} "{video_name}"')
 
             print(f'  {len(annotation_paths)} annotation files under {str(annotations_path)}')
+
+        return ret

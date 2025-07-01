@@ -31,6 +31,7 @@ class MakeClipsFFMPEG(MakeClips):
 
     def apply(self, *args, **kwargs):
         ret = super().apply(*args, **kwargs)
+        
         self._index_annotation_files()
 
         for col in self.context['collections']:

@@ -34,6 +34,8 @@ class Operators(Operator):
         return ret
 
     def apply(self, *args, **kwargs):
+        ret = super().apply(*args, **kwargs)
+
         for op in self.get_operators_info():
             print(f'{op["name"]}: {op["doc"]}')
 
