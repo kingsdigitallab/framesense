@@ -86,7 +86,7 @@ class MakeFramesFFMPEG(Operator):
                 '-ss',
                 str(timedelta(seconds=duration_seconds * place)),
                 '-vframes', '1',
-                shot_folder_path / f'{i+1:03d}.jpg'
+                shot_folder_path / f'{i+1:02d}.jpg'
             ]
 
         # ffmpeg -i input.mp4 -ss 00:00:10 -vframes 1 frame1.png -ss 00:00:20 -vframes 1 frame2.png -ss 00:00:30 -vframes 1 frame3.png
