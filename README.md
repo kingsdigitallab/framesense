@@ -1,4 +1,4 @@
-# FrameSense
+# 🎞️FrameSense
 
 FrameSense is command line tool to pre-process your video collections.
 
