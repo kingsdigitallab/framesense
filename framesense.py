@@ -31,7 +31,7 @@ class FrameSense:
 
         actions = self._get_actions_info()
         for name, info in actions.items():
-            epilog += f'  {name}:\n    {info['doc']}\n'
+            epilog += f'  {name}:\n    {info["doc"]}\n'
 
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
