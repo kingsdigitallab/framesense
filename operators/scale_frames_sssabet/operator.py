@@ -1,12 +1,12 @@
 from pathlib import Path
-from ..scale_frame.operator import ScaleFrame
+from ..scale_frames.operator import ScaleFrames
 import re
 import json
 from datetime import datetime
 import subprocess
 import shutil
 
-class ScaleFramesSSSabet(ScaleFrame):
+class ScaleFramesSSSabet(ScaleFrames):
     '''Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
     
     The model and code are borrowed from the following repository

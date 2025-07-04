@@ -90,3 +90,7 @@ This tool is currently being developped primarily to serve the needs of the [ISS
 Tickets related to ISSA will therefore take priority. 
 Unrelated tickets are welcome but we can't guarantee that they will be addressed promptly or at all
 until FrameSense receives more dedicated support (external contributors or additional funding).
+
+## Testing
+
+See [tests/README.md](tests/README.md) for details.

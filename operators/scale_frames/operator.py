@@ -7,7 +7,7 @@ from datetime import datetime
 import subprocess
 import shutil
 
-class ScaleFrame(Operator):
+class ScaleFrames(Operator):
     '''Shot scale classification from frames'''
 
     def get_supported_arguments(self):
