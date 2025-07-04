@@ -1,0 +1,27 @@
+{
+  "filmInfo": {
+    "title": "His Girl Friday",
+    "mdb_id": "3085",
+    "year": "1940",
+    "director": "Howard Hawks",
+    "synopsis": "Walter Burns is an irresistibly conniving newspaper publisher desperate to woo back his paper’s star reporter, who also happens to be his estranged wife. She’s threatening to quit and settle down with a new beau, but, as Walter knows, she has a weakness: she can’t resist a juicy scoop."
+  },
+  "clips": [
+    {
+      "sequenceNumber": "1",
+      "startTime": "00:00:03",
+      "endTime": "00:01:05",
+      "srt": [
+      ],
+      "description": "Interrogation of a suspect"
+    },
+    {
+      "sequenceNumber": "2",
+      "startTime": "00:02:21",
+      "endTime": "00:03:02",
+      "srt": [
+      ],
+      "description": "Gun fights and man hunts on the street"
+    }
+ ]
+}

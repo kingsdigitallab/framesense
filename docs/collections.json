@@ -13,7 +13,7 @@
                 "description": "Clips from ~360 movies selected from the MovieClips collection.",
                 "origin": "https://www.movieclips.com/",
                 "path": "videos",
-                "path_annotations": null
+                "annotations_path": null
             }            
         },
         {
@@ -24,7 +24,7 @@
                 "collector": "STiC Project Team",
                 "origin": null,
                 "path": "control_vids",
-                "path_annotations": "control_annotations"
+                "annotations_path": "control_annotations"
             }            
         }
     ]

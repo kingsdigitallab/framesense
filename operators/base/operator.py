@@ -6,6 +6,7 @@ import inspect
 from pathlib import Path
 import sys
 import os
+import json
 
 ENGINES = ['docker', 'singularity']
 # ENGINES = ['singularity', 'docker']
@@ -223,3 +224,20 @@ class Operator(ABC):
         if filter:
             ret = filter.lower() in str(path).lower()
         return ret
+
+    def _read_data_file(self, data_file_path: Path):
+        ret = {
+            'meta': {
+            },
+            'data': [
+            ]
+        }
+
+        if data_file_path.is_file():
+            res = data_file_path.read_text()
+            ret = json.loads(res)
+
+        return ret
+
+    def _write_data_file(self, data_file_path: Path, content: dict):
+        data_file_path.write_text(json.dumps(content, indent=2))

@@ -8,6 +8,15 @@ from importlib import import_module
 import inspect
 import time
 
+custom_dotenv_path = os.getenv("DOTENV_PATH")
+
+if custom_dotenv_path:
+    if not Path(custom_dotenv_path).is_file():
+        print(f'ERROR: custom .env file not found in specified path ({custom_dotenv_path}) by DOTENV_PATH')
+        exit(1)
+    # Load from the path specified by the environment variable
+    load_dotenv(dotenv_path=custom_dotenv_path)
+
 load_dotenv()
 
 class FrameSense:
@@ -107,7 +116,7 @@ class FrameSense:
         # get the path to the collections.json from env var "FRAMESENSE_COLLECTIONS_PATH"
         collections_path = os.getenv('FRAMESENSE_COLLECTIONS', None)
         if collections_path is None or not Path(collections_path).exists():
-            self._error('FRAMESENSE_COLLECTIONS environment variable should contain the path to a collections.json.')        
+            self._error('FRAMESENSE_COLLECTIONS environment variable should contain the path to a collections.json.')
         
         self.collections_path = Path(collections_path).absolute().resolve()
         self.collections = json.loads(self.collections_path.read_text())

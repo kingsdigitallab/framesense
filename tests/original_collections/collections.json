@@ -1,0 +1,20 @@
+{
+    "meta": {
+        "type": "collection",
+        "comment": "test collections"
+    },
+    "data": [
+        {
+            "type": "collection",
+            "id": "hollywood",
+            "attributes": {
+                "name": "Hollywood",
+                "collector": "",
+                "description": "Small fragment of public domain movies for testing purpose",
+                "origin": "https://www.movieclips.com/",
+                "path": "hollywood",
+                "annotations_path": "annotations/hollywood"
+            }            
+        }
+    ]
+}
