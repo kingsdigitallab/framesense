@@ -1,0 +1,60 @@
+from abc import ABC, abstractmethod
+from pathlib import Path
+from ..base.operator import Operator
+import re
+import json
+from datetime import datetime
+import subprocess
+import shutil
+
+class ScaleFrame(Operator):
+    '''Shot scale classification from frames'''
+
+    def get_supported_arguments(self):
+        ret = super().get_supported_arguments()
+        ret['redo'] = True
+        ret['filter'] = True
+        return ret
+
+    def apply(self, *args, **kwargs):
+        ret = super().apply(*args, **kwargs)
+
+        for col in self.context['collections']:
+            for frames_folder_path in col['attributes']['path'].glob('**/shots/*/'):
+                self._write_frames_scale(frames_folder_path)
+
+        return ret
+
+    def _write_frames_scale(self, frames_folder_path: Path):
+        if not self._is_path_selected(frames_folder_path):
+            return
+        
+        frames_meta_path = Path(frames_folder_path / 'frames.json')
+        frames_data = self._read_data_file(frames_meta_path)
+        frames_data_index = {
+            frame_data['id']: frame_data
+            for frame_data in frames_data['data']
+        }
+
+        frame_file_paths = list(frames_folder_path.glob('*.jpg'))
+        for frame_file_path in frame_file_paths:
+            frame_id = re.sub(r'^(\d+).*$', r'\1', frame_file_path.name)
+            frame_data = frames_data_index.get(frame_id, None)
+            if not frame_data:
+                frame_data = {
+                    'id': frame_id,
+                    'attributes': {
+                    }
+                }
+                frames_data['data'].append(frame_data)
+
+            if self._is_redo() or not frame_data['attributes'].get('scale_cinescale', None):
+                print(frame_file_path)
+                frame_data['attributes']['scale_cinescale'] = self._recognise_frame_scale(frame_file_path)
+
+        self._write_data_file(frames_meta_path, frames_data)
+                
+    @abstractmethod
+    def _recognise_frame_scale(self, frame_file_path: Path):
+        ret = ''
+        return ret
