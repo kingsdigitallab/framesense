@@ -199,3 +199,5 @@ cython_debug/
 *.def
 
 /tests/collections
+
+/operators/scale_frames_sssabet/app/*.jpg

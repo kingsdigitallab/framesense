@@ -8,11 +8,12 @@ RUN apt update && \
     ## rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
-COPY ./app /app
+RUN mkdir /app
 WORKDIR /app
+COPY ./app/requirements.txt /tmp/requirements.txt
 
 RUN pip install light-the-torch
-RUN ltt install -r requirements.txt
+RUN ltt install -r /tmp/requirements.txt
 
 RUN mkdir /models
 RUN wget -P /models https://github.com/sssabet/Shot_Type_Classification/raw/refs/heads/master/models/Pytorch_Classification_50ep.pt

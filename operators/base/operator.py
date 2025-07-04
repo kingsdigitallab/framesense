@@ -128,22 +128,39 @@ class Operator(ABC):
             if engine == 'docker':
                 engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
 
+
+        # bindings b/w host & container paths
+        bindings = []
+
+        # user-defined binding
         if binding:
-            mounted_path = binding[0].absolute().resolve()
+            bindings.append(binding)
+
+        # bind ./app to /app
+        app_folder_path = self._get_operator_folder_path() / 'app'
+        if app_folder_path.is_dir():
+            bindings.append([
+                app_folder_path,
+                '/app'
+            ])
+
+        # user-defined binding
+        for abinding in bindings: 
+            mounted_path = abinding[0].absolute().resolve()
 
             command_args = [
-                str(binding[1] / a.relative_to(mounted_path)) if isinstance(a, Path) else a
+                str(abinding[1] / a.relative_to(mounted_path)) if isinstance(a, Path) and a.is_relative_to(mounted_path) else a
                 for a in command_args
             ]
         
             flag = '-v'
             if engine == 'singularity':
                 flag = '-B'
-            if engine == 'docker':
-                engine_command_args.append('--rm')
 
-            engine_command_args += [flag, f'{mounted_path}:{binding[1]}']
+            engine_command_args += [flag, f'{mounted_path}:{abinding[1]}']
         
+        if engine == 'docker':
+            engine_command_args.append('--rm')
 
         engine_command_args += command_args
 

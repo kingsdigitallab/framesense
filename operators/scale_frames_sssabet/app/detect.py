@@ -5,6 +5,8 @@ import numpy as np
 import torchvision.transforms as transforms
 import torchvision
 from pathlib import Path
+import sys
+import json
 
 class ScaleDetector: 
     '''Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
@@ -68,7 +70,29 @@ class ScaleDetector:
         return p
 
 
-detector = ScaleDetector()
-res = detector.classify('002b.jpg')
-print(res)
+response = {
+    'error': '',
+    'class': '',
+}
 
+# read the image file name from the first comamnd line argument
+arguments = sys.argv
+if len(arguments) > 0:
+    image_file_name = arguments[1]
+
+    detector = ScaleDetector()
+    res = detector.classify(image_file_name)
+    response = {
+        'error': '',
+        'class': res,
+    }
+else:
+    response = {
+        'error': 'input image not provided',
+        'class': '',
+    }
+
+print(json.dumps(response, indent=2))
+
+if response['error']:
+    sys.exit(1)

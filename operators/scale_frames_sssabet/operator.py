@@ -15,5 +15,32 @@ class ScaleFramesSSSabet(ScaleFrames):
     '''
 
     def _recognise_frame_scale(self, frame_file_path: Path):
-        ret = 'CS'
+        ret = ''
+
+        current_time = datetime.now()
+        iso_string = current_time.strftime("%Y-%m-%d-%M-%S-%f")
+
+        image_file_name = 'img.jpg'
+
+        shutil.copy2(
+            frame_file_path, 
+            self._get_operator_folder_path() / 'app' / image_file_name
+        )
+
+        command_args = [
+            'python',
+            'detect.py',
+            image_file_name
+        ]
+
+        binding = None
+        
+        res = self._run_in_operator_container(command_args, binding, same_user=True)
+
+        response = json.loads(res.stdout)
+        error = response.get('error', '')
+        if not error:
+            ret = response.get('class', '')
+            # print(ret)
+
         return ret
