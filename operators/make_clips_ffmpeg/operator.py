@@ -81,7 +81,7 @@ class MakeClipsFFMPEG(MakeClips):
                 for tc in time_codes_str
             ]
             duration_seconds = int((time_codes[1] - time_codes[0]).total_seconds())
-            name = f'{time_codes_str[0].replace(':', '.')}-{duration_seconds}'
+            name = f'{time_codes_str[0].replace(":", ".")}-{duration_seconds}'
             ret = {
                 'start': time_codes_str[0],
                 'duration': duration_seconds,
