@@ -80,9 +80,10 @@ class Operator(ABC):
 
                     # then build the image
                     # TODO: consider --remote instead of --fakeroot
+
                     res = self._run_command([
                         'singularity',
-                        'build', 
+                        'build',
                         '--fakeroot', 
                         singularity_image_path,
                         singularity_file_path
@@ -114,6 +115,11 @@ class Operator(ABC):
         '''
         engine = self._detect_installed_container_engine()
 
+        command_args = command_args[:]
+
+        # if engine == 'singularity' and not command_args[0].endswith('.sif'):
+        #     command_args[0] = 'docker://' + command_args[0]
+
         # command_args = [engine, 'run'] + command_args
         engine_command_args = [engine]
         
@@ -127,7 +133,6 @@ class Operator(ABC):
         if same_user:
             if engine == 'docker':
                 engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
-
 
         # bindings b/w host & container paths
         bindings = []
@@ -143,6 +148,13 @@ class Operator(ABC):
                 app_folder_path,
                 '/app'
             ])
+
+            if engine == 'singularity':
+                engine_command_args += [
+                    '--pwd',
+                    '/app'
+                ]
+
 
         # user-defined binding
         for abinding in bindings: 
@@ -174,7 +186,8 @@ class Operator(ABC):
         error_message = f'Execution of the command has failed: {command_args}'
 
         try:
-            res = subprocess.run(command_args, capture_output=True, text=True)
+            # cwd is needed for singularity build from .def (with relative path in COPY)
+            res = subprocess.run(command_args, capture_output=True, text=True, cwd=self._get_operator_folder_path())
             if res.returncode > 0:
                 print('[START COMMAND ERROR--------------------')
                 print(res.stderr)

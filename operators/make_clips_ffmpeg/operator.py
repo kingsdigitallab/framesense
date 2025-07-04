@@ -57,13 +57,15 @@ class MakeClipsFFMPEG(MakeClips):
 
         if not clip_info['path'].exists():
             command = [
-                "linuxserver/ffmpeg",
+                # "linuxserver/ffmpeg",
+                "ffmpeg",
                 "-ss", clip_info['start'],
                 "-t", str(clip_info['duration']),
                 "-i", video_path,
                 clip_info['path']
             ]
-            self._run_in_container(command, [video_folder_path, '/config'])
+            # self._run_in_container(command, [video_folder_path, '/config'])
+            self._run_in_operator_container(command, [video_folder_path, '/config'])
 
     def _get_annotation_info(self, annotation, video_folder_path):
         ret = None

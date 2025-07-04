@@ -8,15 +8,17 @@ RUN apt update && \
     ## rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
-RUN mkdir /app
+# RUN mkdir -p /app
 WORKDIR /app
-COPY ./app/requirements.txt /tmp/requirements.txt
+RUN mkdir -p /models
+RUN wget -P /models https://github.com/sssabet/Shot_Type_Classification/raw/refs/heads/master/models/Pytorch_Classification_50ep.pt
+
+# Singularity doesn't like /tmp or /app
+COPY app/requirements.txt /models/requirements.txt
 
 RUN pip install light-the-torch
-RUN ltt install -r /tmp/requirements.txt
+RUN ltt install -r /models/requirements.txt
 
-RUN mkdir /models
-RUN wget -P /models https://github.com/sssabet/Shot_Type_Classification/raw/refs/heads/master/models/Pytorch_Classification_50ep.pt
 
 # Copy the rest of the application code
 # COPY . .
