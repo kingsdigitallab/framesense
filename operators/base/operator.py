@@ -213,7 +213,7 @@ class Operator(ABC):
                 pass
 
         if not ret and not ignore_if_not_found:
-            self._error(f'Container engine is not installed. Please install one of these applications: {', '.join(ENGINES)}.')
+            self._error(f'Container engine is not installed. Please install one of these applications: {", ".join(ENGINES)}.')
 
         return ret
 
