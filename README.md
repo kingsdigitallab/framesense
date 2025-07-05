@@ -72,6 +72,7 @@ For instance, to see the collections and the videos they contain:
 * `-r` : forces the operator to **redo** the operation, even if the output already exists. **USE WITH CAUTION** as it can destroy outputs from previous operations
 * `-v` : **verbose** mode, print more stuff
 * `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
+* `-p`: a parameters string passed to the operator, the meaning is operator-specific
 
 The operator will return an error if you try to use an argument that it doesn support (yet).
 
