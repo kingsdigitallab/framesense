@@ -24,9 +24,9 @@ which name matches the video (V.json)
 Applies to annotations 
 in all annotation files.
 
-## Parameters
+## Parameters (-p)
 
-None
+Not supported
 
 ## Run if
 
@@ -37,3 +37,8 @@ Note that if you change the time codes in the annotation files or add new annota
 ## Residue
 
 Extracted clips which are no longer included (with same time codes) in the annotation files will remain on disk.
+
+## Redo (-r)
+
+Not supported
+
