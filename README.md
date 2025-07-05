@@ -1,6 +1,6 @@
 # 🎞️FrameSense
 
-FrameSense is highly modular command line tool to pre-process your video collections.
+FrameSense is a highly modular command line tool to pre-process your video collections.
 
 **Status**: alpha
 
