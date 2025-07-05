@@ -65,10 +65,10 @@ For instance, to see the collections and the videos they contain:
 
 ### arguments
 
-* -f FILTER : only input files which path contain the FILTER string (case insensitive) will be processed by the operator
-* -r : forces the operator to redo the operation, even if the output already exists. USE WITH CAUTION as it can destroy outputs from previous operations
-* -v : verbose mode, print more stuff
-* --dry-run : does not make any change on disk. A way of testing an operation's scope before running it
+* `-f FILTER` : only input files which path contain the FILTER string (case insensitive) will be processed by the operator
+* `-r` : forces the operator to **redo** the operation, even if the output already exists. USE WITH CAUTION as it can destroy outputs from previous operations
+* `-v` : **verbose** mode, print more stuff
+* `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
 
 An error will be returned if you try to use an argument on an operator that doesn't support it (yet).
 
@@ -78,7 +78,7 @@ But not all operators support that argument yet.
 
 * **Modular**: each operation has its own module and dependencies; easy to extend or swap operations;
 * **Incremental**: an operation builds on top of outputs from other operations, enabling caching, reuse of intermediate results and custom pipelines;
-* *HPC-friendly**: non-interactive command line tool which is easy to install and run on SLURM;
+* **HPC-friendly**: non-interactive command line tool which is easy to install and run on SLURM;
 * **Portable**: should be easy to run on different machines, including lower-end personal computers
 
 ## Operators
