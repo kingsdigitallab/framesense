@@ -41,6 +41,7 @@ A video can be manually annotated in an `annotation file` that contains a list o
                         * 01-XXX.jpg # first frame
                         * 02-XXX.jpg # middle frame
                         * 03-XXX.jpg # last frame
+                        * frames.json
     * ANNOTATIONS1
         * VIDEO1.json
 
