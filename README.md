@@ -1,8 +1,10 @@
 # 🎞️FrameSense
 
-FrameSense is command line tool to pre-process your video collections.
+FrameSense is highly modualr command line tool to pre-process your video collections.
 
-Status: alpha
+**Status**: alpha
+
+**Current focus**: functional minimum viable product. The current implementation is still buggy and slow. Consolidation and optimisation will come at a later stage.
 
 ## Requirements
 
@@ -61,6 +63,17 @@ For instance, to see the collections and the videos they contain:
 
 `python framesense.py collections -v`
 
+### arguments
+
+* -f FILTER : only input files which path contain the FILTER string (case insensitive) will be processed by the operator
+* -r : forces the operator to redo the operation, even if the output already exists. USE WITH CAUTION as it can destroy outputs from previous operations
+* -v : verbose mode, print more stuff
+* --dry-run : does not make any change on disk. A way of testing an operation's scope before running it
+
+An error will be returned if you try to use an argument on an operator that doesn't support it (yet).
+
+But not all operators support that argument yet.
+
 ## Principles
 
 * **Modular**: each operation has its own module and dependencies; easy to extend or swap operations;
@@ -71,6 +84,37 @@ For instance, to see the collections and the videos they contain:
 ## Operators
 
 FrameSense comes with a battery of built-in operators. 
+
+For a complete and up to date list, please use `python framesense.py operators`.
+
+Check the README.md under each operator folder for a specification card. (Work in progress)
+
+### Built-in operators
+
+#### Information
+
+* **operators**:
+    List all available operators
+* **annotations**:
+    List all annotation files
+* **collections**:
+    List all collections
+
+#### Segmentation
+
+* **[make_clips_ffmpeg](operators/make_clips_ffmpeg/)**:
+    Extract clips from videos based on timecodes in annotation files
+* **make_shots_scenedetect**:
+    Extract shots from clips using PySceneDetect
+* **make_frames_ffmpeg**:
+    Extract frames from shots using ffmpeg
+
+#### Detection
+
+* **scale_frames_sssabet**:
+    Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
+
+### Principles
 
 It is expected that each operator:
 * is atomic or minimal ("does one thing and does it well");
@@ -91,6 +135,10 @@ This tool is currently being developped primarily to serve the needs of the [ISS
 Tickets related to ISSA will therefore take priority. 
 Unrelated tickets are welcome but we can't guarantee that they will be addressed promptly or at all
 until FrameSense receives more dedicated support (external contributors or additional funding).
+
+## Performance and HPC
+
+We are aiming to support low end (laptop) and high end (HPCs) compute environment. However at the moment supoort is limited and the operators are very slow.
 
 ## Testing
 
