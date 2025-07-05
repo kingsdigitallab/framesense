@@ -1,6 +1,6 @@
 # 🎞️FrameSense
 
-FrameSense is highly modualr command line tool to pre-process your video collections.
+FrameSense is highly modular command line tool to pre-process your video collections.
 
 **Status**: alpha
 
@@ -69,17 +69,15 @@ For instance, to see the collections and the videos they contain:
 ### arguments
 
 * `-f FILTER` : only input files which path contain the FILTER string (case insensitive) will be processed by the operator
-* `-r` : forces the operator to **redo** the operation, even if the output already exists. USE WITH CAUTION as it can destroy outputs from previous operations
+* `-r` : forces the operator to **redo** the operation, even if the output already exists. **USE WITH CAUTION** as it can destroy outputs from previous operations
 * `-v` : **verbose** mode, print more stuff
 * `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
 
-An error will be returned if you try to use an argument on an operator that doesn't support it (yet).
+The operator will return an error if you try to use an argument that it doesn support (yet).
 
-But not all operators support that argument yet.
+## Architectural principles
 
-## Principles
-
-* **Modular**: each operation has its own module and dependencies; easy to extend or swap operations;
+* **Modular**: open architecture so each operator has its own module and containerised dependencies; easy to extend or swap operations;
 * **Incremental**: an operation builds on top of outputs from other operations, enabling caching, reuse of intermediate results and custom pipelines;
 * **HPC-friendly**: non-interactive command line tool which is easy to install and run on SLURM;
 * **Portable**: should be easy to run on different machines, including lower-end personal computers
@@ -117,18 +115,18 @@ Check the README.md under each operator folder for a specification card. (Work i
 * **scale_frames_sssabet**:
     Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
 
-### Principles
+### Design principles
 
 It is expected that each operator:
-* is atomic or minimal ("does one thing and does it well");
-* implements one method or strategy;
+* is functionally minimal ("does one thing and does it well");
+* is atomic (only valid and complete output are persisted);
+* implements a single method or strategy;
 * should only process the input if its output doesn't already exist;
 * uses containers to isolate its software dependencies;
 * works on all files at one specific level in the hierarchy (e.g. make_shots splits all your clips into shots);
 * has a name which reflects what it does, on what unit, with which method (e.g. make_clips_ffmpeg);
 * is written as a Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
-
 
 ## Feature and Bugs
 
