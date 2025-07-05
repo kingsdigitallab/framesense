@@ -22,3 +22,4 @@ FROM linuxserver/ffmpeg
 
 # # Command to run PySceneDetect
 # CMD ["scenedetect", "--help"]
+ENTRYPOINT []
