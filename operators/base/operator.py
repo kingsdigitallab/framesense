@@ -54,14 +54,19 @@ class Operator(ABC):
         operator_folder_path = self._get_operator_folder_path()
         dockerfile_path = operator_folder_path / 'Dockerfile'
         if dockerfile_path.is_file():
-            image_name = self._get_container_image_name()
+
             engine = self._detect_installed_container_engine()
+
+            image_name = self._get_container_image_name()
+            if engine == 'singularity':
+                image_name = self._get_operator_folder_path().name
 
             print(f'Update {engine} image {image_name}')
 
             if engine == 'singularity':
 
-                singularity_image_path = operator_folder_path / f'operator.sif'
+                # singularity_image_path = operator_folder_path / f'operator.sif'
+                singularity_image_path = self._get_singularity_folder_path() / f'{image_name}.sif'
 
                 if not singularity_image_path.is_file() or (
                     singularity_image_path.stat().st_mtime < dockerfile_path.stat().st_mtime
@@ -75,8 +80,10 @@ class Operator(ABC):
                         'recipe',
                         dockerfile_path,
                     ])
-                    singularity_file_path = operator_folder_path / 'Singularity.def'
-                    singularity_file_path.write_text(res.stdout)
+                    
+                    # singularity_definition_path = operator_folder_path / 'Singularity.def'
+                    singularity_definition_path = self._get_singularity_folder_path() / f'{image_name}.def'
+                    singularity_definition_path.write_text(res.stdout)
 
                     # then build the image
                     # TODO: consider --remote instead of --fakeroot
@@ -86,7 +93,7 @@ class Operator(ABC):
                         'build',
                         '--fakeroot', 
                         singularity_image_path,
-                        singularity_file_path
+                        singularity_definition_path
                     ])                
 
             if engine == 'docker':
@@ -103,7 +110,10 @@ class Operator(ABC):
         if engine == 'docker':
             args = [self._get_container_image_name()] + command_args[:]
         if engine == 'singularity':
-            args = [str(self._get_operator_folder_path() / 'operator.sif')] + command_args[:]
+            # args = [str(self._get_operator_folder_path() / 'operator.sif')] + command_args[:]
+            image_name = self._get_operator_folder_path().name
+            singularity_image_path = self._get_singularity_folder_path() / f'{image_name}.sif'
+            args = [singularity_image_path] + command_args[:]
         return self._run_in_container(args, binding, same_user)
 
     def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
@@ -214,9 +224,18 @@ class Operator(ABC):
 
         if not ret and not ignore_if_not_found:
             self._error(f'Container engine is not installed. Please install one of these applications: {", ".join(ENGINES)}.')
-
+        
         return ret
 
+    def _get_singularity_folder_path(self) -> Path:
+        ret = self._get_framesense_folder_path() / 'singulary'
+        if not ret.exists():
+            ret.mkdir()
+        return ret
+    
+    def _get_framesense_folder_path(self) -> Path:
+        return self.context['framesense_folder_path']
+    
     def _error(self, message):
         print(f'ERROR: {message}', file=sys.stderr)
         sys.exit(1)

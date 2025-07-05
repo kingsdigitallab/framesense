@@ -103,6 +103,7 @@ class FrameSense:
 
     def _get_context(self):
         return {
+            "framesense_folder_path": Path(__file__).parent,
             "collections": self.collections['data'],
             'collections_path': self.collections_path,
             "command_args": self.args,
