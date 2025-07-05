@@ -34,9 +34,13 @@ class MakeFramesFFMPEG(Operator):
         frame_file_paths = list(shot_folder_path.glob('*.jpg'))
 
         if self._is_redo():
+            # remove existing frames .jpg and frames.json
             for frame_file_path in frame_file_paths:
                 frame_file_path.unlink()
             frame_file_paths = []
+
+            for frame_file_path in shot_folder_path.glob('frames.json'):
+                frame_file_path.unlink()
         
         if frame_file_paths:
             return
