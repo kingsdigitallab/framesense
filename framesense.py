@@ -45,6 +45,7 @@ class FrameSense:
         parser.add_argument("-v", "--verbose", action='store_true', help="enable verbose output")
         parser.add_argument("-r", "--redo", action='store_true', help="redo")
         parser.add_argument("-n", "--dry-run", action='store_true', help="perform a trial run with no changes made")
+        parser.add_argument("-p", "--parameters", help="parameters to pass to the operator")
        
         args = parser.parse_args()
         self.args = args

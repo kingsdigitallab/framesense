@@ -24,6 +24,7 @@ class Operator(ABC):
             'verbose': False,
             'redo': False,
             'dry_run': False,
+            'parameters': False,
         }
 
     def get_unsupported_arguments(self):
@@ -290,3 +291,6 @@ class Operator(ABC):
 
     def _write_data_file(self, data_file_path: Path, content: dict):
         data_file_path.write_text(json.dumps(content, indent=2))
+
+    def _get_operator_parameters(self):
+        return self._get_command_argument('parameters')
