@@ -51,6 +51,9 @@ In the above tree, a file or folder name in capital can be name whichever way yo
 File or folder with an asterisk are mandatory. Names in lowercase are predefined, you can't change them.
 Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or at least one clip file (e.g. godfather/godfather/baptism/baptism.mp4).
 
+![image](https://github.com/user-attachments/assets/c3d8ae45-505c-4ade-b0b0-58b0ccd4759e)
+
+
 ## Usage
 
 The tool offers a command-line interface to a series of modular operators acting on your video collections.
