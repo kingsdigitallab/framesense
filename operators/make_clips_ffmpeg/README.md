@@ -30,5 +30,10 @@ None
 
 ## Run if
 
-The clip (C/C.mp4) does not already exist
+The clip (C/C.mp4) does not already exist.
 
+Note that if you change the time codes in the annotation files or add new annotations, only those clips will be extracted.
+
+## Residue
+
+Extracted clips which are no longer included (with same time codes) in the annotation files will remain on disk.
