@@ -36,7 +36,10 @@ No *.jpg already exists under the shots/XXX folder.
 
 ## Redo (-r)
 
-Supported
+Supported.
+
+This will first delete all existing /shots/XXX/*.jpg 
+and /shots/XXX/frames.json
 
 ## Filtering (-f)
 
