@@ -32,7 +32,7 @@ class Operator(ABC):
     def get_unsupported_arguments(self):
         ret = []
         for arg_name, is_supported in self.get_supported_arguments().items():
-            if not is_supported and self._get_command_argument(arg_name):
+            if not is_supported and self._get_framesense_argument(arg_name):
                 ret.append(arg_name)
         return ret
 
@@ -118,10 +118,11 @@ class Operator(ABC):
 
     def _start_service_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, wait_for_message=''):
         if self.service:
+            # we can't reuse it b/c the bindings could be different
             self._stop_service()
 
         print(f'Waiting for service in container...')
-        self.service = self._run_in_operator_container(command_args, binding, same_user=True, port_mapping=[5000, 5000], is_service=True)
+        self.service = self._run_in_operator_container(command_args, binding, same_user=same_user, port_mapping=port_mapping, is_service=True)
         
         # TODO: set a timeout
         # start = time.time()
@@ -325,12 +326,12 @@ class Operator(ABC):
         sys.exit(1)
 
     def _is_verbose(self):
-        return bool(self._get_command_argument('verbose'))
+        return bool(self._get_framesense_argument('verbose'))
 
     def _is_redo(self):
-        return bool(self._get_command_argument('redo'))
+        return bool(self._get_framesense_argument('redo'))
 
-    def _get_command_argument(self, arg_name, default=''):
+    def _get_framesense_argument(self, arg_name, default=''):
         ret = getattr(self.context['command_args'], arg_name, default)
         return ret
 
@@ -353,7 +354,7 @@ class Operator(ABC):
     
     def _is_path_selected(self, path: Path):
         ret = True
-        filter = self._get_command_argument('filter')
+        filter = self._get_framesense_argument('filter')
         if filter:
             ret = filter.lower() in str(path).lower()
         return ret
@@ -376,7 +377,7 @@ class Operator(ABC):
         data_file_path.write_text(json.dumps(content, indent=2))
 
     def _get_operator_parameters(self):
-        return self._get_command_argument('parameters')
+        return self._get_framesense_argument('parameters')
 
     def _fetch_json(self, url):
         try:

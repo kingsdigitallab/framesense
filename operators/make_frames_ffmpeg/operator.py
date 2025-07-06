@@ -115,5 +115,5 @@ class MakeFramesFFMPEG(Operator):
             '-i', shot_file_path
         ] + samples
         # print(command_args)
-        res = self._run_in_operator_container(command_args, binding)
+        res = self._run_in_operator_container(command_args, binding, same_user=True)
 
