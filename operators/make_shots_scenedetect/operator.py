@@ -13,6 +13,7 @@ class MakeShotsSceneDetect(Operator):
         ret = super().get_supported_arguments()
         ret['redo'] = True
         ret['filter'] = True
+        ret['parameters'] = True
         return ret
 
     def apply(self, *args, **kwargs):
@@ -37,7 +38,8 @@ class MakeShotsSceneDetect(Operator):
         shots_folder_tmp_path = clip_path.parent / 'shots.tmp'
                 
         if self._is_redo():
-            shutil.rmtree(shots_folder_path)
+            if shots_folder_path.exists():
+                shutil.rmtree(shots_folder_path)
 
         if shots_folder_path.exists():
             return
@@ -49,14 +51,19 @@ class MakeShotsSceneDetect(Operator):
 
         shots_folder_tmp_path.mkdir(exist_ok=True)
 
+        detection_parameters = ['detect-adaptive']
+        framesense_parameters = self._get_operator_parameters()
+        if framesense_parameters:
+            detection_parameters = re.split(r'\s+', framesense_parameters)
+
         binding = [clip_path.parent, Path('/data')]
         command_args = [
             'scenedetect',
             '--input', clip_path,
-            '--output', shots_folder_tmp_path,
-            'detect-adaptive',
+            '--output', shots_folder_tmp_path
+        ] + detection_parameters + [
+            'split-video',  # creates a mp4 file per shot
             'list-scenes', # creates a CSV files with one row per shot
-            'split-video'  # creates a mp4 file per shot
         ]
         self._run_in_operator_container(command_args, binding, same_user=True)
 

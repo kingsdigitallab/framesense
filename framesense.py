@@ -108,7 +108,12 @@ class FrameSense:
             "collections": self.collections['data'],
             'collections_path': self.collections_path,
             "command_args": self.args,
+            'debug': self._is_debug()
         }
+
+    def _is_debug(self):
+        is_debug = os.getenv('FRAMESENSE_DEBUG', False)
+        return str(is_debug).lower() in ['1', 'true', 'yes', 'on']
 
     def _is_verbose(self):
         return self.args.verbose

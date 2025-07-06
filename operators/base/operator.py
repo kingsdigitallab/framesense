@@ -260,7 +260,8 @@ class Operator(ABC):
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
         res = None
 
-        # print(' '.join([str(a) for a in command_args]))
+        if self._is_debug():
+            print('DEBUG: run command: ' + ' '.join([str(a) for a in command_args]))
 
         error_message = f'Execution of the command has failed: {command_args}'
 
@@ -281,7 +282,8 @@ class Operator(ABC):
     def _run_service(self, command_args: [str]):
         ret = None
 
-        # print(' '.join([str(a) for a in command_args]))
+        if self._is_debug():
+            print('DEBUG: run command: ' + ' '.join([str(a) for a in command_args]))
 
         # error_message = f'Execution of the command has failed: {command_args}'
 
@@ -386,3 +388,7 @@ class Operator(ABC):
             self._error(f'error while fetching {url}, {str(e.reason)}')
         content = res.read().decode('utf-8')
         return json.loads(content)
+
+    def _is_debug(self):
+        ret = self.context.get('debug', False)
+        return ret
