@@ -2,20 +2,22 @@
 
 ## Input
 
-* clips (VIDEO/CLIP.mp4)
+* clips (e.g. `gotdfather/00.00.03-62/00.00.03-62.mp4`)
 
 ## Output
 
-* shots (VIDEO/shots/XXX/001/shot.mp4, etc.)
-* shots table (VIDEO/shots/shots.csv)
+* shots (e.g. `gotdfather/00.00.03-62/shots/001/shot.mp4`)
+* shots table (e.g. `gotdfather/00.00.03-62/shots/shots.csv`)
 
 ## Method
 
 Use [PySceneDetect](https://www.scenedetect.com/cli/)
-to extract shots from a clip (e.g. VIDEO/CLIP.mp4)
-and save the shots under VIDEO/shots/001/shot.mp4,
-VIDEO/shots/002/shot.mp4, etc.
-PySceneDetect also saves the shots metadata table under VIDEO/shots/shots.csv.
+to extract shots from a clip 
+(e.g. `gotdfather/00.00.03-62/00.00.03-62.mp4`)
+and save the shots under 
+`gotdfather/00.00.03-62/shots/001/shot.mp4`,
+`gotdfather/00.00.03-62/shots/002/shot.mp4`, etc.
+PySceneDetect also saves the shots metadata table under `/shots/shots.csv`.
 
 If no parameters (-p) are provided,
 the `detect-adaptive` detection method is used.
@@ -42,7 +44,7 @@ No VIDEO/shots already exists.
 
 Supported.
 
-If first delete the content of VIDEO/shots.
+If first delete the content of the `shots` folder.
 
 ## Filtering (-f)
 
