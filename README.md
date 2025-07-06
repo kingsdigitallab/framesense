@@ -106,7 +106,7 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 * **[make_clips_ffmpeg](operators/make_clips_ffmpeg/)**:
     Extract clips from videos based on timecodes in annotation files
-* **make_shots_scenedetect**:
+* **[make_shots_scenedetect](operators/make_shots_scenedetect)**:
     Extract shots from clips using PySceneDetect
 * **[make_frames_ffmpeg](operators/make_frames_ffmpeg)**:
     Extract frames from shots using ffmpeg
