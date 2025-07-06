@@ -298,7 +298,11 @@ class Operator(ABC):
 
     @functools.lru_cache()
     def _detect_installed_container_engine(self, ignore_if_not_found=False):
-        ret = None
+        ret = os.getenv('FRAMESENSE_CONTAINER_ENGINE', None)
+
+        if ret is not None:
+            return ret
+
         for engine in ENGINES:
             try:
                 output = subprocess.check_output([engine, '--version'])
