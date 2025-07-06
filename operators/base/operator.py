@@ -7,6 +7,8 @@ from pathlib import Path
 import sys
 import os
 import json
+import urllib.request
+import time
 
 ENGINES = ['docker', 'singularity']
 # ENGINES = ['singularity', 'docker']
@@ -36,6 +38,7 @@ class Operator(ABC):
 
     @abstractmethod
     def apply(self, *args, **kwargs):
+        self._stop_service()
         self._build_container_image()
         return None
 
@@ -47,6 +50,13 @@ class Operator(ABC):
         '''returns "framesense/<operator_name>"'''
         operator_folder_path = self._get_operator_folder_path()
         return f'framesense/{operator_folder_path.name}'
+
+    def _get_container_name(self, suffix=''):
+        operator_folder_path = self._get_operator_folder_path()
+        ret =  f'framesense_{operator_folder_path.name}'
+        if suffix:
+            ret += '_' + suffix
+        return ret
 
     def _build_container_image(self):
         '''Builds a docker image from the operator's Dockerfile.
@@ -106,7 +116,49 @@ class Operator(ABC):
                     operator_folder_path
                 ])
 
-    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
+    def _start_service_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, wait_for_message=''):
+        if self.service:
+            self._stop_service()
+
+        print(f'Waiting for service in container...')
+        self.service = self._run_in_operator_container(command_args, binding, same_user=True, port_mapping=[5000, 5000], is_service=True)
+        
+        # TODO: set a timeout
+        # start = time.time()
+        self.service_output = ''
+        i = 0
+        while True:
+            # this is blocking call
+            line = self.service.stdout.readline()
+            i += 1
+            self.service_output += line
+            if wait_for_message in line:
+                # needed when we stop & start again to avoid operator fetching to fail
+                time.sleep(1)
+                break
+
+    def _is_service_running(self):
+        engine = self._detect_installed_container_engine()
+        res = self._run_command(['docker', 'ps'])
+        return self._get_container_name('service') in res.stdout
+    
+    def _stop_service(self):
+        if self._is_service_running():
+            service_name = self._get_container_name('service')
+            print(f'Stopping service {service_name}...')
+            engine = self._detect_installed_container_engine()
+            command_args = [
+                engine,
+                'stop',
+                service_name
+            ]
+            res = self._run_command(command_args)
+            # print(res)
+
+        self.service = None
+        self.service_output = ''
+
+    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
         engine = self._detect_installed_container_engine()
         if engine == 'docker':
             args = [self._get_container_image_name()] + command_args[:]
@@ -115,9 +167,9 @@ class Operator(ABC):
             image_name = self._get_operator_folder_path().name
             singularity_image_path = self._get_singularity_folder_path() / f'{image_name}.sif'
             args = [singularity_image_path] + command_args[:]
-        return self._run_in_container(args, binding, same_user)
+        return self._run_in_container(args, binding, same_user, port_mapping, is_service)
 
-    def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False):
+    def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
         '''Runs a command in a new container.
         command_args: list of items
             the first item is the image name
@@ -185,14 +237,29 @@ class Operator(ABC):
         if engine == 'docker':
             engine_command_args.append('--rm')
 
+            if port_mapping:
+                engine_command_args += ['-p', f'{port_mapping[0]}:{port_mapping[1]}']
+            
+            # TODO: port mapping for singularity
+
+        if is_service:
+            if engine == 'docker':
+                engine_command_args += ['--name', self._get_container_name('service')]
+
         engine_command_args += command_args
 
         # print(engine_command_args)
         # subprocess.run(engine_command_args)
-        return self._run_command(engine_command_args)
+        if is_service:
+            return self._run_service(engine_command_args)
+        else:
+            return self._run_command(engine_command_args)
 
+    
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
         res = None
+
+        # print(' '.join([str(a) for a in command_args]))
 
         error_message = f'Execution of the command has failed: {command_args}'
 
@@ -209,6 +276,22 @@ class Operator(ABC):
             raise e
         
         return res
+
+    def _run_service(self, command_args: [str]):
+        ret = None
+
+        # print(' '.join([str(a) for a in command_args]))
+
+        # error_message = f'Execution of the command has failed: {command_args}'
+
+        try:
+            # TODO: error managment
+            ret = subprocess.Popen(command_args, cwd=self._get_operator_folder_path(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        except Exception as e:
+            print(f'ERROR: {error_message}')
+            raise e
+        
+        return ret
 
     @functools.lru_cache()
     def _detect_installed_container_engine(self, ignore_if_not_found=False):
@@ -294,3 +377,11 @@ class Operator(ABC):
 
     def _get_operator_parameters(self):
         return self._get_command_argument('parameters')
+
+    def _fetch_json(self, url):
+        try:
+            res = urllib.request.urlopen(url)
+        except urllib.error.URLError as e:
+            self._error(f'error while fetching {url}, {str(e.reason)}')
+        content = res.read().decode('utf-8')
+        return json.loads(content)

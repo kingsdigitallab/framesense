@@ -20,12 +20,13 @@ class ScaleFrames(Operator):
         ret = super().apply(*args, **kwargs)
 
         for col in self.context['collections']:
-            for frames_folder_path in col['attributes']['path'].glob('**/shots/*/'):
-                self._write_frames_scale(frames_folder_path)
+            collection_path = col['attributes']['path']
+            for frames_folder_path in collection_path.glob('**/shots/*/'):
+                self._write_frames_scale(frames_folder_path, collection_path)
 
         return ret
 
-    def _write_frames_scale(self, frames_folder_path: Path):
+    def _write_frames_scale(self, frames_folder_path: Path, collection_path: Path):
         if not self._is_path_selected(frames_folder_path):
             return
         
@@ -50,11 +51,11 @@ class ScaleFrames(Operator):
 
             if self._is_redo() or not frame_data['attributes'].get('scale_cinescale', None):
                 print(frame_file_path)
-                frame_data['attributes']['scale_cinescale'] = self._recognise_frame_scale(frame_file_path)
+                frame_data['attributes']['scale_cinescale'] = self._recognise_frame_scale(frame_file_path, collection_path)
 
         self._write_data_file(frames_meta_path, frames_data)
                 
     @abstractmethod
-    def _recognise_frame_scale(self, frame_file_path: Path):
+    def _recognise_frame_scale(self, frame_file_path: Path, collection_path: Path):
         ret = ''
         return ret

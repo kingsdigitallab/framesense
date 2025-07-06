@@ -1,6 +1,8 @@
 # Use the official Python image with slim version
 FROM python:3.12-slim
 
+EXPOSE 5000
+
 # Install dependencies
 RUN apt update && \
     apt install -y --no-install-recommends wget vim && \

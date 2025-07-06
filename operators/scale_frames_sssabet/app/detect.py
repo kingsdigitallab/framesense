@@ -7,6 +7,48 @@ import torchvision
 from pathlib import Path
 import sys
 import json
+from flask import Flask, request, jsonify
+
+PORT = 5000
+
+'''
+Usage:
+
+1. Single image detection from command line:
+
+`python detect.py /path/to/my/image.jpg`
+
+2. Bulk image detections from a http service:
+
+2.1 load the model and service
+
+`python detect.py serve`
+
+2.2 call the service
+
+`curl localhost:5000/detect?image_path=/path/to/my/image.jpg`
+
+2.3 stop the service
+
+`curl localhost:5000/stop`
+
+In all cases responses are in json:
+
+on success:
+
+{
+    "error": "",
+    "class": "MS"
+}
+
+on failure:
+
+{
+    "error": "ERROR MESSAGE",
+    "class": ""
+}
+
+'''
 
 class ScaleDetector: 
     '''Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
@@ -30,6 +72,9 @@ class ScaleDetector:
         )
 
     def classify(self, image_path):
+        '''Returns the shot scale classification of the image as a string:
+        ECS, CS, MS, FS or LS
+        '''
         ret = ''
         image_path = Path(image_path)
         frame = Image.open(image_path)
@@ -70,29 +115,58 @@ class ScaleDetector:
         return p
 
 
-response = {
-    'error': '',
-    'class': '',
-}
-
-# read the image file name from the first comamnd line argument
-arguments = sys.argv
-if len(arguments) > 0:
-    image_file_name = arguments[1]
-
-    detector = ScaleDetector()
-    res = detector.classify(image_file_name)
-    response = {
-        'error': '',
-        'class': res,
-    }
-else:
+if __name__ == '__main__':
     response = {
         'error': 'input image not provided',
         'class': '',
     }
 
-print(json.dumps(response, indent=2))
+    # read the image file name from the first comamnd line argument
+    arguments = sys.argv
 
-if response['error']:
-    sys.exit(1)
+    if len(arguments) > 0:
+        first_arg = arguments[1]
+
+        detector = ScaleDetector()
+
+        if first_arg == 'serve':
+            app = Flask(__name__)
+
+            @app.route('/detect', methods=['GET'])
+            def detect():
+                image_path = request.args.get('image_path', None)
+
+                if image_path:
+                    res = detector.classify(image_path)
+                    response = {
+                        'error': '',
+                        'class': res,
+                    }
+                else:
+                    response = {
+                        'error': 'input image not provided',
+                        'class': '',
+                    }
+                
+                return jsonify(response)
+
+            @app.route('/stop', methods=['GET'])
+            def stop():
+                # yes... Flask does NOT have a shutdown function.
+                import signal, os
+                os.kill(os.getpid(), signal.SIGINT)
+
+            app.run(debug=True, host='0.0.0.0', port=PORT)
+        else:    
+            image_path = first_arg
+
+            res = detector.classify(image_path)
+            response = {
+                'error': '',
+                'class': res,
+            }
+
+    print(json.dumps(response, indent=2))
+
+    if response['error']:
+        sys.exit(1)
