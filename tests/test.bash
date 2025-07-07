@@ -17,7 +17,7 @@ if [ ! -d "collections" ]; then
 fi
 
 cd ..
-export DOTENV_PATH='tests/.env'
+export FRAMESENSE_DOTENV_PATH='tests/.env'
 
 run_python_script "python framesense.py -h"
 run_python_script "python framesense.py collections -v"

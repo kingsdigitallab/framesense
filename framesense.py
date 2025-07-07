@@ -8,11 +8,11 @@ from importlib import import_module
 import inspect
 import time
 
-custom_dotenv_path = os.getenv("DOTENV_PATH")
+custom_dotenv_path = os.getenv('FRAMESENSE_DOTENV_PATH')
 
 if custom_dotenv_path:
     if not Path(custom_dotenv_path).is_file():
-        print(f'ERROR: custom .env file not found in specified path ({custom_dotenv_path}) by DOTENV_PATH')
+        print(f'ERROR: custom .env file not found in specified path ({custom_dotenv_path}) by FRAMESENSE_DOTENV_PATH')
         exit(1)
     # Load from the path specified by the environment variable
     load_dotenv(dotenv_path=custom_dotenv_path)

@@ -145,3 +145,16 @@ We are aiming to support low end (laptop) and high end (HPCs) compute environmen
 ## Testing
 
 See [tests/README.md](tests/README.md) for details.
+
+## Environment variables
+
+Variables affecting how FrameSense works can be set 
+in your session environment
+or the `.env` file located in the same folder as framesense.py.
+
+You can point to a different `.env` file 
+by setting the absolute or relative (to `framesense.py`) path 
+in the `FRAMESENSE_DOTENV_PATH` environment variable.
+
+[`./docs/.env`](./docs/.env) is a template 
+that contains a list of all available variables and their default values.
