@@ -100,7 +100,7 @@ class Operator(ABC):
                         dockerfile_path,
                     ])
                     
-                    singularity_definition_path = Path(f'{str(image_name).rstrip('.sif')}.def')
+                    singularity_definition_path = Path(f'{str(image_name).rstrip(".sif")}.def')
                     singularity_definition_path.write_text(res.stdout)
 
                     # then build the image
