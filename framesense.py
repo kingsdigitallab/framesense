@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 import sys
 import json
@@ -8,16 +8,18 @@ from importlib import import_module
 import inspect
 import time
 
-custom_dotenv_path = os.getenv('FRAMESENSE_DOTENV_PATH')
+dotenv_path = os.getenv('FRAMESENSE_DOTENV_PATH', None)
 
-if custom_dotenv_path:
-    if not Path(custom_dotenv_path).is_file():
-        print(f'ERROR: custom .env file not found in specified path ({custom_dotenv_path}) by FRAMESENSE_DOTENV_PATH')
+if dotenv_path:
+    if not Path(dotenv_path).is_file():
+        print(f'ERROR: custom .env file not found in specified path ({dotenv_path}) by FRAMESENSE_DOTENV_PATH')
         exit(1)
-    # Load from the path specified by the environment variable
-    load_dotenv(dotenv_path=custom_dotenv_path)
+else:
+    dotenv_path = find_dotenv()
 
-load_dotenv()
+if dotenv_path:
+    dotenv_path = Path(dotenv_path).absolute().resolve()
+    load_dotenv(dotenv_path=dotenv_path)
 
 class FrameSense:
     def __init__(self):
@@ -103,13 +105,14 @@ class FrameSense:
         return ret
 
     def _get_context(self):
-        return {
-            "framesense_folder_path": Path(__file__).parent,
+        ret = {
+            "framesense_folder_path": Path(__file__).parent.resolve(),
             "collections": self.collections['data'],
             'collections_path': self.collections_path,
             "command_args": self.args,
             'debug': self._is_debug()
         }
+        return ret
 
     def _is_debug(self):
         is_debug = os.getenv('FRAMESENSE_DEBUG', False)
@@ -120,12 +123,30 @@ class FrameSense:
 
     def _read_collections_file(self):
         '''read collection file'''
+
+        global dotenv_path
+
         # get the path to the collections.json from env var "FRAMESENSE_COLLECTIONS_PATH"
         collections_path = os.getenv('FRAMESENSE_COLLECTIONS', None)
-        if collections_path is None or not Path(collections_path).exists():
-            self._error('FRAMESENSE_COLLECTIONS environment variable should contain the path to a collections.json.')
         
-        self.collections_path = Path(collections_path).absolute().resolve()
+        if collections_path is None:
+            self._error(f'FRAMESENSE_COLLECTIONS environment variable not found.')
+        
+        collections_path = Path(collections_path)
+
+        if not collections_path.is_absolute():
+            if dotenv_path:
+                collections_path = dotenv_path.parent / collections_path
+            
+        collections_path = collections_path.absolute().resolve()
+
+        if not Path(collections_path).is_file():
+            self._error(f'FRAMESENSE_COLLECTIONS environment variable should contain a valid path to a collections.json ({collections_path}).')
+        
+        self.collections_path = collections_path
+
+        print(self.collections_path)
+
         self.collections = json.loads(self.collections_path.read_text())
 
         # convert all the relative paths in collections to absolute Path objects

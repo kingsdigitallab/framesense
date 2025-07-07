@@ -40,5 +40,7 @@ Extracted clips which are no longer included (with same time codes) in the annot
 
 ## Redo (-r)
 
-Not supported
+Will recreate the .mp4 clips, 
+but won't remove existing data under the clip folders.
+
 

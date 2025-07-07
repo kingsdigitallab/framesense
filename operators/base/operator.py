@@ -12,7 +12,6 @@ import time
 import re
 
 ENGINES = ['docker', 'singularity']
-# ENGINES = ['singularity', 'docker']
 
 class Operator(ABC):
 

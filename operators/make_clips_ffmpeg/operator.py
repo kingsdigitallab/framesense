@@ -8,25 +8,10 @@ import subprocess
 class MakeClipsFFMPEG(MakeClips):
     '''Extract clips from videos based on timecodes in annotation files'''
 
-    def _sluggify(self, string):
-        return re.sub(r'\W+', '-', str(string).lower()).strip('-')
-
-    def _index_annotation_files(self):
-        self.annotations_index = {}
-        for col in self.context['collections']:
-            annotations_path = col['attributes'].get('annotations_path', None)
-            if not annotations_path: continue
-            for annotation_path in annotations_path.glob('*.json'):
-                annotation_hash = self._get_hash_from_path(col, annotation_path, True)
-                self.annotations_index[annotation_hash] = annotation_path
-        
-        # print(self.annotations_index)
-
-    def _get_hash_from_path(self, collection: dict, path: Path, has_extension=False) -> str:
-        path = path.name
-        if has_extension:
-            path = path.rsplit('.', 1)[0]
-        ret = f'{collection["id"]}:{self._sluggify(path)}'
+    def get_supported_arguments(self):
+        ret = super().get_supported_arguments()
+        ret['filter'] = True
+        ret['redo'] = True
         return ret
 
     def apply(self, *args, **kwargs):
@@ -52,10 +37,14 @@ class MakeClipsFFMPEG(MakeClips):
         video_path = self._get_video_file_path(video_folder_path)
         if not video_path: return
 
+        if not self._is_path_selected(video_path):
+            return
+
         if not clip_info['path'].parent.exists():
             clip_info['path'].parent.mkdir()
-
-        if not clip_info['path'].exists():
+        
+        if self._is_redo() or not clip_info['path'].exists():
+            print(clip_info['path'])
             command = [
                 # "linuxserver/ffmpeg",
                 "ffmpeg",
@@ -101,5 +90,26 @@ class MakeClipsFFMPEG(MakeClips):
                 ret = res.get('clips', [])
         except json.decoder.JSONDecodeError:
             print(f'WARNING: invalid json format in annotation file {annotation_path}')
+        return ret
+
+    def _sluggify(self, string):
+        return re.sub(r'\W+', '-', str(string).lower()).strip('-')
+
+    def _index_annotation_files(self):
+        self.annotations_index = {}
+        for col in self.context['collections']:
+            annotations_path = col['attributes'].get('annotations_path', None)
+            if not annotations_path: continue
+            for annotation_path in annotations_path.glob('*.json'):
+                annotation_hash = self._get_hash_from_path(col, annotation_path, True)
+                self.annotations_index[annotation_hash] = annotation_path
+        
+        # print(self.annotations_index)
+
+    def _get_hash_from_path(self, collection: dict, path: Path, has_extension=False) -> str:
+        path = path.name
+        if has_extension:
+            path = path.rsplit('.', 1)[0]
+        ret = f'{collection["id"]}:{self._sluggify(path)}'
         return ret
 
