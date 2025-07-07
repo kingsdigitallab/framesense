@@ -140,6 +140,9 @@ will be built** from its Dockerfile.
 After that, the container image will only be rebuilt 
 if the Dockerfile has changed.
 
+If the operator folder contains an `./app` directory,
+it will be mounted to `/app` within the container.
+
 #### Singularity
 
 When using Singularity (instead of Docker), 
@@ -153,7 +156,7 @@ and copy the `singularity` folder across to another
 so they are ready to be used.
 
 The build process will be offloaded to 
-the remote Singularity remote endpoint 
+the remote Singularity endpoint 
 you are logged into.
 If you are not logged into a remote endpoint
 the build process uses the `--fakeroot` method.
@@ -180,7 +183,7 @@ until FrameSense receives more dedicated support (external contributors or addit
 
 ## Performance and HPC
 
-We are aiming to support low end (laptop) and high end (HPCs) compute environment. However at the moment supoort is limited and the operators are very slow.
+We are aiming to support low end (laptop) and high end (HPCs) compute environment. However at the moment support is limited and the operators are very slow.
 
 ## Testing
 

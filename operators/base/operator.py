@@ -9,6 +9,7 @@ import os
 import json
 import urllib.request
 import time
+import re
 
 ENGINES = ['docker', 'singularity']
 # ENGINES = ['singularity', 'docker']
@@ -99,12 +100,17 @@ class Operator(ABC):
                         'recipe',
                         dockerfile_path,
                     ])
-                    
+
+                    # see gh-12
+                    singularity_definition_content = self._convert_singularity_definition(
+                        res.stdout, 
+                        dockerfile_path.parent
+                    )
+
                     singularity_definition_path = Path(f'{str(image_name).rstrip(".sif")}.def')
-                    singularity_definition_path.write_text(res.stdout)
+                    singularity_definition_path.write_text(singularity_definition_content)
 
                     # then build the image
-                    # TODO: consider --remote instead of --fakeroot
 
                     # This works without logging into a remote endpoint
                     # But requires privileged access, not met on HPC infrastructure.
@@ -218,6 +224,7 @@ class Operator(ABC):
             the second is the command to pass to the container
             the rest are arguments to the command
         
+        TODO: rewrite, it has gradually become hard to understand; many scenarios are covered
         TODO: clearer to completely separate singularity from docker? two different sub-functions?
         TODO: pass the image name in a separate argument, rather than at the beginning of command_args
         '''
@@ -467,4 +474,46 @@ class Operator(ABC):
 
     def _is_debug(self):
         ret = self.context.get('debug', False)
+        return ret
+
+    def _convert_singularity_definition(self, definition: str, base_path: Path) -> str:
+        lines = []
+
+        # See gh-12, we convert the source paths under %files to absolute paths
+        #
+        # COPY app/requirements.txt /models/requirements.txt
+        #
+        # app/requirements.txt is relative to the Dockerfile in Docker.
+        # But in singularity we need to convert it to absolute paths
+        # to build it without error with a remote container engine.
+        # With --fakeroot build, the paths are relative to the current dir.
+        # With --remote, relative paths don't work (unless file in the current dir)
+        #
+        # %file app/requirement.txt /molels/requirements.txt
+        #
+        # =>
+        #
+        # %file /absolute/path/to/app/requirement.txt /models/requirements.txt
+        #
+        def make_path_absolute(match):
+            # e.g. app/requirements.txt
+            ret = Path(match.group(1))
+
+            if not ret.is_absolute():
+                ret = base_path / ret
+
+            return str(ret)
+
+        section = ''
+        for line in definition.split('\n'):
+            if line.strip().startswith('%'):
+                section = line.strip()[1:]
+            else:
+                if section == 'files':
+                    line = re.sub(r'^(?:\s*)(\S+)', make_path_absolute, line)
+            
+            lines.append(line)
+
+        ret = '\n'.join(lines)
+
         return ret

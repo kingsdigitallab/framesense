@@ -6,11 +6,9 @@ EXPOSE 5000
 # Install dependencies
 RUN apt update && \
     apt install -y --no-install-recommends wget vim && \
-    echo "REMOVE THIS"
-    ## rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
-# RUN mkdir -p /app
+# Set the working directory (will be mounted)
 WORKDIR /app
 RUN mkdir -p /models
 RUN wget -P /models https://github.com/sssabet/Shot_Type_Classification/raw/refs/heads/master/models/Pytorch_Classification_50ep.pt
@@ -21,9 +19,3 @@ COPY app/requirements.txt /models/requirements.txt
 RUN pip install light-the-torch
 RUN ltt install -r /models/requirements.txt
 
-
-# Copy the rest of the application code
-# COPY . .
-
-# Command to run PySceneDetect
-# CMD ["scenedetect", "--help"]
