@@ -145,8 +145,6 @@ class FrameSense:
         
         self.collections_path = collections_path
 
-        print(self.collections_path)
-
         self.collections = json.loads(self.collections_path.read_text())
 
         # convert all the relative paths in collections to absolute Path objects
