@@ -106,10 +106,17 @@ class Operator(ABC):
                     # then build the image
                     # TODO: consider --remote instead of --fakeroot
 
+                    # This works without logging into a remote endpoint
+                    # But requires privileged access, not met on HPC infrastructure.
+                    # For presonal machine.
+                    singularity_build_method = '--fakeroot'
+                    if self._is_logged_into_singularity_remote():
+                        singularity_build_method = '--remote'
+
                     res = self._run_command([
                         'singularity',
                         'build',
-                        '--fakeroot', 
+                        singularity_build_method, 
                         singularity_image_path,
                         singularity_definition_path
                     ])                
@@ -122,6 +129,16 @@ class Operator(ABC):
                     '--progress', 'quiet',
                     operator_folder_path
                 ])
+
+    def _is_logged_into_singularity_remote(self):
+        ret = False
+
+        res = self._run_command(['singularity', 'remote', 'status'])
+
+        if "logged in as" in res.stdout.lower():
+            ret = True
+
+        return ret
 
     def _start_service_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, wait_for_message=''):
         if self.service:

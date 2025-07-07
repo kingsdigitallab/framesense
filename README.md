@@ -129,6 +129,46 @@ It is expected that each operator:
 * is written as a Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
 
+### Containers
+
+Any software dependency needed for an operator to run 
+should be packaged into a container image. 
+FrameSense supports Docker and Singularity container engines.
+
+**The first time an operator is executed the container image 
+will be built** from its Dockerfile.
+After that, the container image will only be rebuilt 
+if the Dockerfile has changed.
+
+#### Singularity
+
+When using Singularity (instead of Docker), 
+the Dockerfile is converted to a .def file 
+before the conainer image is built. 
+All singularity definition and image files 
+are generated and stored under the `./singularity` folder.
+
+It is possible to build the images on one machine 
+and copy the `singularity` folder across to another
+so they are ready to be used.
+
+The build process will be offloaded to 
+the remote Singularity remote endpoint 
+you are logged into.
+If you are not logged into a remote endpoint
+the build process uses the `--fakeroot` method.
+But this method requires privileges 
+only available on a personal computer.
+
+On a HPC environment with Singularity
+you can either log into a remote endpoint
+or copy the `singularity` folder from another machine.
+
+If you are not logged and `--fakeroot` is not allowed,
+you may encounter this error:
+
+`FATAL:   fakeroot requires to set 'allow setuid = yes' in /etc/singularity/singularity.conf`
+
 ## Feature and Bugs
 
 Please use [github issue tracker](https://github.com/kingsdigitallab/framesense/issues) to report bugs or request new features.
