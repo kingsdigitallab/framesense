@@ -64,7 +64,6 @@ class MakeClipsFFMPEG(MakeClips):
                 "-i", video_path,
                 clip_info['path']
             ]
-            # self._run_in_container(command, [video_folder_path, '/config'])
             self._run_in_operator_container(command, [video_folder_path, '/config'], same_user=True)
 
     def _get_annotation_info(self, annotation, video_folder_path):

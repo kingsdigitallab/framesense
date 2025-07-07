@@ -47,9 +47,19 @@ class Operator(ABC):
         return Path(inspect.getfile(type(self))).parent
 
     def _get_container_image_name(self):
-        '''returns "framesense/<operator_name>"'''
-        operator_folder_path = self._get_operator_folder_path()
-        return f'framesense/{operator_folder_path.name}'
+        ret = None
+        
+        operator_name = self._get_operator_folder_path().name
+
+        engine = self._detect_installed_container_engine()
+
+        if engine == 'docker':
+            ret = f'framesense/{operator_name}'
+
+        if engine == 'singularity':
+            ret = self._get_singularity_folder_path() / f'{operator_name}.sif'
+
+        return ret
 
     def _get_container_name(self, suffix=''):
         operator_folder_path = self._get_operator_folder_path()
@@ -69,15 +79,13 @@ class Operator(ABC):
             engine = self._detect_installed_container_engine()
 
             image_name = self._get_container_image_name()
-            if engine == 'singularity':
-                image_name = self._get_operator_folder_path().name
 
             print(f'Update {engine} image {image_name}')
 
             if engine == 'singularity':
 
                 # singularity_image_path = operator_folder_path / f'operator.sif'
-                singularity_image_path = self._get_singularity_folder_path() / f'{image_name}.sif'
+                singularity_image_path = image_name
 
                 if not singularity_image_path.is_file() or (
                     singularity_image_path.stat().st_mtime < dockerfile_path.stat().st_mtime
@@ -92,8 +100,7 @@ class Operator(ABC):
                         dockerfile_path,
                     ])
                     
-                    # singularity_definition_path = operator_folder_path / 'Singularity.def'
-                    singularity_definition_path = self._get_singularity_folder_path() / f'{image_name}.def'
+                    singularity_definition_path = Path(f'{str(image_name).rstrip('.sif')}.def')
                     singularity_definition_path.write_text(res.stdout)
 
                     # then build the image
@@ -139,20 +146,45 @@ class Operator(ABC):
                 break
 
     def _is_service_running(self):
+        ret = False
+
+        res = None
+
         engine = self._detect_installed_container_engine()
-        res = self._run_command(['docker', 'ps'])
-        return self._get_container_name('service') in res.stdout
+        if engine == 'docker':
+            res = self._run_command([engine, 'ps'])
+        if engine == 'singularity':
+            service_name = self._get_container_name('service')
+            res = self._run_command([engine, 'instance', 'list', service_name])
+        
+        if res:
+            ret = self._get_container_name('service') in res.stdout
+
+        return ret
     
     def _stop_service(self):
         if self._is_service_running():
             service_name = self._get_container_name('service')
+
             print(f'Stopping service {service_name}...')
+
             engine = self._detect_installed_container_engine()
-            command_args = [
-                engine,
-                'stop',
-                service_name
-            ]
+
+            if engine == 'docker':
+                command_args = [
+                    engine,
+                    'stop',
+                    service_name
+                ]
+
+            if engine == 'singularity':
+                command_args = [
+                    engine,
+                    'instance',
+                    'stop',
+                    service_name
+                ]
+
             res = self._run_command(command_args)
             # print(res)
 
@@ -160,37 +192,31 @@ class Operator(ABC):
         self.service_output = ''
 
     def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
-        engine = self._detect_installed_container_engine()
-        if engine == 'docker':
-            args = [self._get_container_image_name()] + command_args[:]
-        if engine == 'singularity':
-            # args = [str(self._get_operator_folder_path() / 'operator.sif')] + command_args[:]
-            image_name = self._get_operator_folder_path().name
-            singularity_image_path = self._get_singularity_folder_path() / f'{image_name}.sif'
-            args = [singularity_image_path] + command_args[:]
-        return self._run_in_container(args, binding, same_user, port_mapping, is_service)
+        return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service)
 
-    def _run_in_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
+    def _run_in_container(self, container_image_name, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
         '''Runs a command in a new container.
         command_args: list of items
-            the first item is the image name
+            NO (the first item is the image name)
             the second is the command to pass to the container
             the rest are arguments to the command
+        
+        TODO: clearer to completely separate singularity from docker? two different sub-functions?
+        TODO: pass the image name in a separate argument, rather than at the beginning of command_args
         '''
         engine = self._detect_installed_container_engine()
 
         command_args = command_args[:]
 
-        # if engine == 'singularity' and not command_args[0].endswith('.sif'):
-        #     command_args[0] = 'docker://' + command_args[0]
-
-        # command_args = [engine, 'run'] + command_args
         engine_command_args = [engine]
         
         if engine == 'docker':
             engine_command_args.append('run')
         if engine == 'singularity':
-            engine_command_args.append('exec')
+            if is_service:
+                engine_command_args += ['instance', 'start']
+            else:
+                engine_command_args.append('exec')
 
         # to ensure that all files are writable by the current user
         # but... not all images will like this
@@ -213,12 +239,11 @@ class Operator(ABC):
                 '/app'
             ])
 
-            if engine == 'singularity':
+            if engine == 'singularity' and not is_service:
                 engine_command_args += [
                     '--pwd',
                     '/app'
                 ]
-
 
         # user-defined binding
         for abinding in bindings: 
@@ -243,18 +268,42 @@ class Operator(ABC):
             
             # TODO: port mapping for singularity
 
-        if is_service:
-            if engine == 'docker':
-                engine_command_args += ['--name', self._get_container_name('service')]
+        service_name = self._get_container_name('service')
 
-        engine_command_args += command_args
-
-        # print(engine_command_args)
-        # subprocess.run(engine_command_args)
         if is_service:
-            return self._run_service(engine_command_args)
+            if engine in ['docker']:
+                engine_command_args += ['--name', service_name]
+            
+        engine_command_args.append(container_image_name)
+
+        if is_service and engine in ['singularity']:
+            # after the image name
+            engine_command_args.append(service_name)
+
+            # we need two separate calls to singularity:
+            # one to start the container as an instance
+            # e.g. singularity instance start -B /home/X/src/prj/tools/framesense/tests/collections/hollywood:/data -B /home/jeff/src/prj/tools/framesense/operators/scale_frames_sssabet/app:/app /home/X/src/prj/tools/framesense/singulary/scale_frames_sssabet.sif framesense_scale_frames_sssabet_service
+            self._run_command(engine_command_args)
+
+            # a second to launch the service within the instance
+            # e.g. singularity exec --pwd /app instance://framesense_scale_frames_sssabet_service python detect.py server
+
+            service_args = []
+            if app_folder_path.is_dir():
+                service_args = ['--pwd', '/app']
+
+            return self._run_service([
+                'singularity',
+                'exec'] + service_args + [                
+                f'instance://{service_name}',
+            ] + command_args)
         else:
-            return self._run_command(engine_command_args)
+            engine_command_args += command_args        
+
+            if is_service:
+                return self._run_service(engine_command_args)
+            else:
+                return self._run_command(engine_command_args)
 
     
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
@@ -285,11 +334,17 @@ class Operator(ABC):
         if self._is_debug():
             print('DEBUG: run command: ' + ' '.join([str(a) for a in command_args]))
 
-        # error_message = f'Execution of the command has failed: {command_args}'
+        error_message = f'Execution of the command has failed: {command_args}'
 
         try:
             # TODO: error managment
-            ret = subprocess.Popen(command_args, cwd=self._get_operator_folder_path(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            ret = subprocess.Popen(
+                command_args, 
+                cwd=self._get_operator_folder_path(), 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True
+            )
         except Exception as e:
             print(f'ERROR: {error_message}')
             raise e
