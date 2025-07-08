@@ -63,3 +63,7 @@ class ScaleFramesSSSabet(ScaleFrames):
             # print(ret)
 
         return ret
+
+    def _get_scale_attribute_name(self):
+        '''The name of the attribute written by this operator in the frames.json file'''
+        return 'scale_sssabet'

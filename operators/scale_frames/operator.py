@@ -27,6 +27,8 @@ class ScaleFrames(Operator):
         return ret
 
     def _write_frames_scale(self, frames_folder_path: Path, collection_path: Path):
+        scale_attribute_name = self._get_scale_attribute_name()
+
         if not self._is_path_selected(frames_folder_path):
             return
         
@@ -49,9 +51,9 @@ class ScaleFrames(Operator):
                 }
                 frames_data['data'].append(frame_data)
 
-            if self._is_redo() or not frame_data['attributes'].get('scale_cinescale', None):
+            if self._is_redo() or not frame_data['attributes'].get(scale_attribute_name, None):
                 print(frame_file_path)
-                frame_data['attributes']['scale_cinescale'] = self._recognise_frame_scale(frame_file_path, collection_path)
+                frame_data['attributes'][scale_attribute_name] = self._recognise_frame_scale(frame_file_path, collection_path)
 
         self._write_data_file(frames_meta_path, frames_data)
                 
@@ -59,3 +61,8 @@ class ScaleFrames(Operator):
     def _recognise_frame_scale(self, frame_file_path: Path, collection_path: Path):
         ret = ''
         return ret
+
+    @abstractmethod
+    def _get_scale_attribute_name(self):
+        '''The name of the attribute written by this operator in the frames.json file'''
+        return 'scale'
