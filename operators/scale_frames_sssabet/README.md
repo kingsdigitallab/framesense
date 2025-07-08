@@ -101,6 +101,6 @@ Will rewrite the frame scale attributes `scale_sssabet` in the `frames.json` for
 
 The classifier code and model are borrowed from [Shot_Type_Classification](https://github.com/sssabet/Shot_Type_Classification), which were developped by [Saeed Shafiee Sabet](https://github.com/sssabet). 
 
-That model was trained on MovieShots dataset https://paperswithcode.com/dataset/movieshots https://arxiv.org/abs/2008.03548.
+That model was trained on MovieShots dataset ([paper with code](https://paperswithcode.com/dataset/movieshots), [arxiv](https://arxiv.org/abs/2008.03548)).
 
 Architecture of the model is [Mobilenet_v3](https://huggingface.co/docs/timm/en/models/mobilenet-v3)

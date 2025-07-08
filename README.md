@@ -113,7 +113,7 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 #### Detection
 
-* **scale_frames_sssabet**:
+* **[scale_frames_sssabet](operators/scale_frames_sssabet)**:
     Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
 
 ### Design principles
