@@ -332,10 +332,12 @@ class Operator(ABC):
     def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
         res = None
 
-        if self._is_debug():
-            print('DEBUG: run command: ' + ' '.join([str(a) for a in command_args]))
+        command_as_string = ' '.join([str(a) for a in command_args])
 
-        error_message = f'Execution of the command has failed: {command_args}'
+        if self._is_debug():
+            print(f'DEBUG: running command {command_as_string}')
+
+        error_message = f'Execution of the command has failed: {command_as_string}'
 
         try:
             # cwd is needed for singularity build from .def (with relative path in COPY)
@@ -352,10 +354,13 @@ class Operator(ABC):
         return res
 
     def _run_service(self, command_args: [str]):
+        # TODO: remove code duplication with _run_command
         ret = None
 
+        command_as_string = ' '.join([str(a) for a in command_args])
+
         if self._is_debug():
-            print('DEBUG: run command: ' + ' '.join([str(a) for a in command_args]))
+            print(f'DEBUG: running command {command_as_string}')
 
         error_message = f'Execution of the command has failed: {command_args}'
 
