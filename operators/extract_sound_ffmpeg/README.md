@@ -6,7 +6,7 @@
 
 ## Output
 
-* sound file (e.g. `gotdfather/00.00.03-62/00.00.03-62.mp3`)
+* sound file (e.g. `gotdfather/00.00.03-62/00.00.03-62.wav`)
 
 ## Method
 

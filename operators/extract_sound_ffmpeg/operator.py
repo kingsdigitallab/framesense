@@ -16,6 +16,8 @@ class ExtractSoundFFMPEG(Operator):
         ret = super().get_supported_arguments()
         ret['redo'] = True
         ret['filter'] = True
+        # TODO: add parameter for mp3 vs wav
+        # TODO: add parameter for quality or frequency
         return ret
 
     def apply(self, *args, **kwargs):
@@ -36,17 +38,21 @@ class ExtractSoundFFMPEG(Operator):
         if not self._is_path_selected(clip_path):
             return
 
-        sound_path = clip_path.with_suffix('.mp3')
+        sound_path = clip_path.with_suffix('.wav')
 
         if self._is_redo() or not sound_path.exists():
             print(sound_path)
             command = [
-                # "linuxserver/ffmpeg",
                 "ffmpeg",
                 "-i", clip_path,
-                "-vn", 
-                "-acodec", "libmp3lame",
-                "-q:a", str(SOUND_QUALITY_DEFAULT),
+                # "-vn", 
+                # "-acodec", "libmp3lame", # mp3
+                # "-acodec", "pcm_s16le", # wav
+                # "-ar", "44100", # sample rate
+                # "-ac", "2", #  nb of audio channels
+                # "-q:a", str(SOUND_QUALITY_DEFAULT),
+                "-map", "0:a", # maps the first audio stream from the input file
+                "-y", # overwrite output
                 sound_path
             ]
             self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
