@@ -16,8 +16,8 @@ class ScaleFrames(Operator):
         ret['filter'] = True
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
+    def _apply(self):
+        ret = None
 
         for col in self.context['collections']:
             collection_path = col['attributes']['path']

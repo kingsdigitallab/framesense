@@ -14,8 +14,8 @@ class MakeClipsFFMPEG(MakeClips):
         ret['redo'] = True
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
+    def _apply(self):
+        ret = None
         
         self._index_annotation_files()
 

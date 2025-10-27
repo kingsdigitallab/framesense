@@ -16,17 +16,17 @@ Usage:
 
 1. Single image detection from command line:
 
-`python detect.py /path/to/my/image.jpg`
+`python processor.py /path/to/my/image.jpg`
 
 2. Bulk image detections from a http service:
 
 2.1 load the model and service
 
-`python detect.py serve`
+`python processor.py serve`
 
 2.2 call the service
 
-`curl localhost:5000/detect?image_path=/path/to/my/image.jpg`
+`curl localhost:5000/process?input_path=/path/to/my/image.jpg`
 
 2.3 stop the service
 
@@ -38,14 +38,14 @@ on success:
 
 {
     "error": "",
-    "class": "MS"
+    "result": "MS"
 }
 
 on failure:
 
 {
     "error": "ERROR MESSAGE",
-    "class": ""
+    "result": ""
 }
 
 '''
@@ -118,7 +118,7 @@ class ScaleDetector:
 if __name__ == '__main__':
     response = {
         'error': 'input image not provided',
-        'class': '',
+        'result': '',
     }
 
     # read the image file name from the first comamnd line argument
@@ -132,20 +132,20 @@ if __name__ == '__main__':
         if first_arg == 'serve':
             app = Flask(__name__)
 
-            @app.route('/detect', methods=['GET'])
-            def detect():
-                image_path = request.args.get('image_path', None)
+            @app.route('/process', methods=['GET'])
+            def process():
+                image_path = request.args.get('input_path', None)
 
                 if image_path:
                     res = detector.classify(image_path)
                     response = {
                         'error': '',
-                        'class': res,
+                        'result': res,
                     }
                 else:
                     response = {
                         'error': 'input image not provided',
-                        'class': '',
+                        'result': '',
                     }
                 
                 return jsonify(response)
@@ -163,7 +163,7 @@ if __name__ == '__main__':
             res = detector.classify(image_path)
             response = {
                 'error': '',
-                'class': res,
+                'result': res,
             }
 
     print(json.dumps(response, indent=2))

@@ -11,8 +11,8 @@ class Collections(Operator):
         ret['verbose'] = True
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
+    def _apply(self):
+        ret = None
 
         for col in self.context['collections']:
             col_path = col["attributes"]["path"]

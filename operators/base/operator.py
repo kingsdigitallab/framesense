@@ -36,16 +36,30 @@ class Operator(ABC):
                 ret.append(arg_name)
         return ret
 
-    @abstractmethod
-    def apply(self, *args, **kwargs):
-        self._stop_service()
+    def apply(self):
+        self._before_apply()
+        ret = self._apply()
+        self._after_apply()
+        return ret
+
+    def _before_apply(self):
+        self.stop_service()
         self._build_container_image()
+
+    @abstractmethod
+    def _apply(self):
         return None
+
+    def _after_apply(self):
+        self.stop_service()
 
     def _get_operator_folder_path(self) -> Path:
         # /home/u/src/prj/tools/framesense/operators/make_shots_scenedetect
         return Path(inspect.getfile(type(self))).parent
 
+    def _get_operator_name(self) -> str:
+        return self._get_operator_folder_path().name
+    
     def _get_container_image_name(self):
         ret = None
         
@@ -148,7 +162,7 @@ class Operator(ABC):
     def _start_service_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, wait_for_message=''):
         if self.service:
             # we can't reuse it b/c the bindings could be different
-            self._stop_service()
+            self.stop_service()
 
         print(f'Waiting for service in container...')
         self.service = self._run_in_operator_container(command_args, binding, same_user=same_user, port_mapping=port_mapping, is_service=True)
@@ -184,7 +198,7 @@ class Operator(ABC):
 
         return ret
     
-    def _stop_service(self):
+    def stop_service(self):
         if self._is_service_running():
             service_name = self._get_container_name('service')
 
@@ -212,6 +226,54 @@ class Operator(ABC):
 
         self.service = None
         self.service_output = ''
+        self.service_collection_path = None
+    
+    def _call_service_processor(self, input_file_path: Path, collection_path: Path):
+        ret = ''
+
+        # current_time = datetime.now()
+        # iso_string = current_time.strftime("%Y-%m-%d-%M-%S-%f")
+
+        binding = [
+            collection_path, 
+            '/data'
+        ]
+
+        command_args = [
+            'python',
+            'processor.py',
+            'serve'
+        ]
+
+        if self.service_collection_path != str(collection_path):
+            self._start_service_in_operator_container(command_args, binding, same_user=True, port_mapping=[5000, 5000], wait_for_message='Serving Flask app')
+            self.service_collection_path = str(collection_path)
+
+        # send request to localhost:5000/process?input_path=frame_file_path
+
+        # command_args = [
+        #     'python',
+        #     'processor.py',
+        #     frame_file_path
+        # ]
+
+        # res = self._run_in_operator_container(command_args, binding, same_user=True)
+
+        # response = json.loads(res.stdout)
+
+        input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
+        
+        print(input_file_path.relative_to(binding[0]))
+        response = self._fetch_json(f'http://localhost:5000/process?input_path={input_file_path_in_container}')
+
+        error = response.get('error', '')
+        if not error:
+            ret = response.get('result', '')
+            # print(ret)
+        else:
+            self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
+
+        return ret
 
     def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
         return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service)
@@ -288,8 +350,14 @@ class Operator(ABC):
 
             if port_mapping:
                 engine_command_args += ['-p', f'{port_mapping[0]}:{port_mapping[1]}']
+                # TODO: port mapping for singularity?
             
-            # TODO: port mapping for singularity
+        if engine == 'docker':
+            engine_command_args += ['--gpu', 'all']
+
+        if engine == 'singularity':
+            # TODO: test
+            engine_command_args += ['--nv']
 
         service_name = self._get_container_name('service')
 
@@ -309,7 +377,7 @@ class Operator(ABC):
             self._run_command(engine_command_args)
 
             # a second to launch the service within the instance
-            # e.g. singularity exec --pwd /app instance://framesense_scale_frames_sssabet_service python detect.py server
+            # e.g. singularity exec --pwd /app instance://framesense_scale_frames_sssabet_service python server.py server
 
             service_args = []
             if app_folder_path.is_dir():
@@ -411,7 +479,7 @@ class Operator(ABC):
         return self.context['framesense_folder_path']
     
     def _error(self, message):
-        print(f'ERROR: {message}', file=sys.stderr)
+        print(f'ERROR: {message} ({self._get_operator_name()})', file=sys.stderr)
         sys.exit(1)
 
     def _is_verbose(self):

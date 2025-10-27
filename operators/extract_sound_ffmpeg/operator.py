@@ -20,8 +20,8 @@ class ExtractSoundFFMPEG(Operator):
         # TODO: add parameter for quality or frequency
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
+    def _apply(self):
+        ret = None
 
         for col in self.context['collections']:
             for video_folder_path in col['attributes']['path'].iterdir():

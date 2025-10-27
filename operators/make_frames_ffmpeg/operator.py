@@ -16,8 +16,8 @@ class MakeFramesFFMPEG(Operator):
         ret['parameters'] = True
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
+    def _apply(self):
+        ret = None
 
         for col in self.context['collections']:
             for shot_file_path in col['attributes']['path'].glob('**/shots/*/*.mp4'):

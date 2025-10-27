@@ -14,9 +14,9 @@ class Annotations(Operator):
         ret['verbose'] = True
         return ret
 
-    def apply(self, *args, **kwargs):
-        ret = super().apply(*args, **kwargs)
-
+    def _apply(self):
+        ret = None
+        
         for col in self.context['collections']:
             print(f'{col["id"]}')
             annotations_path = col["attributes"]["annotations_path"]
