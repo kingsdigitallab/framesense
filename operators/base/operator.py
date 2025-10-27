@@ -353,7 +353,7 @@ class Operator(ABC):
                 # TODO: port mapping for singularity?
             
         if engine == 'docker':
-            engine_command_args += ['--gpu', 'all']
+            engine_command_args += ['--gpus', 'all']
 
         if engine == 'singularity':
             # TODO: test
