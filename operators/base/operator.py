@@ -353,7 +353,8 @@ class Operator(ABC):
                 # TODO: port mapping for singularity?
             
         if engine == 'docker':
-            engine_command_args += ['--gpus', 'all']
+            if self.does_docker_support_gpu():
+                engine_command_args += ['--gpus', 'all']
 
         if engine == 'singularity':
             # TODO: test
@@ -589,3 +590,9 @@ class Operator(ABC):
         ret = '\n'.join(lines)
 
         return ret
+
+    def does_docker_support_gpu(self):
+        command_args = ['docker', 'run', '--rm', '--gpus', 'all', 'alpine']
+        res = subprocess.run(command_args, capture_output=True, text=True, cwd=self._get_operator_folder_path())
+        return res.returncode == 0
+
