@@ -270,7 +270,9 @@ class Operator(ABC):
         ]
 
         if self.service_collection_path != str(collection_path):
-            self._start_service_in_operator_container(command_args, binding, same_user=True, port_mapping=[5000, 5000], wait_for_message='Serving Flask app')
+            # Do NOT use same_user for parakeet b/c host user can vary
+            # Docker build could create dynamically, but not needed
+            self._start_service_in_operator_container(command_args, binding, same_user=False, port_mapping=[SERVICE_PORT, SERVICE_PORT], wait_for_message='Serving Flask app')
             self.service_collection_path = str(collection_path)
 
         # send request to localhost:5000/process?input_path=frame_file_path
@@ -288,7 +290,7 @@ class Operator(ABC):
         input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
         
         self._log(input_file_path.relative_to(binding[0]))
-        response = self._fetch_json(f'http://localhost:5000/process?input_path={input_file_path_in_container}')
+        response = self._fetch_json(f'http://localhost:{SERVICE_PORT}/process?input_path={input_file_path_in_container}')
 
         error = response.get('error', '')
         if not error:
@@ -332,8 +334,7 @@ class Operator(ABC):
         # and the current user on host is not always 1000
         if same_user:
             if engine == 'docker':
-                # engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
-                engine_command_args += ['--user', f'{os.getuid()}:1000']
+                engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
 
         # bindings b/w host & container paths
         bindings = []

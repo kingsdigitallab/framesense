@@ -22,4 +22,8 @@ COPY app/processor.py /models/processor.py
 RUN python /models/processor.py load_model
 RUN rm /models/processor.py
 
-RUN groupadd --gid 1000 u1000 && useradd --uid 1000 --gid 1000 -m u1000
+# ARG USER_ID
+# ARG GROUP_ID
+# RUN groupadd -g $GROUP_ID user && \
+#     useradd -u $USER_ID -g user -m user
+# USER user
