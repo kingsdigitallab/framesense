@@ -201,3 +201,18 @@ in the `FRAMESENSE_DOTENV_PATH` environment variable.
 
 [`./docs/.env`](./docs/.env) is a template 
 that contains a list of all available variables and their default values.
+
+If CUDA_VISIBLE_DEVICES='' 
+the containers will not be able to access the host's GPU.
+
+## GPU access
+
+Docker containers can access the host GPU 
+if the [nvidia container toolkit](https://docs.nvidia.com/ai-enterprise/deployment/vmware/latest/docker.html) is installed.
+
+To check support run this command:
+
+`docker run --rm --gpus all alpine`
+
+If it returns an error related to gpu in the message 
+the toolkit might be missing.

@@ -592,7 +592,11 @@ class Operator(ABC):
         return ret
 
     def does_docker_support_gpu(self):
-        command_args = ['docker', 'run', '--rm', '--gpus', 'all', 'alpine']
-        res = subprocess.run(command_args, capture_output=True, text=True, cwd=self._get_operator_folder_path())
-        return res.returncode == 0
+        ret = False
+        cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", None)
+        if cuda_visible_devices != '':
+            command_args = ['docker', 'run', '--rm', '--gpus', 'all', 'alpine']
+            res = subprocess.run(command_args, capture_output=True, text=True, cwd=self._get_operator_folder_path())
+            ret = res.returncode == 0
 
+        return ret
