@@ -6,7 +6,7 @@
 
 ## Output
 
-* text file (e.g. `gotdfather/00.00.03-62/transciption.json`)
+* text file (e.g. `gotdfather/00.00.03-62/transcription.json`)
 
 ## Method
 

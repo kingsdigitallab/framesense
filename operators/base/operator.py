@@ -10,6 +10,8 @@ import json
 import urllib.request
 import time
 import re
+import http
+from datetime import datetime
 
 ENGINES = ['docker', 'singularity']
 
@@ -403,8 +405,7 @@ class Operator(ABC):
 
         command_as_string = ' '.join([str(a) for a in command_args])
 
-        if self._is_debug():
-            print(f'DEBUG: running command {command_as_string}')
+        self._debug(f'running command {command_as_string}')
 
         error_message = f'Execution of the command has failed: {command_as_string}'
 
@@ -428,8 +429,7 @@ class Operator(ABC):
 
         command_as_string = ' '.join([str(a) for a in command_args])
 
-        if self._is_debug():
-            print(f'DEBUG: running command {command_as_string}')
+        self._debug(f'running command {command_as_string}')
 
         error_message = f'Execution of the command has failed: {command_args}'
 
@@ -480,8 +480,20 @@ class Operator(ABC):
         return self.context['framesense_folder_path']
     
     def _error(self, message):
-        print(f'ERROR: {message} ({self._get_operator_name()})', file=sys.stderr)
-        sys.exit(1)
+        self._log(message, status='ERROR')
+
+    def _debug(self, message):
+        if self._is_debug():
+            self._log(message, status='DEBUG')
+
+    def _log(self, message, status='INFO'):
+        now = datetime.now()
+        print(
+            f'{status}: [{now.hour}:{now.minute}:{now.second}.{now.microsecond // 1e5:01}] {message} ({self._get_operator_name()})', 
+            file=sys.stderr if status == 'ERROR' else sys.stdout
+        )
+        if status == 'ERROR':
+            sys.exit(1)
 
     def _is_verbose(self):
         return bool(self._get_framesense_argument('verbose'))
@@ -542,6 +554,9 @@ class Operator(ABC):
             res = urllib.request.urlopen(url)
         except urllib.error.URLError as e:
             self._error(f'error while fetching {url}, {str(e.reason)}')
+        except http.client.RemoteDisconnected as e:
+            self._error(f'error while fetching {url}, {str(e)}')
+
         content = res.read().decode('utf-8')
         return json.loads(content)
 
