@@ -202,3 +202,4 @@ cython_debug/
 
 /operators/scale_frames_sssabet/app/*.jpg
 .aider*
+*.err

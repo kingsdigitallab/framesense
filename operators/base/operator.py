@@ -14,6 +14,8 @@ import http
 from datetime import datetime
 
 ENGINES = ['docker', 'singularity']
+SERVICE_PORT = 5000
+
 
 class Operator(ABC):
 
@@ -96,7 +98,7 @@ class Operator(ABC):
 
             image_name = self._get_container_image_name()
 
-            print(f'Update {engine} image {image_name}')
+            self._log(f'Update {engine} image {image_name}')
 
             if engine == 'singularity':
 
@@ -166,22 +168,29 @@ class Operator(ABC):
             # we can't reuse it b/c the bindings could be different
             self.stop_service()
 
-        print(f'Waiting for service in container...')
+        self._log(f'Waiting for service in container...')
         self.service = self._run_in_operator_container(command_args, binding, same_user=same_user, port_mapping=port_mapping, is_service=True)
+        
+        os.set_blocking(self.service.stdout.fileno(), False)  # Now readline() will be non-blocking
         
         # TODO: set a timeout
         # start = time.time()
         self.service_output = ''
         i = 0
         while True:
-            # this is blocking call
+            # this is blocking call (NOT, see above)
             line = self.service.stdout.readline()
-            i += 1
-            self.service_output += line
-            if wait_for_message in line:
-                # needed when we stop & start again to avoid operator fetching to fail
-                time.sleep(1)
-                break
+            if line:
+                i += 1
+                self.service_output += line
+                if wait_for_message in line:
+                    # needed when we stop & start again to avoid operator fetching to fail
+                    time.sleep(1)
+                    break
+            else:
+                if self.service.returncode is not None:
+                    # service terminated
+                    self._error(f'Service launch failed ({self.service.returncode}): {self.service_output}')
 
     def _is_service_running(self):
         ret = False
@@ -204,7 +213,7 @@ class Operator(ABC):
         if self._is_service_running():
             service_name = self._get_container_name('service')
 
-            print(f'Stopping service {service_name}...')
+            self._log(f'Stopping service {service_name}...')
 
             engine = self._detect_installed_container_engine()
 
@@ -265,7 +274,7 @@ class Operator(ABC):
 
         input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
         
-        print(input_file_path.relative_to(binding[0]))
+        self._log(input_file_path.relative_to(binding[0]))
         response = self._fetch_json(f'http://localhost:5000/process?input_path={input_file_path_in_container}')
 
         error = response.get('error', '')
@@ -306,10 +315,12 @@ class Operator(ABC):
                 engine_command_args.append('exec')
 
         # to ensure that all files are writable by the current user
-        # but... not all images will like this
+        # but... not all images will like this (1000 may not exist there)
+        # and the current user on host is not always 1000
         if same_user:
             if engine == 'docker':
-                engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
+                # engine_command_args += ['--user', f'{os.getuid()}:{os.getgid()}']
+                engine_command_args += ['--user', f'{os.getuid()}:1000']
 
         # bindings b/w host & container paths
         bindings = []
@@ -413,12 +424,12 @@ class Operator(ABC):
             # cwd is needed for singularity build from .def (with relative path in COPY)
             res = subprocess.run(command_args, capture_output=True, text=True, cwd=self._get_operator_folder_path())
             if res.returncode > 0:
-                print('[START COMMAND ERROR--------------------')
-                print(res.stderr)
-                print('END COMMAND ERROR----------------------]')
+                self._log('[START COMMAND ERROR--------------------')
+                self._log(res.stderr)
+                self._log('END COMMAND ERROR----------------------]')
                 self._error(error_message)
         except Exception as e:
-            print(f'ERROR: {error_message}')
+            self._log(f'{error_message}', 'ERROR')
             raise e
         
         return res
@@ -443,7 +454,7 @@ class Operator(ABC):
                 text=True
             )
         except Exception as e:
-            print(f'ERROR: {error_message}')
+            self._log(f'{error_message}', 'ERROR')
             raise e
         
         return ret
@@ -489,7 +500,7 @@ class Operator(ABC):
     def _log(self, message, status='INFO'):
         now = datetime.now()
         print(
-            f'{status}: [{now.hour}:{now.minute}:{now.second}.{now.microsecond // 1e5:01}] {message} ({self._get_operator_name()})', 
+            f'{status}: [{now.hour}:{now.minute}:{now.second}.{int(now.microsecond * 10)}][{self._get_operator_name()}] {message}', 
             file=sys.stderr if status == 'ERROR' else sys.stdout
         )
         if status == 'ERROR':
