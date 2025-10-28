@@ -172,6 +172,7 @@ class Operator(ABC):
         self.service = self._run_in_operator_container(command_args, binding, same_user=same_user, port_mapping=port_mapping, is_service=True)
         
         os.set_blocking(self.service.stdout.fileno(), False)  # Now readline() will be non-blocking
+        os.set_blocking(self.service.stderr.fileno(), False)  # Now readline() will be non-blocking
         
         # TODO: set a timeout
         # start = time.time()
@@ -180,17 +181,29 @@ class Operator(ABC):
         while True:
             # this is blocking call (NOT, see above)
             line = self.service.stdout.readline()
+            # todo: wait for port instead
             if line:
                 i += 1
                 self.service_output += line
+                # self._debug(line)
                 if wait_for_message in line:
                     # needed when we stop & start again to avoid operator fetching to fail
                     time.sleep(1)
                     break
             else:
-                if self.service.returncode is not None:
+                time.sleep(0.5)
+                # self._debug(self.service.returncode)
+                if self.service.poll() is not None:
                     # service terminated
-                    self._error(f'Service launch failed ({self.service.returncode}): {self.service_output}')
+                    error_lines = ''
+                    for l in self.service.stderr.readline():
+                        if l is None:
+                            break
+                        error_lines += l
+                    info = self.service_output
+                    if error_lines:
+                        info = error_lines
+                    self._error(f'Service launch failed ({self.service.returncode}): {info}')
 
     def _is_service_running(self):
         ret = False
@@ -500,7 +513,7 @@ class Operator(ABC):
     def _log(self, message, status='INFO'):
         now = datetime.now()
         print(
-            f'{status}: [{now.hour}:{now.minute}:{now.second}.{int(now.microsecond * 10)}][{self._get_operator_name()}] {message}', 
+            f'{now.hour}:{now.minute}:{now.second}.{int(now.microsecond / 10e5)} [{status:<5}] [{self._get_operator_name()}] {message}', 
             file=sys.stderr if status == 'ERROR' else sys.stdout
         )
         if status == 'ERROR':

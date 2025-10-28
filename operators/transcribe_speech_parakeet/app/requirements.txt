@@ -3,3 +3,4 @@
 nemo_toolkit[asr]
 megatron-core
 flask
+cuda-python
