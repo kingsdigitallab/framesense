@@ -39,6 +39,7 @@ class TranscribeSpeechParakeet(Operator):
             return
 
         if not sound_path.exists():
+            self._warn(f'Input transcription not found: {sound_path}')
             return
 
         transcription_path = clip_path.parent / 'transcription.json'

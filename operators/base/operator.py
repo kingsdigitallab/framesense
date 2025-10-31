@@ -301,10 +301,10 @@ class Operator(ABC):
 
         return ret
 
-    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
-        return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service)
+    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False):
+        return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service, share_network=share_network)
 
-    def _run_in_container(self, container_image_name, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False):
+    def _run_in_container(self, container_image_name, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False):
         '''Runs a command in a new container.
         command_args: list of items
             NO (the first item is the image name)
@@ -382,6 +382,10 @@ class Operator(ABC):
         if engine == 'docker':
             if self.does_docker_support_gpu():
                 engine_command_args += ['--gpus', 'all']
+
+        if engine == 'docker':
+            if share_network:
+                engine_command_args += ['--network=host']
 
         if engine == 'singularity':
             # TODO: test
@@ -506,6 +510,9 @@ class Operator(ABC):
     
     def _error(self, message):
         self._log(message, status='ERROR')
+
+    def _warn(self, message):
+        self._log(message, status='WARN')
 
     def _debug(self, message):
         if self._is_debug():
@@ -640,3 +647,9 @@ class Operator(ABC):
             ret = res.returncode == 0
 
         return ret
+
+    def read_json(self, file_path: Path):
+        return json.loads(file_path.read_text())
+
+    def write_json(self, file_path: Path, content):
+        file_path.write_text(json.dumps(content, indent=2))
