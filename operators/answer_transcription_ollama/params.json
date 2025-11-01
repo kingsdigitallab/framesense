@@ -1,0 +1,27 @@
+{
+    "ollama_host": "http://localhost:11434",
+    "model": "gemma3:4b",
+    "context_length": 32000,
+    "questions": {
+        "summary": {
+            "question": "summarise in two short sentences the content of the transcription"
+        }
+    },
+    "prompt_template_MULTILINES": [
+        "TASK:",
+        "",
+        "First read the TRANSCRIPTION of a video. Then read the QUESTION about it. And finally provide and ANSWER.",
+        "On each line of the TRANSCRIPTION, there is a time stamp (HH:MM:SS) followed by a sentence spoken in the video at that time.",
+        "",
+        "TRANSCRIPTION:",
+        "",
+        "{transcription}",
+        "",
+        "QUESTION:",
+        "",
+        "{question}",
+        "",
+        "ANSWER:",
+        ""
+    ]
+}

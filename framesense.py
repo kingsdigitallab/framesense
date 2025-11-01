@@ -108,6 +108,7 @@ class FrameSense:
         ret = {
             "framesense_folder_path": Path(__file__).parent.resolve(),
             "collections": self.collections['data'],
+            "collections_meta": self.collections.get('meta', {}),
             'collections_path': self.collections_path,
             "command_args": self.args,
             'debug': self._is_debug()

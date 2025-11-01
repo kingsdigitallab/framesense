@@ -12,6 +12,7 @@ import time
 import re
 import http
 from datetime import datetime
+import shutil
 
 ENGINES = ['docker', 'singularity']
 SERVICE_PORT = 5000
@@ -49,6 +50,53 @@ class Operator(ABC):
     def _before_apply(self):
         self.stop_service()
         self._build_container_image()
+
+        self._load_parameters()
+        self.display_parameters()
+        self._share_parameters_with_container()
+
+    def _load_parameters(self):
+        ret = {}
+
+        # get operator default params
+        params_path = Path(self._get_operator_folder_path() / 'params.json')
+        if params_path.exists():
+            operator_name = self._get_operator_name()
+
+            ret = self.read_json(params_path)
+            
+            # override with collections-level params
+            collections_params = self.context['collections_meta'].get('params', {}).get(operator_name, {})
+            for k, v in collections_params.items():
+                if k not in ret:
+                    self._error(f'Parameter `{k}` is defined your collections file but not supported by the operator. {','.join(ret.keys())}')
+                else:
+                    ret[k] = v
+
+            # override with environment params
+            for k, v in ret.items():
+                v2 = os.getenv(f'{operator_name}_{k}'.upper(), None)
+                if v2 is not None:
+                    target_type = type(v)
+                    ret[k] = target_type(v2)
+        
+        self.transform_keys_with_suffix(ret)
+
+        self.params = ret
+        return ret
+
+    def display_parameters(self):
+        for k, v in self.params.items():
+            v_str = json.dumps(v)
+            self._log(f'{k[:15]:<15}= {v_str[:60]}')
+
+    def _share_parameters_with_container(self):
+        params = self.params
+
+        if params:
+            app_path = self._get_operator_folder_path() / 'app'
+            container_params_path = app_path / 'params.json'
+            self.write_json(container_params_path, params)
 
     @abstractmethod
     def _apply(self):
@@ -521,7 +569,7 @@ class Operator(ABC):
     def _log(self, message, status='INFO'):
         now = datetime.now()
         print(
-            f'{now.hour}:{now.minute}:{now.second}.{int(now.microsecond / 10e5)} [{status:<5}] [{self._get_operator_name()}] {message}', 
+            f'{now.hour:02d}:{now.minute:02d}:{now.second:02d}.{int(now.microsecond / 10e5)} [{status:<5}] [{self._get_operator_name()}] {message}', 
             file=sys.stderr if status == 'ERROR' else sys.stdout
         )
         if status == 'ERROR':
@@ -561,22 +609,23 @@ class Operator(ABC):
             ret = filter.lower() in str(path).lower()
         return ret
 
-    def _read_data_file(self, data_file_path: Path):
+    def _read_data_file(self, data_file_path: Path, is_data_dict=False):
         ret = {
             'meta': {
             },
             'data': [
             ]
         }
+        if is_data_dict:
+            ret['data'] = {}
 
         if data_file_path.is_file():
-            res = data_file_path.read_text()
-            ret = json.loads(res)
+            ret = self.read_json(data_file_path)
 
         return ret
 
     def _write_data_file(self, data_file_path: Path, content: dict):
-        data_file_path.write_text(json.dumps(content, indent=2))
+        self.write_json(data_file_path, content)
 
     def _get_operator_parameters(self):
         return self._get_framesense_argument('parameters')
@@ -653,3 +702,44 @@ class Operator(ABC):
 
     def write_json(self, file_path: Path, content):
         file_path.write_text(json.dumps(content, indent=2))
+
+    def get_param(self, name):
+        ret = self.params[name]
+        return ret
+
+    def set_param(self, name, value):
+        self.params[name] = value
+        self._share_parameters_with_container()
+
+    def _parse_dirty_json(self, dirty_json):
+        'Convert dirty json to a pythons structure. Handles different formattings.'
+        ret = dirty_json
+        if isinstance(dirty_json, str):
+            json_blocks = re.sub(r'(?s)```json\b(.*)```', r'\1', dirty_json)
+            clean_json = json_blocks.strip(' \n')
+            if (clean_json.startswith('{') and clean_json.endswith('}')) or (clean_json.startswith('[') and clean_json.endswith(']')):
+                ret = json.loads(clean_json)
+        return ret
+    
+    def transform_keys_with_suffix(self, data):
+        suffix = '_MULTILINES'
+
+        def transform_func(v):
+            ret = v
+            if isinstance(v, list):
+                ret = '\n'.join(ret)
+            return ret
+
+        if isinstance(data, dict):
+            keys = list(data.keys())
+            for key in keys:
+                val = data[key]
+                if key.endswith(suffix):
+                    val = transform_func(val)
+                    data[key[:-len(suffix)]] = val
+                    del data[key]
+                self.transform_keys_with_suffix(val)
+        elif isinstance(data, list):
+            for item in data:
+                self.transform_keys_with_suffix(item)
+    
