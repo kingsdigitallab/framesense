@@ -1,0 +1,3 @@
+{
+    "command": "ffmpeg -i {input} -c:v libvpx-vp9 -b:v 0 -crf 40 -speed 8 -c:a libopus -b:a 16k -vf scale=640:-1 {output}.webm"
+}

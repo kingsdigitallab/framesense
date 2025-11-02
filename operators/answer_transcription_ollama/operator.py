@@ -67,7 +67,8 @@ class AnswerTranscriptionOllama(Operator):
             # pass the prompt to the container
             self.set_param('prompt', prompt)
 
-            self._log(f'{transcription_path} (question "{question_key})"')
+            prompt_length = len(re.findall(r'\w+', prompt))
+            self._log(f'{transcription_path} (question: {question_key}; words in prompt: {prompt_length})')
 
             binding = [clip_path.parent, Path('/data')]
             command_args = [

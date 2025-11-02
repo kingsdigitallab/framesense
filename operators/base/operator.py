@@ -95,8 +95,9 @@ class Operator(ABC):
 
         if params:
             app_path = self._get_operator_folder_path() / 'app'
-            container_params_path = app_path / 'params.json'
-            self.write_json(container_params_path, params)
+            if app_path.exists():
+                container_params_path = app_path / 'params.json'
+                self.write_json(container_params_path, params)
 
     @abstractmethod
     def _apply(self):
@@ -594,6 +595,7 @@ class Operator(ABC):
         parent_folder_path.stat
         videos = [
             p for p in parent_folder_path.glob("**/*") 
+            # TODO: if p.suffix.lower() in video_extensions
             if any(
                 p.suffix.lower() == ext 
                 for ext in video_extensions
