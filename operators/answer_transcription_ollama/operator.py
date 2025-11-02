@@ -58,7 +58,16 @@ class AnswerTranscriptionOllama(Operator):
             prompt = prompt.replace('{transcription}', transcription_srt)
             prompt = prompt.replace('{question}', question['question'])
 
-            prompt_hash = self.short_hash(f'{self.get_param('model')}; {self.get_param('context_length')}; {prompt}')
+            prompt_hash = self.short_hash('; '.join([
+                str(p)
+                for p
+                in [
+                   self.get_param('model'), 
+                   self.get_param('context_length'),
+                   self.get_param('seed'),
+                   prompt
+                ]
+            ]))
 
             if not self._is_redo() and answers.get(question_key, {}).get('prompt_hash', None) == prompt_hash:
                 # we already got that answer, skip
@@ -85,6 +94,7 @@ class AnswerTranscriptionOllama(Operator):
                 'answer': self._parse_dirty_json(answer),
                 'model': self.get_param('model'),
                 'context_length': self.get_param('context_length'),
+                'seed': self.get_param('seed'),
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
             }

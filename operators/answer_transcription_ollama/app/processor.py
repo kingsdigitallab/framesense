@@ -58,7 +58,8 @@ if __name__ == '__main__':
                         'content': PARAMS['prompt'],
                     },
                 ], options={
-                    'num_ctx': PARAMS['context_length']
+                    'num_ctx': PARAMS['context_length'],
+                    'seed': PARAMS['seed']
                 }
             )
 

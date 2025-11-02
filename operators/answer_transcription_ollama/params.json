@@ -2,6 +2,7 @@
     "ollama_host": "http://localhost:11434",
     "model": "gemma3:4b",
     "context_length": 32000,
+    "seed": 1,
     "questions": {
         "summary": {
             "question": "summarise in two short sentences the content of the transcription"
