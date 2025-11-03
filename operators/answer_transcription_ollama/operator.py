@@ -64,7 +64,7 @@ class AnswerTranscriptionOllama(Operator):
                 in [
                    self.get_param('model'), 
                    self.get_param('context_length'),
-                   self.get_param('seed'),
+                   # self.get_param('seed'),
                    prompt
                 ]
             ]))
@@ -79,16 +79,21 @@ class AnswerTranscriptionOllama(Operator):
             prompt_length = len(re.findall(r'\w+', prompt))
             self._log(f'{transcription_path} (question: {question_key}; words in prompt: {prompt_length})')
 
-            binding = [clip_path.parent, Path('/data')]
-            command_args = [
-                'python', 
-                '/app/processor.py',
-                'answer'
-            ]
-            res = self._run_in_operator_container(command_args, binding, share_network=True)
-            response = json.loads(res.stdout)
-            # TODO: check for errors
-            answer = response['result']
+            answer = '[]'
+            # this condition is important b/c:
+            # qwen will hallucinate if transcription is empty;
+            # also saves time;
+            if re.findall(r'\w', transcription_srt):
+                binding = [clip_path.parent, Path('/data')]
+                command_args = [
+                    'python', 
+                    '/app/processor.py',
+                    'answer'
+                ]
+                res = self._run_in_operator_container(command_args, binding, share_network=True)
+                response = json.loads(res.stdout)
+                # TODO: check for errors
+                answer = response['result']
 
             answers[question_key] = {
                 'answer': self._parse_dirty_json(answer),
@@ -98,7 +103,6 @@ class AnswerTranscriptionOllama(Operator):
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
             }
-
         
         # if not self._is_redo():
         #     # TODO: better method: remove all questions which are already answered
