@@ -27,3 +27,6 @@ RUN rm /models/processor.py
 # RUN groupadd -g $GROUP_ID user && \
 #     useradd -u $USER_ID -g user -m user
 # USER user
+
+ENV TRANSFORMERS_CACHE=/hf_cache
+

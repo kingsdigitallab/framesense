@@ -217,8 +217,9 @@ class Operator(ABC):
             # we can't reuse it b/c the bindings could be different
             self.stop_service()
 
-        self._log(f'Waiting for service in container...')
+        self._log(f'Launching service in container...')
         self.service = self._run_in_operator_container(command_args, binding, same_user=same_user, port_mapping=port_mapping, is_service=True)
+        self._log(f'Waiting for service...')
         
         os.set_blocking(self.service.stdout.fileno(), False)  # Now readline() will be non-blocking
         os.set_blocking(self.service.stderr.fileno(), False)  # Now readline() will be non-blocking
@@ -238,6 +239,7 @@ class Operator(ABC):
                 if wait_for_message in line:
                     # needed when we stop & start again to avoid operator fetching to fail
                     time.sleep(1)
+                    self._log(f'Service is running...')
                     break
             else:
                 time.sleep(0.5)
@@ -405,6 +407,15 @@ class Operator(ABC):
                     '--pwd',
                     '/app'
                 ]
+        
+        # hugging face cache
+        hf_cache_path: Path = self.context['framesense_folder_path'] / 'hf_cache'
+        if not hf_cache_path.exists():
+            hf_cache_path.mkdir(exist_ok=True)
+        bindings.append([
+            hf_cache_path,
+            '/hf_cache'
+        ])
 
         # user-defined binding
         for abinding in bindings: 

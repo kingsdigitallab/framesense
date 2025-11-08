@@ -1,10 +1,6 @@
 from pathlib import Path
 from ..base.operator import Operator
-import re
 import json
-from datetime import datetime
-import subprocess
-import shutil
 
 # https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2
 

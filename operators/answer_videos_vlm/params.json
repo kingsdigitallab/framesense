@@ -1,0 +1,13 @@
+{
+    "model": "Qwen/Qwen3-VL-4B-Instruct",
+    "seed": 3407,
+    "max_new_tokens": 2000,
+    "questions": {
+        "summary": {
+            "question": "summarise in two short sentences the content of the video"
+        }
+    },
+    "prompt_template_MULTILINES": [
+        "{question}"
+    ]
+}
