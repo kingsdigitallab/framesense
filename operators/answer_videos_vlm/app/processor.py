@@ -35,6 +35,15 @@ on failure:
 
 '''
 
+def get_vram():
+    free, total = torch.cuda.mem_get_info()
+    used = total - free
+    return used / 1024**3
+
+def show_vram():
+    print(f"* VRAM used: {get_vram():.2f} GB")
+
+
 class VQA: 
     '''...
     '''
@@ -140,6 +149,10 @@ if __name__ == '__main__':
                     response = {
                         'error': '',
                         'result': res,
+                        'stats': {
+                            'vram': get_vram(),
+                            # 'duration': t1 - t0,
+                        }
                     }
                 else:
                     response = {
@@ -167,6 +180,7 @@ if __name__ == '__main__':
             response = {
                 'error': '',
                 'result': res,
+
             }
 
     print(json.dumps(response, indent=2))

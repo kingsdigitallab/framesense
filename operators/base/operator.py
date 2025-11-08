@@ -69,7 +69,7 @@ class Operator(ABC):
             collections_params = self.context['collections_meta'].get('params', {}).get(operator_name, {})
             for k, v in collections_params.items():
                 if k not in ret:
-                    self._error(f'Parameter `{k}` is defined your collections file but not supported by the operator. {','.join(ret.keys())}')
+                    self._error(f'Parameter `{k}` is defined your collections file but not supported by the operator. {",".join(ret.keys())}')
                 else:
                     ret[k] = v
 
