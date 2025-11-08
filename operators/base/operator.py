@@ -313,7 +313,10 @@ class Operator(ABC):
         self.service_collection_path = None
     
     def _call_service_processor(self, input_file_path: Path, collection_path: Path):
-        ret = ''
+        ret = {
+            'error': 'unknown error',
+            'result': [],
+        }
 
         # current_time = datetime.now()
         # iso_string = current_time.strftime("%Y-%m-%d-%M-%S-%f")
@@ -354,8 +357,7 @@ class Operator(ABC):
 
         error = response.get('error', '')
         if not error:
-            ret = response.get('result', '')
-            # print(ret)
+            ret = response
         else:
             self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
 
