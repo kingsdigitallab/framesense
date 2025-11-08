@@ -42,6 +42,6 @@ class TranscribeSpeechParakeet(Operator):
 
         if self._is_redo() or not transcription_path.exists():
             # self._log(transcription_path)
-            res = self._call_service_processor(sound_path, collection_path)
-            transcription_path.write_text(json.dumps(res, indent=2))
+            response = self._call_service_processor(sound_path, collection_path)
+            transcription_path.write_text(json.dumps(response['result'], indent=2))
 

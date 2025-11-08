@@ -61,9 +61,7 @@ class AnswerVideosVLM(Operator):
             prompt_length = len(re.findall(r'\w+', prompt))
             self._log(f'{video_path} (question: {question_key}; words in prompt: {prompt_length})')
 
-            res = self._call_service_processor(video_path, collection_path)
-            # res = self._run_in_operator_container(command_args, binding, share_network=True)
-            response = json.loads(res.stdout)
+            response = self._call_service_processor(video_path, collection_path)
             # TODO: check for errors
             answer = response['result']
 

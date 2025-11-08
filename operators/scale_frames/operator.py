@@ -52,8 +52,8 @@ class ScaleFrames(Operator):
                 frames_data['data'].append(frame_data)
 
             if self._is_redo() or not frame_data['attributes'].get(scale_attribute_name, None):
-                print(frame_file_path)
-                frame_data['attributes'][scale_attribute_name] = self._recognise_frame_scale(frame_file_path, collection_path)
+                res = self._recognise_frame_scale(frame_file_path, collection_path)
+                frame_data['attributes'][scale_attribute_name] = res
 
         self._write_data_file(frames_meta_path, frames_data)
                 

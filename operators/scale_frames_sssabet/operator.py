@@ -16,7 +16,9 @@ class ScaleFramesSSSabet(ScaleFrames):
     '''
 
     def _recognise_frame_scale(self, frame_file_path: Path, collection_path: Path):
-        return self._call_service_processor(frame_file_path, collection_path)
+        # TODO: error management
+        response = self._call_service_processor(frame_file_path, collection_path)
+        return response['result']
 
     def _get_scale_attribute_name(self):
         '''The name of the attribute written by this operator in the frames.json file'''
