@@ -188,6 +188,9 @@ class Operator(ABC):
                     res = self._run_command([
                         'singularity',
                         'build',
+                        # singularity can easily run out space on /tmp
+                        # b/c of nvidia and torch python packages
+                        '--tmpdir', self._get_framesense_tmp_path(),
                         singularity_build_method, 
                         singularity_image_path,
                         singularity_definition_path
@@ -202,6 +205,12 @@ class Operator(ABC):
                     operator_folder_path
                 ])
 
+    def _get_framesense_tmp_path(self):
+        ret: Path = self.context['framesense_folder_path'] / 'tmp'
+        if not ret.exists():
+            ret.mkdir(exist_ok=True)
+        return ret
+    
     def _is_logged_into_singularity_remote(self):
         ret = False
 
@@ -494,7 +503,7 @@ class Operator(ABC):
 
         command_as_string = ' '.join([str(a) for a in command_args])
 
-        self._debug(f'running command {command_as_string}')
+        self._debug(f'running command: {command_as_string}')
 
         error_message = f'Execution of the command has failed: {command_as_string}'
 
@@ -518,7 +527,7 @@ class Operator(ABC):
 
         command_as_string = ' '.join([str(a) for a in command_args])
 
-        self._debug(f'running command {command_as_string}')
+        self._debug(f'running command: {command_as_string}')
 
         error_message = f'Execution of the command has failed: {command_args}'
 

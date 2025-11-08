@@ -205,3 +205,4 @@ cython_debug/
 *.err
 **/app/params.json
 *.whl
+/tmp
