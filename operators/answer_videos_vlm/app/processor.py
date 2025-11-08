@@ -7,7 +7,7 @@ from transformers import Qwen3VLForConditionalGeneration, Qwen3VLMoeForCondition
 import signal
 import os
 # from qwen_vl_utils import process_vision_info
-# from datetime import datetime
+from datetime import datetime
 
 PARAMS = json.loads(Path('/app/params.json').read_text())
 
@@ -43,6 +43,10 @@ def get_vram():
 def show_vram():
     print(f"* VRAM used: {get_vram():.2f} GB")
 
+def format_time(delta):
+    hours, remainder = divmod(delta.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"    
 
 class VQA: 
     '''...
@@ -145,13 +149,17 @@ if __name__ == '__main__':
                 video_path = request.args.get('input_path', None)
 
                 if video_path:
+                    vram_before = get_vram()
+                    t0 = datetime.now()
                     res = answerer.answer(video_path)
+                    t1 = datetime.now()
                     response = {
                         'error': '',
                         'result': res,
                         'stats': {
-                            'vram': get_vram(),
-                            # 'duration': t1 - t0,
+                            'vram_before': vram_before,
+                            'vram_after': get_vram(),
+                            'duration': format_time(t1 - t0),
                         }
                     }
                 else:

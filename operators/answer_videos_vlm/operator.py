@@ -74,6 +74,7 @@ class AnswerVideosVLM(Operator):
                 'seed': self.get_param('seed'),
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
+                'stats': response.get('stats', {})
             }
         
         self._write_data_file(video_answers_path, answers_file_content)

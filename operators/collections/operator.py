@@ -25,10 +25,10 @@ class Collections(Operator):
                 col_summary = f'has {len(video_paths)} videos under {col_path}'
             else:
                 col_summary = "NOT FOUND"
-            print(col["id"], col_summary)
+            self._log(f'{col["id"]} {col_summary}')
 
             if self._is_verbose():
                 for video_path in sorted(video_paths):
-                    print(f'  {video_path.name}')
+                    self._log(f'  {video_path.name}')
 
         return ret

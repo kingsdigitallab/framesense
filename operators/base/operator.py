@@ -569,7 +569,7 @@ class Operator(ABC):
         return ret
 
     def _get_singularity_folder_path(self) -> Path:
-        ret = self._get_framesense_folder_path() / 'singulary'
+        ret = self._get_framesense_folder_path() / 'singularity'
         if not ret.exists():
             ret.mkdir()
         return ret
