@@ -656,6 +656,7 @@ class Operator(ABC):
 
     def _fetch_json(self, url):
         try:
+            self._debug(f'fetching: {url}')
             res = urllib.request.urlopen(url)
         except urllib.error.URLError as e:
             self._error(f'error while fetching {url}, {str(e.reason)}')
