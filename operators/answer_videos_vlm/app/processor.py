@@ -83,6 +83,8 @@ class VQA:
     def answer(self, video_path):
         video_path = Path(video_path)
 
+        # we need to read it again
+        PARAMS = json.loads(Path('/app/params.json').read_text())
         messages = [
             {
                 "role": "user",
