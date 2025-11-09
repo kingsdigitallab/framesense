@@ -51,7 +51,7 @@ class ExtractSoundFFMPEG(Operator):
                 # "-ar", "44100", # sample rate
                 # "-ac", "2", #  nb of audio channels
                 # "-q:a", str(SOUND_QUALITY_DEFAULT),
-                "-map", "0:a", # maps the first audio stream from the input file
+                "-map", "0:a:0", # maps the first audio stream from the input file
                 "-y", # overwrite output
                 sound_path
             ]
