@@ -611,12 +611,15 @@ class Operator(ABC):
     def _sluggify(self, string):
         return re.sub(r'\W+', '-', str(string).lower()).strip('-')
 
-    def _get_video_file_path(self, parent_folder_path: Path):
+    def _get_video_file_path(self, parent_folder_path: Path, direct_child_only=False):
         video_extensions = [".mp4", ".mkv"]        
         
         parent_folder_path.stat
+        pattern = '**/*'
+        if direct_child_only:
+            pattern = '*'
         videos = [
-            p for p in parent_folder_path.glob("**/*") 
+            p for p in parent_folder_path.glob(pattern) 
             # TODO: if p.suffix.lower() in video_extensions
             if any(
                 p.suffix.lower() == ext 
