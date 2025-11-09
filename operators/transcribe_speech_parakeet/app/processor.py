@@ -4,9 +4,12 @@ import sys
 import json
 from flask import Flask, request, jsonify
 
+PARAMS = json.loads(Path('/app/params.json').read_text())
+
 PORT = 5000
 # https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
-MODEL = "nvidia/parakeet-tdt-0.6b-v3"
+# MODEL = "nvidia/parakeet-tdt-0.6b-v3"
+MODEL = PARAMS['model']
 
 '''
 Usage:

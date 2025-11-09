@@ -18,15 +18,4 @@ COPY app/requirements.txt /models/requirements.txt
 RUN pip install -U pip setuptools wheel
 RUN pip install -r /models/requirements.txt
 
-COPY app/processor.py /models/processor.py
-RUN python /models/processor.py load_model
-RUN rm /models/processor.py
-
-# ARG USER_ID
-# ARG GROUP_ID
-# RUN groupadd -g $GROUP_ID user && \
-#     useradd -u $USER_ID -g user -m user
-# USER user
-
-ENV TRANSFORMERS_CACHE=/hf_cache
-
+ENV HF_HOME=/hf_cache

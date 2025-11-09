@@ -206,3 +206,4 @@ cython_debug/
 **/app/params.json
 *.whl
 /tmp
+/hf_cache
