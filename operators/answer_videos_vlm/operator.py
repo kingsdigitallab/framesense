@@ -21,6 +21,8 @@ class AnswerVideosVLM(Operator):
             collection_path = col['attributes']['path']
             for video_folder_path in collection_path.iterdir():
                 video_path = self._get_video_file_path(video_folder_path, direct_child_only=True)
+                if video_path is None: 
+                    continue
                 self._question_video(video_path, collection_path)
 
         return ret
