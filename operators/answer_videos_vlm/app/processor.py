@@ -11,7 +11,7 @@ from datetime import datetime
 
 PARAMS = json.loads(Path('/app/params.json').read_text())
 
-torch.manual_seed(PARAMS['seed'])
+torch.manual_seed(int(PARAMS['seed']))
 
 PORT = 5000
 
@@ -110,7 +110,7 @@ class VQA:
         # Inference: Generation of the output
         generated_ids = self.model.generate(
             **inputs,
-            max_new_tokens=PARAMS['max_new_tokens'],
+            max_new_tokens=int(PARAMS['max_new_tokens']),
             temperature=0.7,
             top_k=20,
             top_p=0.8,
