@@ -1,3 +1,4 @@
+import traceback
 import torch 
 from pathlib import Path
 import sys
@@ -148,28 +149,37 @@ if __name__ == '__main__':
 
             @app.route('/process', methods=['GET'])
             def transcribe():
-                video_path = request.args.get('input_path', None)
+                try:
+                    video_path = request.args.get('input_path', None)
 
-                if video_path:
-                    vram_before = get_vram()
-                    t0 = datetime.now()
-                    res = answerer.answer(video_path)
-                    t1 = datetime.now()
-                    response = {
-                        'error': '',
-                        'result': res,
-                        'stats': {
-                            'vram_before': vram_before,
-                            'vram_after': get_vram(),
-                            'duration': format_time(t1 - t0),
+                    if video_path:
+                        vram_before = get_vram()
+                        t0 = datetime.now()
+                        res = answerer.answer(video_path)
+                        t1 = datetime.now()
+                        response = {
+                            'error': '',
+                            'result': res,
+                            'stats': {
+                                'vram_before': vram_before,
+                                'vram_after': get_vram(),
+                                'duration': format_time(t1 - t0),
+                            }
                         }
-                    }
-                else:
-                    response = {
-                        'error': 'input image not provided',
-                        'result': [],
-                    }
-                
+                    else:
+                        response = {
+                            'error': 'input image not provided',
+                            'result': [],
+                        }
+                except Exception as e:
+                    error_message = str(e)
+                    stack_trace = traceback.format_exc()
+                    # Return or use both as needed
+                    error_path = Path('/app/error.log')
+                    log_message = f'''Message: {error_message}\nStack Trace:\n{stack_trace}'''
+                    error_path.write_text(log_message)
+                    raise e
+
                 return jsonify(response)
 
             @app.route('/stop', methods=['GET'])
