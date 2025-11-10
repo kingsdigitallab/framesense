@@ -118,16 +118,16 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 ### Sound
 
-* **[extract_sound_ffmpeg](operators/extract_sound_ffmpeg/):
+* **[extract_sound_ffmpeg](operators/extract_sound_ffmpeg/)**:
     Extract clip audio channel into a sound file
-* **[transcode_clips_ffmpeg](operators/transcode_clips_ffmpeg/):
+* **[transcode_clips_ffmpeg](operators/transcode_clips_ffmpeg/)**:
     Convert a clip from one format to another
 
 #### Question answering
 
-* **[answer_videos_vlm](operators/answer_videos_vlm/):
+* **[answer_videos_vlm](operators/answer_videos_vlm/)**:
     Answer questions about a video file using a video/vision language model
-* **[answer_transcription_ollama](operators/answer_transcription_ollama/):
+* **[answer_transcription_ollama](operators/answer_transcription_ollama/)**:
     Answer questions about a clip transcription using a large language model
 
 ### Design principles
