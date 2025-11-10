@@ -116,6 +116,20 @@ Check the README.md under each operator folder for a specification card. (Work i
 * **[scale_frames_sssabet](operators/scale_frames_sssabet)**:
     Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
 
+### Sound
+
+* **[extract_sound_ffmpeg](operators/extract_sound_ffmpeg/):
+    Extract clip audio channel into a sound file
+* **[transcode_clips_ffmpeg](operators/transcode_clips_ffmpeg/):
+    Convert a clip from one format to another
+
+#### Question answering
+
+* **[answer_videos_vlm](operators/answer_videos_vlm/):
+    Answer questions about a video file using a video/vision language model
+* **[answer_transcription_ollama](operators/answer_transcription_ollama/):
+    Answer questions about a clip transcription using a large language model
+
 ### Design principles
 
 It is expected that each operator:
