@@ -64,7 +64,9 @@ class AnswerVideosVLM(Operator):
             self._log(f'{video_path} (question: {question_key}; words in prompt: {prompt_length})')
 
             response = self._call_service_processor(video_path, collection_path)
-            # TODO: check for errors
+            if response['error']:
+                self._error(response['error'])
+
             answer = response['result']
 
             answers[question_key] = {
@@ -77,7 +79,7 @@ class AnswerVideosVLM(Operator):
                 'stats': response.get('stats', {})
             }
         
-        self._write_data_file(video_answers_path, answers_file_content)
+            self._write_data_file(video_answers_path, answers_file_content)
 
     def short_hash(self, s, length=8):
         hash_object = hashlib.sha256(s.encode('utf-8'))

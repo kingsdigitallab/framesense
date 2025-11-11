@@ -178,7 +178,11 @@ if __name__ == '__main__':
                     error_path = Path('/app/error.log')
                     log_message = f'''Message: {error_message}\nStack Trace:\n{stack_trace}'''
                     error_path.write_text(log_message)
-                    raise e
+                    response = {
+                        'error': f'{type(e)}: {error_message}',
+                        'result': [],
+                        'stack': stack_trace
+                    }
 
                 return jsonify(response)
 
