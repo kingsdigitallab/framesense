@@ -120,7 +120,9 @@ class FrameSense:
         return str(is_debug).lower() in ['1', 'true', 'yes', 'on']
 
     def _is_verbose(self):
-        return self.args.verbose
+        if self.args.verbose:
+            return 1
+        return 0
 
     def _read_collections_file(self):
         '''read collection file'''

@@ -19,9 +19,11 @@ class Collections(Operator):
             is_dir = (col_path).is_dir()
             video_paths = []
             if is_dir:
-                for video_path in col_path.iterdir():
-                    if video_path.is_dir():
-                        video_paths.append(video_path)
+                for video_folder_path in col_path.iterdir():
+                    if video_folder_path.is_dir():
+                        video_path = self._get_video_file_path(video_folder_path, True)
+                        if video_path:
+                            video_paths.append(video_path)
                 col_summary = f'has {len(video_paths)} videos under {col_path}'
             else:
                 col_summary = "NOT FOUND"
@@ -29,6 +31,7 @@ class Collections(Operator):
 
             if self._is_verbose():
                 for video_path in sorted(video_paths):
-                    self._log(f'  {video_path.name}')
+
+                    self._log(f'  {video_path.stat().st_size / 1024 / 1024 / 1024:7.3f} GB  {video_path.relative_to(col_path)}')
 
         return ret
