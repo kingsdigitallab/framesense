@@ -1,6 +1,6 @@
 # 🎞️FrameSense
 
-FrameSense is a highly modular command line tool to pre-process your video collections.
+FrameSense is a highly modular command line tool designed to process your video collections.
 
 **Status**: alpha
 
@@ -186,7 +186,7 @@ you may encounter this error:
 
 `FATAL:   fakeroot requires to set 'allow setuid = yes' in /etc/singularity/singularity.conf`
 
-## Feature and Bugs
+## Features and Bugs
 
 Please use [github issue tracker](https://github.com/kingsdigitallab/framesense/issues) to report bugs or request new features.
 
