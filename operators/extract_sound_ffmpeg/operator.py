@@ -48,7 +48,7 @@ class ExtractSoundFFMPEG(Operator):
                 # "-vn", 
                 # "-acodec", "libmp3lame", # mp3
                 # "-acodec", "pcm_s16le", # wav
-                # "-ar", "44100", # sample rate
+                "-ar", str(self.get_param('audio_rate')), # sample rate
                 # "-ac", "2", #  nb of audio channels
                 # "-q:a", str(SOUND_QUALITY_DEFAULT),
                 "-map", "0:a:0", # maps the first audio stream from the input file

@@ -7,7 +7,7 @@ import subprocess
 import shutil
 
 class TranscodeClipsFFMPEG(Operator):
-    '''Extract sound from clips using FFMPEG'''
+    '''Convert a clip file to another video format'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()

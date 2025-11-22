@@ -5,7 +5,7 @@ EXPOSE 5000
 
 # Install dependencies
 RUN apt update && \
-    apt install -y --no-install-recommends wget vim build-essential && \
+    apt install -y --no-install-recommends wget vim build-essential ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory (will be mounted)
