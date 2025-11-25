@@ -69,7 +69,7 @@ class MakeFramesFFMPEG(Operator):
                 '-count_frames',
                 '-show_entries', 
                 # TODO: nb_read_frames is accurate but slower than nb_frames
-                'format=duration:stream=nb_frames', 
+                'format=duration:stream=nb_read_frames', 
                 '-of', 'json', 
                 shot_file_path,
             ]
@@ -93,19 +93,28 @@ class MakeFramesFFMPEG(Operator):
 
             metadata = json.loads(res.stdout)
             duration_seconds = float(metadata['format']['duration'])
+            duration_frames = float(metadata['streams'][0]['nb_read_frames'])
 
             # now get first, middle and last frames
             # TODO: improve that sampling
             samples = []
-            # .99 or 1 won't match a frame
-            places = [0, 0.5, .95]
+            # .99 or 1 won't match a frame with timecode
+            places = [
+                [0, 'first'], 
+                [0.5, 'mid'], 
+                [1, 'last'],
+            ]
+
+            # ffmpeg -i shot.mp4 -vf "select=eq(n\,4)" -vframes 1 -update 1 00004.jpg
 
             for i, place in enumerate(places):
                 samples += [
-                    '-ss',
-                    str(timedelta(seconds=duration_seconds * place)),
+                    # '-ss', str(timedelta(seconds=duration_seconds * place)),
+                    '-vf', f"""select='eq(n,{int(place[0] * (duration_frames - 1))})'""",
                     '-vframes', '1',
-                    shot_folder_path / f'{i+1:04d}.jpg'
+                    '-update', '1', # this is too supress warning about no pattern in filename
+                    # shot_folder_path / f'{i+1:04d}.jpg'
+                    shot_folder_path / f'{place[1]}.jpg'
                 ]
 
         # ffmpeg -i input.mp4 -ss 00:00:10 -vframes 1 frame1.png -ss 00:00:20 -vframes 1 frame2.png -ss 00:00:30 -vframes 1 frame3.png

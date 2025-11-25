@@ -207,3 +207,5 @@ cython_debug/
 *.whl
 /tmp
 /hf_cache
+transcription.json
+*.wav
