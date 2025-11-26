@@ -1,22 +1,25 @@
-# transcribe_speech_parakeet
+# transcribe_transcription_ollama
 
 ## Input
 
-* clips sounds (e.g. `gotdfather/00.00.03-62/00.00.03-62.wav`)
+* a transcription file
+* a set of questions
 
 ## Output
 
-* text file (e.g. `gotdfather/00.00.03-62/transcription.json`)
+* answer in a json file
 
 ## Method
 
-Uses speech-to-text parakeet model
+Uses a vision language model run by Ollama.
 
-Applies to all clips in the collections.
+You must have Ollama installed and running on a computer.
+
+Applies to all transcriptions in the collections.
 
 ## Run if
 
-No sound file already exists.
+The answer to that same question by the same model over the same transcription is not found in frames.json.
 
 ## Redo (-r)
 

@@ -1,22 +1,26 @@
-# transcribe_speech_parakeet
+# answer_videos_vlm
 
 ## Input
 
-* clips sounds (e.g. `gotdfather/00.00.03-62/00.00.03-62.wav`)
+* a video file
+* a set of questions
 
 ## Output
 
-* text file (e.g. `gotdfather/00.00.03-62/transcription.json`)
+* answers in a json file `video_answers.json`
 
 ## Method
 
-Uses speech-to-text parakeet model
+Uses Qwen video language model run with Hugging face transformers API.
 
-Applies to all clips in the collections.
+Applies to all videos in the collections.
+
+Note that qwen models require a GPU with a lot of VRAM (60-85 GB).
+We recommend qwen3-vl-32b-instruct for best results.
 
 ## Run if
 
-No sound file already exists.
+The answer to that same question by the same model over the same video is not found in the output file.
 
 ## Redo (-r)
 

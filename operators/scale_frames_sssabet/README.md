@@ -18,33 +18,34 @@ with a `scale_sssabet` attribute under each item in the frames list.
 
 Examples of frames.json after running this operator.
 
-```
+```json
 {
   "meta": {},
-  "data": [
-    {
-      "id": "0001",
-      "attributes": {
-        "scale_sssabet": "FS"
+  "data": {
+    "middle.jpg": {
+      "shot_scale": {
+        "value": "MS",
+        "operator": "scale_frames_sssabet",
+        "method": ""
+      },
+    },
+    "last.jpg": {
+      "shot_scale": {
+        "value": "MS",
+        "operator": "scale_frames_sssabet",
+        "method": ""
       }
     },
-    {
-      "id": "0003",
-      "attributes": {
-        "scale_sssabet": "FS"
-      }
-    },
-    {
-      "id": "0002",
-      "attributes": {
-        "scale_sssabet": "ECS"
+    "first.jpg": {
+      "shot_scale": {
+        "value": "FS",
+        "operator": "scale_frames_sssabet",
+        "method": ""
       }
     }
-  ]
+  }
 }
 ```
-
-The first entry in that frames list with `"id": "0001"` refers to frame image 0001.jpg in the same folder.
 
 ## Concepts
 

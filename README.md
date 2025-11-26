@@ -129,6 +129,8 @@ Check the README.md under each operator folder for a specification card. (Work i
     Answer questions about a video file using a video/vision language model
 * **[answer_transcription_ollama](operators/answer_transcription_ollama/)**:
     Answer questions about a clip transcription using a large language model
+* **[answer_frames_ollama](operators/answer_frames_ollama/)**:
+    Answer questions about a frame using a vision language model
 
 ### Design principles
 
