@@ -1,5 +1,5 @@
 {
-    "ollama_host": "http://localhost:11435",
+    "ollama_host": "http://localhost:11434",
     "model": "moondream:1.8b",
     "seed": 1,
     "frame_filter": "middle",

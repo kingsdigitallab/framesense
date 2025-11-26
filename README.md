@@ -116,10 +116,13 @@ Check the README.md under each operator folder for a specification card. (Work i
 * **[scale_frames_sssabet](operators/scale_frames_sssabet)**:
     Shot scale classification from frames based on //github.com/sssabet/Shot_Type_Classification
 
-### Sound
+#### Sound
 
 * **[extract_sound_ffmpeg](operators/extract_sound_ffmpeg/)**:
     Extract clip audio channel into a sound file
+
+#### Transcoding
+
 * **[transcode_clips_ffmpeg](operators/transcode_clips_ffmpeg/)**:
     Convert a clip from one format to another
 
