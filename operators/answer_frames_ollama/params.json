@@ -1,0 +1,14 @@
+{
+    "ollama_host": "http://localhost:11435",
+    "model": "moondream:1.8b",
+    "seed": 1,
+    "frame_filter": "middle",
+    "questions": {
+        "describe_short": {
+            "question": "describe this image in one short sentence"
+        }
+    },
+    "prompt_template_MULTILINES": [
+        "{question}"
+    ]
+}

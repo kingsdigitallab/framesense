@@ -637,6 +637,8 @@ class Operator(ABC):
         return ret
 
     def _read_data_file(self, data_file_path: Path, is_data_dict=False):
+        ret = {}
+
         if data_file_path.is_file():
             ret = self.read_json(data_file_path)
         

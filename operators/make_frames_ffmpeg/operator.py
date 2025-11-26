@@ -101,7 +101,7 @@ class MakeFramesFFMPEG(Operator):
             # .99 or 1 won't match a frame with timecode
             places = [
                 [0, 'first'], 
-                [0.5, 'mid'], 
+                [0.5, 'middle'], 
                 [1, 'last'],
             ]
 

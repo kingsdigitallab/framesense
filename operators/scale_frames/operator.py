@@ -35,9 +35,6 @@ class ScaleFrames(Operator):
         frames_meta_path = Path(frames_folder_path / 'frames.json')
         frames_meta_content = self._read_data_file(frames_meta_path, is_data_dict=True)
         frames_data = frames_meta_content['data']
-        if not isinstance(frames_data, dict):
-            frames_data = {}
-            frames_meta_content['data'] = frames_data
 
         frame_file_paths = list(frames_folder_path.glob('*.jpg'))
         for frame_file_path in frame_file_paths:
@@ -49,7 +46,7 @@ class ScaleFrames(Operator):
 
             if self._is_redo() or not frame_data.get(scale_attribute_name, None):
                 res = self._recognise_frame_scale(frame_file_path, collection_path)
-                frame_data['scale_attribute_name'] = {
+                frame_data[scale_attribute_name] = {
                     'value': res,
                     'operator': self._get_operator_name(),
                     'method': '',
