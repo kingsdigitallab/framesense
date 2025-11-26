@@ -637,18 +637,18 @@ class Operator(ABC):
         return ret
 
     def _read_data_file(self, data_file_path: Path, is_data_dict=False):
-        ret = {
-            'meta': {
-            },
-            'data': [
-            ]
-        }
-        if is_data_dict:
-            ret['data'] = {}
-
         if data_file_path.is_file():
             ret = self.read_json(data_file_path)
+        
+        if not ret:
+            ret = {}
 
+        data_type = dict if is_data_dict else list 
+        if not isinstance(ret.get('data', None), data_type):
+            ret['data'] = data_type()
+        if not isinstance(ret.get('meta', None), data_type):
+            ret['meta'] = {}
+            
         return ret
 
     def _write_data_file(self, data_file_path: Path, content: dict):
