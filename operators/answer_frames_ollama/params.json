@@ -3,6 +3,7 @@
     "model": "moondream:1.8b",
     "seed": 1,
     "frame_filter": "middle",
+    "context_length": 2000,
     "questions": {
         "describe_short": {
             "question": "describe this image in one short sentence"

@@ -57,7 +57,7 @@ if __name__ == '__main__':
                     'images': [first_arg],
                 },
             ], options={
-                # 'num_ctx': PARAMS['context_length'],
+                'num_ctx': PARAMS['context_length'],
                 'seed': PARAMS['seed'],
             }
         )
