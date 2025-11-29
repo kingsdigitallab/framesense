@@ -26,3 +26,12 @@ Supported.
 
 Supported
 
+## Resource usage
+
+The RAM/VRAM usage depends on the size of the model 
+and the duration of the input sound file.
+
+If you get an Out of Memory error while using the GPU,
+and you have much more RAM than VRAM you may have more luck with
+`CUDA_VISIBLE_DEVICES='' python framesense.py extract_sound_ffmpeg`
+.

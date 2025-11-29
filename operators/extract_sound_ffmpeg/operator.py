@@ -1,10 +1,5 @@
 from pathlib import Path
 from ..base.operator import Operator
-import re
-import json
-from datetime import datetime
-import subprocess
-import shutil
 
 # quality of mp3 output from 0 (poorest) to 9 (best)
 SOUND_QUALITY_DEFAULT = 4
