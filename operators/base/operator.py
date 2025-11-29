@@ -664,7 +664,9 @@ class Operator(ABC):
             self._debug(f'fetching: {url}')
             res = urllib.request.urlopen(url)
         except urllib.error.URLError as e:
-            self._debug(f'fetch error: {e.read()}')
+            error_message = e.read()
+            error_message = error_message.replace('\\n', '\n')
+            self._debug(f'fetch error: {error_message}')
             self._error(f'error while fetching {url}, {str(e.reason)}')
         except http.client.RemoteDisconnected as e:
             self._error(f'error while fetching {url}, {str(e)}')
