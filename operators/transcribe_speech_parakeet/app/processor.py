@@ -3,6 +3,8 @@ from pathlib import Path
 import sys
 import json
 from flask import Flask, request, jsonify
+import signal
+import os
 
 PARAMS = json.loads(Path('/app/params.json').read_text())
 
@@ -72,7 +74,6 @@ class Transcriber:
         self.model.change_attention_model(self_attention_model="rel_pos_local_attn", att_context_size=[256, 256])
 
     def transcribe(self, sound_path):
-        ret = ''
         sound_path = Path(sound_path)
 
         output = self.model.transcribe([str(sound_path)], timestamps=True)
@@ -120,7 +121,6 @@ if __name__ == '__main__':
             @app.route('/stop', methods=['GET'])
             def stop():
                 # yes... Flask does NOT have a shutdown function.
-                import signal, os
                 os.kill(os.getpid(), signal.SIGINT)
 
             app.run(debug=True, host='0.0.0.0', port=PORT)
