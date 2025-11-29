@@ -459,7 +459,7 @@ class Operator(ABC):
                 engine_command_args += ['--network=host']
 
         if engine == 'singularity':
-            # TODO: test
+            # enables GPU support
             engine_command_args += ['--nv']
 
         service_name = self._get_container_name('service')
