@@ -1,0 +1,6 @@
+{
+    "model": "jinaai/jina-embeddings-v4",
+    "seed": 1,
+    "frame_filter": "middle",
+    "context_length": 2000
+}

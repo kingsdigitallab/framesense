@@ -1,0 +1,11 @@
+wheel==0.45.1
+transformers==4.57.1
+accelerate==1.11.0
+qwen-vl-utils[decord]==0.0.14
+torch==2.8.0
+torchvision==0.23.0
+torchcodec<0.8
+flask
+peft
+pillow
+sentence-transformers
