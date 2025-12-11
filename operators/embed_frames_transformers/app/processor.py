@@ -91,7 +91,7 @@ class Processor:
                 prompt_name="passage",
             )
 
-        return ret
+        return ret[0].tolist()
 
 if __name__ == '__main__':
     response = {
