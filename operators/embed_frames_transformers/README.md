@@ -38,9 +38,18 @@ You can also filter by the name of the frame with the frame_filter param.
 
 See params.json.
 
-Available models:
-* [jinaai/jina-clips-v2 (2024)](https://huggingface.co/jinaai/jina-clip-v2): requires ? of VRAM or ~5GB of RAM (without GPU). Returned vector has 1024 dimensions.
-* [jinaai/jina-embeddings-v4 (2025)](https://huggingface.co/jinaai/jina-embeddings-v4): requires ~18GB of VRAM or 8GB of RAM (without GPU). Returned vector has 2048 dimensions.
+Supported models:
+* [jinaai/jina-clips-v2 (2024)](https://huggingface.co/jinaai/jina-clip-v2)
+* [jinaai/jina-embeddings-v4 (2025)](https://huggingface.co/jinaai/jina-embeddings-v4)
+
+|           | jina-clips-v2  | jina-embeddings-v4 |
+| --------- | -------------- | ------------------ |
+| params    | 0.9B           | 3.8B               |
+| release   | Dec 2024       | June 2025          |
+| vec size  | 1024           | 2048               |
+| img size  | 512x512 pixels | 20 mega pixels     |
+| sec/img   | ~3s on CPU     | ~120s on CPU       |
 
 Set environment variable `CUDA_VISIBLE_DEVICES=''` 
 to force the use of a CPU in case your GPU doesn't have enough VRAM.
+

@@ -276,6 +276,8 @@ class Operator(ABC):
                         info = errs
                     elif outs:
                         info = outs
+                    elif self.service.returncode != 0:
+                        info = self.service_output
                     
                     self._error(f'Service launch failed (status: {self.service.returncode}): {info}')
 
