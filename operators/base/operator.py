@@ -43,8 +43,25 @@ class Operator(ABC):
 
     def apply(self):
         self._before_apply()
-        ret = self._apply()
+        
+        collection = self.get_service_collection()
+        if collection:
+            ret = self._serve(collection)
+        else:
+            ret = self._apply()
+        
         self._after_apply()
+
+        return ret
+
+    def _serve(self, collection):
+        self._log(f'Service running over collection {collection['id']}. Press CTRL C to stop.')
+        ret = self._call_service_processor(None, collection['attributes']['path'])
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt as e:
+            self._log('Service interrupted by keyboard')
         return ret
 
     def _before_apply(self):
@@ -347,19 +364,20 @@ class Operator(ABC):
 
         # response = json.loads(res.stdout)
 
-        input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
-        
-        self._log(input_file_path.relative_to(binding[0]))
-        response = self._fetch_json(f'http://localhost:{SERVICE_PORT}/process?input_path={input_file_path_in_container}')
+        if input_file_path:
+            input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
+            
+            self._log(input_file_path.relative_to(binding[0]))
+            response = self._fetch_json(f'http://localhost:{SERVICE_PORT}/process?input_path={input_file_path_in_container}')
 
-        error = response.get('error', '')
-        if not error:
-            ret = response
-        else:
-            stack = response.get('stack', '')
-            if stack:
-                self._debug(f'Processing service returned error. Stack = \n\n{stack}')
-            self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
+            error = response.get('error', '')
+            if not error:
+                ret = response
+            else:
+                stack = response.get('stack', '')
+                if stack:
+                    self._debug(f'Processing service returned error. Stack = \n\n{stack}')
+                self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
 
         return ret
 
@@ -776,3 +794,18 @@ class Operator(ABC):
             for item in data:
                 self.transform_keys_with_suffix(item)
     
+    def get_service_collection(self):
+        '''Return the collection a service should run on.
+        None if no service should be running.'''    
+        ret = None
+
+        collection_id = self._get_framesense_argument('serve', default=None)
+
+        if collection_id:
+            for col in self.context['collections']:
+                if col['id'] == collection_id:
+                    ret = col
+            if ret is None:
+                self._error(f'no collection with id "{collection_id}"')
+
+        return ret

@@ -2,6 +2,5 @@
     "model.old": "jinaai/jina-embeddings-v4",
     "model": "jinaai/jina-clip-v2",
     "seed": 1,
-    "frame_filter": "middle",
-    "context_length": 2000
+    "frame_filter": "middle"
 }

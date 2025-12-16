@@ -48,6 +48,7 @@ class FrameSense:
         parser.add_argument("-r", "--redo", action='store_true', help="redo")
         parser.add_argument("-n", "--dry-run", action='store_true', help="perform a trial run with no changes made")
         parser.add_argument("-p", "--parameters", help="parameters to pass to the operator")
+        parser.add_argument("-s", "--serve", help="run an operator as a service over a collection", metavar='COLLECTION')
        
         args = parser.parse_args()
         self.args = args

@@ -57,8 +57,6 @@ class EmbedFramesTransformers(Operator):
                 ]
             ]))
 
-            print(frames_meta_path, frame_file_path)
-
             if not self._is_redo() and frame_data.get(data_key, {}).get('prompt_hash', None) == prompt_hash:
                 # we already got that answer, skip
                 continue

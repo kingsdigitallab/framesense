@@ -1,28 +1,25 @@
-# answer_frames_ollama
+# embed_frames-transformers
 
 ## Input
 
 * image of a frame (e.g. `gotdfather/00.00.03-62/shots/001/middle.jpg`)
-* a question about the image
 * a vision language model
 
 ## Output
 
-* answer to the question in `frames.json`
+Vector representing the frame added to frames.json under key 'embedding'
 
 ## Method
 
-Uses a vision language model via Ollama inferrence service.
+Uses an embedding model via Transfomers framework.
 
 Applies to all frames in the collections.
-
-IMPORTANT: you need to ensure ollama is installed and running.
 
 The required model will be pulled on demand.
 
 ## Run if
 
-The answer to that same question by the same model over the same frame is not found in frames.json.
+The embedding of the same frame by the same model is not found in frames.json.
 
 ## Redo (-r)
 
@@ -38,11 +35,9 @@ You can also filter by the name of the frame with the frame_filter param.
 
 See params.json.
 
-Available vision models on ollama: https://ollama.com/search?c=vision
+Available models:
+* [jinaai/jina-clips-v2 (2024)](https://huggingface.co/jinaai/jina-clip-v2): requires ? of VRAM or ~5GB of RAM (without GPU)
+* [jinaai/jina-embeddings-v4 (2025)](https://huggingface.co/jinaai/jina-embeddings-v4): requires ~18GB of VRAM or 8GB  of RAM (without GPU)
 
-Example:
-
-* `moondream:1.8b` (3GB of VRAM) is the fatest and runs on low VRAM or CPU
-* `gemma3:4b` (5.5GB) and above
-* `qwen3-vl:2b` (7.5GB) and above
-* `minicpm-v` (7GB VRAM)
+Set environment variable `CUDA_VISIBLE_DEVICES=''` 
+to force the use of a CPU in case your GPU doesn't have enough VRAM.
