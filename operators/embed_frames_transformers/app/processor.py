@@ -19,6 +19,19 @@ PORT = 5000
 
 MODEL = PARAMS['model']
 
+SUPPORTED_MODELS = [
+    "jinaai/jina-embeddings-v4", 
+    "jinaai/jina-clip-v2"
+]
+
+if MODEL not in SUPPORTED_MODELS:
+    res = {
+        "result": "",
+        "error": f"Unsupported model '{MODEL}'. Please use one of {SUPPORTED_MODELS}.",
+    }
+    print(json.dumps(res, indent=2))
+    sys.exit(1)
+
 OFFLOAD_FOLDER = "/hf_cache/offload"
 Path(OFFLOAD_FOLDER).mkdir(parents=True, exist_ok=True)
 
@@ -37,7 +50,9 @@ on failure:
 '''
 
 def get_vram():
-    free, total = torch.cuda.mem_get_info()
+    free, total = [0, 0]
+    if torch.cuda.is_available():
+        free, total = torch.cuda.mem_get_info()
     used = total - free
     return used / 1024**3
 
@@ -56,20 +71,25 @@ class Processor:
     def __init__(self):
         # https://huggingface.co/jinaai/jina-embeddings-v4
         # TODO: flash-attention
+        options = {
+        }
+
+        if 'jina-embeddings-v4' in MODEL:
+            options['attn_implementation'] = "flash_attention_2"
+
         model = AutoModel.from_pretrained(
             MODEL, 
             trust_remote_code=True, 
-            dtype=torch.float16,
-            attn_implementation="flash_attention_2",
-            #attn_implementation="sdpa",
+            # dtype=torch.float16,
+            # attn_implementation="flash_attention_2",
+            # attn_implementation="sdpa",
             device_map="auto",
             offload_folder=OFFLOAD_FOLDER,
+            **options,
         )
 
         self.model = model
 
-        print('Create processor')
-        
     def process(self, input):
         # we need to read it again
         # PARAMS = json.loads(Path('/app/params.json').read_text())
@@ -79,17 +99,28 @@ class Processor:
         is_image = re.search(r'\.(jpg|png)$', input)
 
         if is_image:
-            ret = self.model.encode_image(
-                images=[input],
-                task="retrieval",
-            )        
+            if 'jina-clip-v2' in MODEL:
+                ret = self.model.encode_image(
+                    images=[input]
+                )        
+            if 'jina-embeddings-v4' in MODEL:
+                ret = self.model.encode_image(
+                    images=[input],
+                    task="retrieval",
+                )        
         else:
-            ret = self.model.encode_text(
-                texts=[input],
-                task="retrieval",
-                # or "query"?
-                prompt_name="passage",
-            )
+            if 'jina-clip-v2' in MODEL:
+                # https://huggingface.co/jinaai/jina-clip-v2
+                ret = self.model.encode_text(
+                    texts=input,
+                    task="retrieval.query",
+                )
+            if 'jina-embeddings-v4' in MODEL:
+                ret = self.model.encode_text(
+                    texts=[input],
+                    task="retrieval",
+                    prompt_name="query",
+                )
 
         return ret[0].tolist()
 
@@ -106,8 +137,9 @@ if __name__ == '__main__':
         first_arg = arguments[1]
 
         processor = Processor()
-
+        
         if first_arg == 'serve':
+
             app = Flask(__name__)
 
             @app.route('/process', methods=['GET'])

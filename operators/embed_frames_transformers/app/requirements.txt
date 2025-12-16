@@ -9,3 +9,7 @@ flask
 peft
 pillow
 sentence-transformers
+# jina-clip-v2
+einops 
+timm 
+

@@ -19,7 +19,7 @@ class EmbedFramesTransformers(Operator):
 
         for col in self.context['collections']:
             collection_path = col['attributes']['path']
-            for frames_folder_path in collection_path.glob('**/shots/*/'):
+            for frames_folder_path in sorted(collection_path.glob('**/shots/*/')):
                 self._process_frame(frames_folder_path, collection_path)
 
         return ret

@@ -244,7 +244,6 @@ class Operator(ABC):
             if line:
                 i += 1
                 self.service_output += line
-                # self._debug(line)
                 if wait_for_message in line:
                     # needed when we stop & start again to avoid operator fetching to fail
                     time.sleep(1)
@@ -252,18 +251,16 @@ class Operator(ABC):
                     break
             else:
                 time.sleep(0.5)
-                # self._debug(self.service.returncode)
+
                 if self.service.poll() is not None:
-                    # service terminated
-                    error_lines = ''
-                    for l in self.service.stderr.readline():
-                        if l is None:
-                            break
-                        error_lines += l
-                    info = self.service_output
-                    if error_lines:
-                        info = error_lines
-                    self._error(f'Service launch failed ({self.service.returncode}): {info}')
+                    outs, errs = self.service.communicate()
+
+                    if errs:
+                        info = errs
+                    elif outs:
+                        info = outs
+                    
+                    self._error(f'Service launch failed (status: {self.service.returncode}): {info}')
 
     def _is_service_running(self):
         ret = False
@@ -359,6 +356,9 @@ class Operator(ABC):
         if not error:
             ret = response
         else:
+            stack = response.get('stack', '')
+            if stack:
+                self._debug(f'Processing service returned error. Stack = \n\n{stack}')
             self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
 
         return ret
