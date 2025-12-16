@@ -101,7 +101,7 @@ class Processor:
         if is_image:
             if 'jina-clip-v2' in MODEL:
                 ret = self.model.encode_image(
-                    images=[input]
+                    [input]
                 )        
             if 'jina-embeddings-v4' in MODEL:
                 ret = self.model.encode_image(
@@ -111,10 +111,10 @@ class Processor:
         else:
             if 'jina-clip-v2' in MODEL:
                 # https://huggingface.co/jinaai/jina-clip-v2
-                ret = self.model.encode_text(
-                    texts=input,
+                ret = [self.model.encode_text(
+                    input,
                     task="retrieval.query",
-                )
+                )]
             if 'jina-embeddings-v4' in MODEL:
                 ret = self.model.encode_text(
                     texts=[input],
