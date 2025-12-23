@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
             app = Flask(__name__)
 
-            @app.route('/process', methods=['GET'])
+            @app.route('/process', methods=['GET', 'POST'])
             def process():
                 try:
                     input = request.args.get('input_path', None)
@@ -181,7 +181,11 @@ if __name__ == '__main__':
                         'stack': stack_trace
                     }
 
-                return jsonify(response)
+                
+                ret = jsonify(response)
+                ret.headers.add('Access-Control-Allow-Origin', '*')
+
+                return ret
 
             @app.route('/stop', methods=['GET'])
             def stop():
