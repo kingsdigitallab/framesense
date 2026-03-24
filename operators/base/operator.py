@@ -771,7 +771,11 @@ class Operator(ABC):
             json_blocks = re.sub(r'(?s)```json\b(.*)```', r'\1', dirty_json)
             clean_json = json_blocks.strip(' \n')
             if (clean_json.startswith('{') and clean_json.endswith('}')) or (clean_json.startswith('[') and clean_json.endswith(']')):
-                ret = json.loads(clean_json)
+                try:
+                    ret = json.loads(clean_json)
+                except json.decoder.JSONDecodeError:
+                    self._warn(f'Invalid JSON format: {ret}')
+                    pass
         return ret
     
     def transform_keys_with_suffix(self, data):
