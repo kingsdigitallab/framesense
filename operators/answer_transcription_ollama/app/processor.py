@@ -50,6 +50,8 @@ if __name__ == '__main__':
                 host=PARAMS['ollama_host']
             )
 
+            think=PARAMS.get('think', False)
+
             response: ChatResponse = client.chat(
                 model=PARAMS['model'], 
                 messages=[
@@ -60,7 +62,8 @@ if __name__ == '__main__':
                 ], options={
                     'num_ctx': PARAMS['context_length'],
                     'seed': PARAMS['seed']
-                }
+                },
+                think=think
             )
 
             response = {
