@@ -11,5 +11,6 @@
     },
     "prompt_template_MULTILINES": [
         "{question}"
-    ]
+    ],
+    "think": false
 }
