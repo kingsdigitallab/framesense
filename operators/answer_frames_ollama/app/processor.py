@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
         client.pull(PARAMS['model'])
 
+        think=PARAMS.get('think', False)
+
         response: ChatResponse = client.chat(
             model=PARAMS['model'], 
             messages=[
@@ -59,7 +61,8 @@ if __name__ == '__main__':
             ], options={
                 'num_ctx': PARAMS['context_length'],
                 'seed': PARAMS['seed'],
-            }
+            },
+            think=think
         )
 
         response = {
