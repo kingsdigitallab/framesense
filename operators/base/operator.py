@@ -815,3 +815,70 @@ class Operator(ABC):
                 self._error(f'no collection with id "{collection_id}"')
 
         return ret
+
+    def send_prompt_to_openai_api_from_params(self, image_path=None):
+        import json
+        import urllib.request
+
+        # Define your parameters and arguments
+        # TODO: call  getter instead
+        params = self.params
+        # TODO:
+        images = []
+        if image_path:
+            import base64
+            images.append(base64.b64encode(Path(image_path).read_bytes()).decode('utf-8'))
+
+        api_base = params['api_base']
+        ollama_host = params.get('ollama_host', '')
+        if ollama_host:
+            # backward compatibility with legacy parameter
+            api_base = ollama_host.strip('/') +  '/api'
+
+        url = api_base.strip('/') + '/chat'
+
+        # Construct the request payload
+        payload = {
+            'model': params['model'],
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': params['prompt'],
+                    'images': images,
+                },
+            ],
+            'options': {
+                # works with Ollama's OpenAI API; other engines won't support that
+                'num_ctx': params['context_length'],
+                # works with Ollama's OpenAI API; should work w/ other engines
+                'seed': params['seed'],
+            },
+            # works with Ollama's OpenAI API; not sure if works with others
+            'think': params['think'],
+            'stream': False  # Set to False to get a single JSON response
+        }
+
+        # Encode data to bytes
+        data = json.dumps(payload).encode('utf-8')
+
+        # Create and send the request
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/json')
+
+        res = ''
+        error = ''
+        try:
+            with urllib.request.urlopen(req) as response:
+                # Parse the JSON response
+                res = json.loads(response.read().decode('utf-8'))
+                res = res['message']['content']
+                # print(res)
+        except urllib.error.HTTPError as e:
+            error = f"HTTP Error: {e.code} - {e.reason}"
+        except urllib.error.URLError as e:
+            error = f"URL Error: {e.reason}"
+
+        return {
+            'error': error,
+            'result': res
+        }
