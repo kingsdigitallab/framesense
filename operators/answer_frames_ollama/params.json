@@ -1,5 +1,4 @@
 {
-    "ollama_host": "http://localhost:11434",
     "api_base": "http://localhost:11434/api",
     "model": "qwen3.5:0.8b",
     "model.alt": "moondream:1.8b",

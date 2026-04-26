@@ -134,7 +134,14 @@ class AnswerFramesOllama(Operator):
         if image_path:
             import base64
             images.append(base64.b64encode(Path(image_path).read_bytes()).decode('utf-8'))
-        url = params['api_base'].strip('/') + '/chat'
+
+        api_base = params['api_base']
+        ollama_host = params.get('ollama_host', '')
+        if ollama_host:
+            # backward compatibility with legacy parameter
+            api_base = ollama_host.strip('/') +  '/api'
+
+        url = api_base.strip('/') + '/chat'
 
         # Construct the request payload
         payload = {
