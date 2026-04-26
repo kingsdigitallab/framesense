@@ -5,8 +5,8 @@ import json
 import datetime
 import hashlib
 
-class AnswerFramesOllama(Operator):
-    '''Let a LLM served by Ollama answer a question about a frame'''
+class AnswerFramesVLM(Operator):
+    '''Answer a question about a frame with an openai-compatible llm platform'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()

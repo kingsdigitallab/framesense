@@ -72,7 +72,6 @@ For instance, to see the collections and the videos they contain:
 * `-r` : forces the operator to **redo** the operation, even if the output already exists. **USE WITH CAUTION** as it can destroy outputs from previous operations
 * `-v` : **verbose** mode, print more stuff
 * `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
-* `-p`: a parameters string passed to the operator, the meaning is operator-specific
 
 The operator will return an error if you try to use an argument that it doesn support (yet).
 
@@ -132,7 +131,7 @@ Check the README.md under each operator folder for a specification card. (Work i
     Answer questions about a video file using a video/vision language model
 * **[answer_transcription_ollama](operators/answer_transcription_ollama/)**:
     Answer questions about a clip transcription using a large language model
-* **[answer_frames_ollama](operators/answer_frames_ollama/)**:
+* **[answer_frames_vlm](operators/answer_frames_vlm/)**:
     Answer questions about a frame using a vision language model
 
 ### Design principles
@@ -202,7 +201,8 @@ until FrameSense receives more dedicated support (external contributors or addit
 
 ## Performance and HPC
 
-We are aiming to support low end (laptop) and high end (HPCs) compute environment. However at the moment support is limited and the operators are very slow.
+We are aiming to support low end (laptop) and high end (HPCs) compute environment. 
+However at the moment support is limited and the operators are very slow.
 
 ## Testing
 
@@ -223,6 +223,22 @@ that contains a list of all available variables and their default values.
 
 If CUDA_VISIBLE_DEVICES='' 
 the containers will not be able to access the host's GPU.
+
+Any operator parameter can be passed as an environment variable.
+The name is OPERATOR_PARAM, 
+where OPERATOR is the uppercase name of the operator,
+and PARAM the uppercase name of the operator name.
+For instance ANSWER_FRAMES_VLM_MODEL="qwen3-vl:2b" 
+to set the `model` param of `answer_frames_vml` to "qwen3-vl:2b".
+
+## Operator parameters
+
+The value of any operator parameter originates from these sources, 
+in the following order of precedence:
+* environment variable (see above)
+* variable in `.env` file
+* value under meta.params.OPERATOR.PARAM in the collection json file
+* the default value set in the operator's `params.json` file
 
 ## GPU access
 

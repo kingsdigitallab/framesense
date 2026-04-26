@@ -33,7 +33,7 @@ export FRAMESENSE_DOTENV_PATH='tests/.env'
 # run_python_script "python framesense.py answer_videos_vlm"
 
 # run_python_script "python framesense.py transcode_clips_ffmpeg"
-run_python_script "python framesense.py answer_frames_ollama -r"
+run_python_script "python framesense.py answer_frames_vlm -r"
 
 echo "-------"
 echo "Test suite completed without errors"
