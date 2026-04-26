@@ -80,10 +80,11 @@ class AnswerFramesVLM(Operator):
                 
                 response = self.send_prompt_to_openai_api_from_params(image_path=frame_file_path)
 
-                # print(response)
-                # TODO: check for errors
-                answer = response['result']
+                if response['error']:
+                    self._error(f'Unexpected error from the LLM inferrence platform ({response['error']})')
 
+                print(response)
+                answer = response['result']
 
                 frame_data[question_key] = {
                     'value': self._parse_dirty_json(answer),

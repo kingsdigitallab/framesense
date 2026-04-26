@@ -833,9 +833,9 @@ class Operator(ABC):
         ollama_host = params.get('ollama_host', '')
         if ollama_host:
             # backward compatibility with legacy parameter
-            api_base = ollama_host.strip('/') +  '/api'
+            api_base = ollama_host.strip('/') +  '/v1'
 
-        url = api_base.strip('/') + '/chat'
+        url = api_base.strip('/') + '/chat/completions'
 
         # Construct the request payload
         payload = {
@@ -843,8 +843,11 @@ class Operator(ABC):
             'messages': [
                 {
                     'role': 'user',
-                    'content': params['prompt'],
-                    'images': images,
+                    'content': [
+                        {'type': 'text', 'text': params['prompt']},
+                        {'type': 'image_url', 'image_url': f'data:image/png;base64,{images[0]}'}  
+                    ],
+                    # 'images': images,
                 },
             ],
             'options': {
@@ -854,8 +857,10 @@ class Operator(ABC):
                 'seed': params['seed'],
             },
             # works with Ollama's OpenAI API; not sure if works with others
+            # TODO: "reasoning": {"enabled": True}
             'think': params['think'],
-            'stream': False  # Set to False to get a single JSON response
+            'stream': False,  # Set to False to get a single JSON response
+            'max_tokens': params['context_length']
         }
 
         # Encode data to bytes
@@ -864,17 +869,27 @@ class Operator(ABC):
         # Create and send the request
         req = urllib.request.Request(url, data=data, method='POST')
         req.add_header('Content-Type', 'application/json')
+        api_key = params['api_key']
+        if api_key:
+            req.add_header('Authorization', f'Bearer {api_key}')
 
         res = ''
         error = ''
         try:
             with urllib.request.urlopen(req) as response:
                 # Parse the JSON response
-                res = json.loads(response.read().decode('utf-8'))
-                res = res['message']['content']
+                res = response.read().decode('utf-8')
+                print(res)
+                res = json.loads(res)
+                usage = res['usage']
+                # print(usage)
+                res = res['choices'][0]['message']['content']
+                # res = res['message']['content']
                 # print(res)
         except urllib.error.HTTPError as e:
             error = f"HTTP Error: {e.code} - {e.reason}"
+            if '404' in error:
+                self._warn(f'404 error returned by inferrence platform. Check validity of address ({url}) and availability or model ({params["model"]})')
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
 

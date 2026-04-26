@@ -43,7 +43,12 @@ Examples of vision models on ollama: https://ollama.com/search?c=vision
 
 Example:
 
-* `moondream:1.8b` (1.1GB of VRAM) is the fatest
-* `qwen3.5:0.8b` (2.3GB VRAM) and above
-* `qwen3-vl:2b` (3GB) and above
-* `gemma3:4b` (4.2GB) and above
+| Model | VRAM (GB) | Indicative time (s.) |
+|----------|----------|----------|
+| `moondream:1.8b` | 1.1 | 6 |
+| `qwen3.5:0.8b` | 2.3 |  | 
+| `qwen3.5:2b` | 4.5 |  |
+| `qwen3-vl:2b` | 3.0 |  |
+| `gemma3:4b` | 4.2 |  |
+|  |  |  |
+|  |  |  |
