@@ -78,19 +78,9 @@ class AnswerFramesOllama(Operator):
                 # qwen will hallucinate if transcription is empty;
                 # also saves time;
                 
-                if 0:
-                    binding = [frame_file_path.parent, Path('/data')]
-                    command_args = [
-                        'python', 
-                        '/app/processor.py',
-                        frame_file_path
-                    ]
-                    res = self._run_in_operator_container(command_args, binding, share_network=True)
-                    response = json.loads(res.stdout)
-                else:
-                    response = self.send_prompt_to_openai_api_from_params(image_path=frame_file_path)
+                response = self.send_prompt_to_openai_api_from_params(image_path=frame_file_path)
 
-                print(response)
+                # print(response)
                 # TODO: check for errors
                 answer = response['result']
 
