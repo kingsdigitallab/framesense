@@ -1,9 +1,11 @@
 {
     "ollama_host": "http://localhost:11434",
-    "model": "moondream:1.8b",
+    "api_base": "http://localhost:11434/api",
+    "model": "qwen3.5:0.8b",
+    "model.alt": "moondream:1.8b",
     "seed": 1,
     "frame_filter": "middle",
-    "context_length": 2000,
+    "context_length": 2048,
     "questions": {
         "describe_short": {
             "question": "describe this image in one short sentence"

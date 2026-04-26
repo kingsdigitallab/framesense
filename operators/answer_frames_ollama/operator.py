@@ -77,16 +77,23 @@ class AnswerFramesOllama(Operator):
                 # this condition is important b/c:
                 # qwen will hallucinate if transcription is empty;
                 # also saves time;
-                binding = [frame_file_path.parent, Path('/data')]
-                command_args = [
-                    'python', 
-                    '/app/processor.py',
-                    frame_file_path
-                ]
-                res = self._run_in_operator_container(command_args, binding, share_network=True)
-                response = json.loads(res.stdout)
+                
+                if 0:
+                    binding = [frame_file_path.parent, Path('/data')]
+                    command_args = [
+                        'python', 
+                        '/app/processor.py',
+                        frame_file_path
+                    ]
+                    res = self._run_in_operator_container(command_args, binding, share_network=True)
+                    response = json.loads(res.stdout)
+                else:
+                    response = self.send_prompt_to_openai_api(image_path=frame_file_path)
+
+                print(response)
                 # TODO: check for errors
                 answer = response['result']
+
 
                 frame_data[question_key] = {
                     'value': self._parse_dirty_json(answer),
@@ -113,3 +120,64 @@ class AnswerFramesOllama(Operator):
         minutes = int(seconds // 60)
         seconds %= 60
         return f"{hours:02d}:{minutes:02d}:{int(seconds):02d}"
+
+
+    def send_prompt_to_openai_api(self, image_path=None):
+        import json
+        import urllib.request
+
+        # Define your parameters and arguments
+        # TODO: call  getter instead
+        params = self.params
+        # TODO:
+        images = []
+        if image_path:
+            import base64
+            images.append(base64.b64encode(Path(image_path).read_bytes()).decode('utf-8'))
+        url = params['api_base'].strip('/') + '/chat'
+
+        # Construct the request payload
+        payload = {
+            'model': params['model'],
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': params['prompt'],
+                    'images': images,
+                },
+            ],
+            'options': {
+                # works with Ollama's OpenAI API; other engines won't support that
+                'num_ctx': params['context_length'],
+                # works with Ollama's OpenAI API; should work w/ other engines
+                'seed': params['seed'],
+            },
+            # works with Ollama's OpenAI API; not sure if works with others
+            'think': params['think'],
+            'stream': False  # Set to False to get a single JSON response
+        }
+
+        # Encode data to bytes
+        data = json.dumps(payload).encode('utf-8')
+
+        # Create and send the request
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/json')
+
+        res = ''
+        error = ''
+        try:
+            with urllib.request.urlopen(req) as response:
+                # Parse the JSON response
+                res = json.loads(response.read().decode('utf-8'))
+                res = res['message']['content']
+                # print(res)
+        except urllib.error.HTTPError as e:
+            error = f"HTTP Error: {e.code} - {e.reason}"
+        except urllib.error.URLError as e:
+            error = f"URL Error: {e.reason}"
+
+        return {
+            'error': error,
+            'result': res
+        }
