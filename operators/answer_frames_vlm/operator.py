@@ -83,7 +83,7 @@ class AnswerFramesVLM(Operator):
                 if response['error']:
                     self._error(f'Unexpected error from the LLM inferrence platform ({response['error']})')
 
-                print(response)
+                # print(response)
                 answer = response['result']
 
                 frame_data[question_key] = {

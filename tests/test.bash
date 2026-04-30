@@ -19,12 +19,12 @@ fi
 cd ..
 export FRAMESENSE_DOTENV_PATH='tests/.env'
 
-# run_python_script "python framesense.py -h"
-# run_python_script "python framesense.py collections -v"
-# run_python_script "python framesense.py annotations"
-# run_python_script "python framesense.py make_clips_ffmpeg"
-# run_python_script "python framesense.py extract_sound_ffmpeg"
-# run_python_script "python framesense.py make_shots_scenedetect"
+run_python_script "python framesense.py -h"
+run_python_script "python framesense.py collections -v"
+run_python_script "python framesense.py annotations"
+run_python_script "python framesense.py make_clips_ffmpeg"
+run_python_script "python framesense.py extract_sound_ffmpeg"
+run_python_script "python framesense.py make_shots_scenedetect"
 # run_python_script "python framesense.py make_frames_ffmpeg"
 # run_python_script "python framesense.py scale_frames_sssabet"
 
@@ -33,7 +33,7 @@ export FRAMESENSE_DOTENV_PATH='tests/.env'
 # run_python_script "python framesense.py answer_videos_vlm"
 
 # run_python_script "python framesense.py transcode_clips_ffmpeg"
-run_python_script "python framesense.py answer_frames_vlm -r"
+# run_python_script "python framesense.py answer_frames_vlm"
 
 echo "-------"
 echo "Test suite completed without errors"

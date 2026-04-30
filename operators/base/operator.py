@@ -879,7 +879,7 @@ class Operator(ABC):
             with urllib.request.urlopen(req) as response:
                 # Parse the JSON response
                 res = response.read().decode('utf-8')
-                print(res)
+                # print(res)
                 res = json.loads(res)
                 usage = res['usage']
                 # print(usage)

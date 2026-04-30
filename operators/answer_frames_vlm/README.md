@@ -41,14 +41,14 @@ See [params.json](params.json).
 
 Examples of vision models on ollama: https://ollama.com/search?c=vision
 
-Example:
+Examples for 6 frames on a laptop w/ i7-1260P Intel (16 Cores), 32GB RAM, 4GB VRAM:
 
-| Model | VRAM (GB) | Indicative time (s.) |
-|----------|----------|----------|
-| `moondream:1.8b` | 1.1 | 6 |
-| `qwen3.5:0.8b` | 2.3 |  | 
-| `qwen3.5:2b` | 4.5 |  |
-| `qwen3-vl:2b` | 3.0 |  |
-| `gemma3:4b` | 4.2 |  |
-|  |  |  |
-|  |  |  |
+| Model | VRAM (GB) | GPU processing (s.) | CPU only
+|----------|----------|----------|----------|
+| `moondream:1.8b` | 1.1 | 7 | 116 |
+| `gemma4:e2b` | 7.6 | ? | 224 |
+| `gemma3:4b` | 4.3 | 13 | 516 |
+| `qwen3-vl:2b` | 3.0 | 36 | 486 |
+| `qwen3.5:0.8b` | 2.3 | 50 | 347 |
+| `qwen3.5:2b` | 4.5 | 77 | 656 | 
+| `ministral-3:3b` | 4.3 | ? | 649
