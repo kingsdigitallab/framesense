@@ -24,7 +24,7 @@ run_python_script "python framesense.py collections -v"
 run_python_script "python framesense.py annotations"
 run_python_script "python framesense.py make_clips_ffmpeg"
 run_python_script "python framesense.py extract_sound_ffmpeg"
-run_python_script "python framesense.py make_shots_scenedetect"
+run_python_script "python framesense.py make_shots_scenedetect -r"
 # run_python_script "python framesense.py make_frames_ffmpeg"
 # run_python_script "python framesense.py scale_frames_sssabet"
 

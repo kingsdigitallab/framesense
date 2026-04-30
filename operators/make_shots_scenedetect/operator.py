@@ -47,24 +47,30 @@ class MakeShotsSceneDetect(Operator):
         if shots_folder_tmp_path.exists():
             shutil.rmtree(shots_folder_tmp_path)
         
-        print(f'{clip_path}')
-
         shots_folder_tmp_path.mkdir(exist_ok=True)
 
-        detection_parameters = ['detect-adaptive']
-        framesense_parameters = self._get_operator_parameters()
-        if framesense_parameters:
-            detection_parameters = re.split(r'\s+', framesense_parameters)
+        detection_method = self.get_param('method')
+        # framesense_parameters = self._get_operator_parameters()
+        # if framesense_parameters:
+        #     detection_parameters = re.split(r'\s+', framesense_parameters)
 
         binding = [clip_path.parent, Path('/data')]
         command_args = [
             'scenedetect',
             '--input', clip_path,
-            '--output', shots_folder_tmp_path
-        ] + detection_parameters + [
+            '--output', shots_folder_tmp_path,
+            detection_method,
+        ]
+        
+        threshold = self.get_param('threshold')
+        if threshold:
+            command_args += ['-t', str(threshold)]
+        
+        command_args += [
             'split-video',  # creates a mp4 file per shot
             'list-scenes', # creates a CSV files with one row per shot
         ]
+
         self._run_in_operator_container(command_args, binding, same_user=True)
 
         # rename and move the files

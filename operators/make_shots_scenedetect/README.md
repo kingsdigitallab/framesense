@@ -26,15 +26,10 @@ Applies to all clips in the collections.
 
 ## Parameters (-p)
 
-If a parameter is provided to FrameSense (-p)
-it will be used to specify the detection method
-and its control parameters.
-
-For instance:
-* `-p 'detect-threshold -t 23'` to use the threshold method with a given threshold of 23
-* `-p 'detect-content'` to use the content method
-
 For more information see [PySceneDetect documentation about the various methods](https://www.scenedetect.com/docs/latest/cli.html#detectors`)
+
+* `method`: the scene detection method (`detect-content`, `detect-adaptive` or `detect-threshold`)
+* `threshold`: threshold value for `detect-adaptive` or `detect-threshold` methods; pyscene detect default to 12
 
 ## Run if
 
