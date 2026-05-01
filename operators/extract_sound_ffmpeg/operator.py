@@ -21,7 +21,7 @@ class ExtractSoundFFMPEG(Operator):
         for col in self.context['collections']:
             for video_folder_path in col['attributes']['path'].iterdir():
                 if video_folder_path.is_dir():
-                    for clip_folder_path in video_folder_path.iterdir():
+                    for clip_folder_path in sorted(video_folder_path.iterdir()):
                         if clip_folder_path.is_dir():
                             clip_path = self._get_video_file_path(clip_folder_path)
                             if clip_path:

@@ -1,0 +1,26 @@
+{
+    "meta": {
+        "type": "collection",
+        "comment": "test collections",
+        "params": {
+            "answer_frames_vlm": {
+                "api_base": "http://localhost:11434/v1",
+                "model": "gemma3:4b"
+            }
+        }
+    },
+    "data": [
+        {
+            "type": "collection",
+            "id": "workshop-test",
+            "attributes": {
+                "name": "Workshop Test Collection",
+                "collector": "",
+                "description": "Test collection for DH workshop 5th May 2026",
+                "origin": "",
+                "path": "test_collection",
+                "annotations_path": "test_annotations"
+            }            
+        }
+    ]
+}
