@@ -1,10 +1,6 @@
 from pathlib import Path
 from ..base.operator import Operator
-import re
 import json
-from datetime import datetime
-import subprocess
-from datetime import timedelta
 
 class MakeFramesFFMPEG(Operator):
     '''Extract frames from shots using ffmpeg'''
@@ -45,17 +41,18 @@ class MakeFramesFFMPEG(Operator):
         if frame_file_paths:
             return
 
-        parameters = self._get_operator_parameters()
-        print(shot_file_path)
+        video_filter = self.get_param('video_filter')
+        # parameters = self._get_operator_parameters()
+        # print(shot_file_path)
 
-        if parameters:
+        if video_filter:
             # e.g. sample every 10th frame 
             # parameters should be 'select=not(mod(n\,10))'
             # ffmpeg -i input.mp4 -vf "select=not(mod(n\,10))" -vsync vfr 1_every_10/img_%03d.jpg
             # https://superuser.com/a/1274696
             # for 2 fps: 'fps=2'
             samples = [
-                '-vf', parameters,
+                '-vf', video_filter,
                 '-vsync', 'vfr',
                 shot_folder_path / '%04d.jpg'
             ]
@@ -112,7 +109,7 @@ class MakeFramesFFMPEG(Operator):
                     # '-ss', str(timedelta(seconds=duration_seconds * place)),
                     '-vf', f"""select='eq(n,{int(place[0] * (duration_frames - 1))})'""",
                     '-vframes', '1',
-                    '-update', '1', # this is too supress warning about no pattern in filename
+                    '-update', '1', # this is to supress warning about no pattern in filename
                     # shot_folder_path / f'{i+1:04d}.jpg'
                     shot_folder_path / f'{place[1]}.jpg'
                 ]

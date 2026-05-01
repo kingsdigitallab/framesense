@@ -20,15 +20,17 @@ the first, middle and last frame are extracted.
 
 Applies to all shots in the collections.
 
-## Parameters (-p)
+## Parameters
 
-If a parameter is provided to FrameSense (-p)
-it will be mapped to ffmpeg -vf argument
+video_filter, if provided is mapped to ffmpeg -vf argument
 to control the sampling of frames.
 
 For instance:
-* `-p 'select=not(mod(n\,10))'` will extract every 10th frame
-* `-p 'fps=2'` will extract two frames per second
+* `'select=not(mod(n\,10))'` will extract every 10th frame
+* `'fps=2'` will extract two frames per second
+
+When video_filter is provided the output frames files are numbered 
+sequentially.
 
 ## Run if
 

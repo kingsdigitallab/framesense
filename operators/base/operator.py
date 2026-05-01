@@ -95,7 +95,10 @@ class Operator(ABC):
                 v2 = os.getenv(f'{operator_name}_{k}'.upper(), None)
                 if v2 is not None:
                     target_type = type(v)
-                    ret[k] = target_type(v2)
+                    if target_type is not type(None):
+                        ret[k] = target_type(v2)
+                    else:
+                        ret[k] = v2
         
         self.transform_keys_with_suffix(ret)
 
