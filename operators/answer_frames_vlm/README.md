@@ -45,10 +45,10 @@ Examples for 6 frames on a laptop w/ i7-1260P Intel (16 Cores), 32GB RAM, 4GB VR
 
 | Model | VRAM (GB) | GPU processing (s.) | CPU only
 |----------|----------|----------|----------|
-| `moondream:1.8b` | 1.1 | 7 | 116 |
-| `gemma4:e2b` | 7.6 | ? | 224 |
-| `gemma3:4b` | 4.3 | 13 | 516 |
-| `qwen3-vl:2b` | 3.0 | 36 | 486 |
-| `qwen3.5:0.8b` | 2.3 | 50 | 347 |
-| `qwen3.5:2b` | 4.5 | 77 | 656 | 
-| `ministral-3:3b` | 4.3 | ? | 649
+| `moondream:1.8b` | 1.1 | 34 | 116 |
+| `gemma3:4b` | 4.3 | 80 | 516 |
+| `gemma4:e2b` | 7.6 | 95 | 224 |
+| `ministral-3:3b` | 4.3 | 97 | 649
+| `qwen3-vl:2b` | 3.0 | 106 | 486 |
+| `qwen3.5:0.8b` | 2.3 | 130 | 347 |
+| `qwen3.5:2b` | 4.5 | 283 | 656 | 

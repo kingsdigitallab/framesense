@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCENARIO="$1"
+
 run_python_script() {
     local python_command="$1"
     echo "=========================================="
@@ -24,16 +26,18 @@ run_python_script "python framesense.py collections -v"
 run_python_script "python framesense.py annotations"
 run_python_script "python framesense.py make_clips_ffmpeg"
 run_python_script "python framesense.py extract_sound_ffmpeg"
-run_python_script "python framesense.py make_shots_scenedetect -r"
-# run_python_script "python framesense.py make_frames_ffmpeg"
-# run_python_script "python framesense.py scale_frames_sssabet"
+run_python_script "python framesense.py make_shots_scenedetect"
+run_python_script "python framesense.py make_frames_ffmpeg"
+run_python_script "python framesense.py scale_frames_sssabet"
+run_python_script "python framesense.py answer_frames_vlm"
 
-# run_python_script "python framesense.py transcribe_speech_parakeet -r"
-# run_python_script "python framesense.py answer_transcription_ollama"
-# run_python_script "python framesense.py answer_videos_vlm"
+if [ "$SCENARIO" != "$1" ]; then
+    run_python_script "python framesense.py transcribe_speech_parakeet"
+    run_python_script "python framesense.py answer_transcription_ollama"
+    run_python_script "python framesense.py transcode_clips_ffmpeg"
 
-# run_python_script "python framesense.py transcode_clips_ffmpeg"
-# run_python_script "python framesense.py answer_frames_vlm"
+    # run_python_script "python framesense.py answer_videos_vlm"
+fi
 
 echo "-------"
 echo "Test suite completed without errors"

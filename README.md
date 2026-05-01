@@ -227,7 +227,7 @@ the containers will not be able to access the host's GPU.
 Any operator parameter can be passed as an environment variable.
 The name is OPERATOR_PARAM, 
 where OPERATOR is the uppercase name of the operator,
-and PARAM the uppercase name of the operator name.
+and PARAM the uppercase name of the parameter.
 For instance ANSWER_FRAMES_VLM_MODEL="qwen3-vl:2b" 
 to set the `model` param of `answer_frames_vml` to "qwen3-vl:2b".
 
@@ -237,7 +237,7 @@ The value of any operator parameter originates from these sources,
 in the following order of precedence:
 * environment variable (see above)
 * variable in `.env` file
-* value under meta.params.OPERATOR.PARAM in the collection json file
+* value under meta.params.OPERATOR.PARAM in the collection json file (note that OPERATOR and PARAM values should be in lower case, e.g. `answer_frames_vlm` and `model`)
 * the default value set in the operator's `params.json` file
 
 ## GPU access
