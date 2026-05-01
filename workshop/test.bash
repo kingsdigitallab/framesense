@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SCENARIO="$1"
 VIDEO_FILTER="1"
 VIDEO_FILTER="Park"
 #VIDEO_FILTER="Trees"
@@ -16,10 +15,6 @@ run_python_script() {
         exit 1
     fi
 }
-
-if [ ! -d "collections" ]; then
-    cp -r original_collections collections
-fi
 
 cd ..
 export FRAMESENSE_DOTENV_PATH='workshop/.env'
