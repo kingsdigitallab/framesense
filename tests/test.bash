@@ -31,7 +31,7 @@ run_python_script "python framesense.py make_frames_ffmpeg"
 run_python_script "python framesense.py scale_frames_sssabet"
 run_python_script "python framesense.py answer_frames_vlm"
 
-if [ "$SCENARIO" != "$1" ]; then
+if [ "$SCENARIO" != "workshop" ]; then
     run_python_script "python framesense.py transcribe_speech_parakeet"
     run_python_script "python framesense.py answer_transcription_ollama"
     run_python_script "python framesense.py transcode_clips_ffmpeg"
