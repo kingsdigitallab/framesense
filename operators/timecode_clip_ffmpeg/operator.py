@@ -26,6 +26,39 @@ class TimecodeClipFFMPEG(Operator):
 
         return ret
 
+    def _timecode_clip(self, clip_path: Path):
+        if not self._is_path_selected(clip_path):
+            return
+
+        output_path = clip_path.parent / f'{clip_path.stem}_timecoded{clip_path.suffix}'
+
+        if not self._is_redo() and output_path.exists():
+            return
+
+        self._log(output_path)
+        fontsize = self.get_param('fontsize')
+        rate = self._get_video_frame_rate(clip_path)
+        vf = (
+            f"drawtext="
+            f"text='':"
+            f"timecode='00\\:00\\:00\\:00':"
+            f"rate={rate}:"
+            f"font='DejaVu Sans':"
+            f"x=10:y=10:"
+            f"fontsize={fontsize}:"
+            f"fontcolor=white:"
+            f"box=1:"
+            f"boxcolor=black@0.5:"
+            f"boxborderw=5"
+        )
+        command = [
+            'ffmpeg', '-i', clip_path,
+            '-vf', vf,
+            '-c:a', 'copy',
+            output_path,
+        ]
+        self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
+
     def _get_video_frame_rate(self, clip_path: Path) -> str:
         binding = [clip_path.parent, Path('/data')]
         command_args = [
@@ -45,34 +78,3 @@ class TimecodeClipFFMPEG(Operator):
         if den == 0:
             return '25'
         return str(round(num / den, 3))
-
-    def _timecode_clip(self, clip_path: Path):
-        if not self._is_path_selected(clip_path):
-            return
-
-        output_path = clip_path.parent / f'{clip_path.stem}_timecoded{clip_path.suffix}'
-
-        if self._is_redo() or not output_path.exists():
-            self._log(output_path)
-            fontsize = self.get_param('fontsize')
-            rate = self._get_video_frame_rate(clip_path)
-            vf = (
-                f"drawtext="
-                f"text='':"
-                f"timecode='00\\:00\\:00\\:00':"
-                f"rate={rate}:"
-                f"font='DejaVu Sans':"
-                f"x=10:y=10:"
-                f"fontsize={fontsize}:"
-                f"fontcolor=white:"
-                f"box=1:"
-                f"boxcolor=black@0.5:"
-                f"boxborderw=5"
-            )
-            command = [
-                'ffmpeg', '-i', clip_path,
-                '-vf', vf,
-                '-c:a', 'copy',
-                output_path,
-            ]
-            self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
