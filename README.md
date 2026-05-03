@@ -22,9 +22,9 @@ FrameSense is a highly modular command line tool designed to process your video 
 
 ## Concepts
 
-In FrameSense your collection is broken down into a hierachy of smaller units. A `Collection` contains `videos`, which are made of `Clips`. Each Clip is a sequence of `Shots`. And each Shot is composed of a series of still `Frames`.
+In FrameSense your collection is broken down into a hierarchy of smaller units. A `Collection` contains `videos`, which are made of `Clips`. Each Clip is a sequence of `Shots`. And each Shot is composed of a series of still `Frames`.
 
-Each operation provided by FrameSense works at on a particular unit in that hierarchy.
+Each operation provided by FrameSense works on a particular unit in that hierarchy.
 
 A video can be manually annotated in an `annotation file` that contains a list of annotations. An `annotation` describes and locates a clip within the video.
 
@@ -73,7 +73,7 @@ For instance, to see the collections and the videos they contain:
 * `-v` : **verbose** mode, print more stuff
 * `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
 
-The operator will return an error if you try to use an argument that it doesn support (yet).
+The operator will return an error if you try to use an argument that it doesn't support (yet).
 
 ## Architectural principles
 
@@ -144,7 +144,7 @@ It is expected that each operator:
 * uses containers to isolate its software dependencies;
 * works on all files at one specific level in the hierarchy (e.g. make_shots splits all your clips into shots);
 * has a name which reflects what it does, on what unit, with which method (e.g. make_clips_ffmpeg);
-* is written as a Python class wihin a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
+* is written as a Python class within a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
 
 ### Containers
@@ -194,7 +194,7 @@ you may encounter this error:
 
 Please use [github issue tracker](https://github.com/kingsdigitallab/framesense/issues) to report bugs or request new features.
 
-This tool is currently being developped primarily to serve the needs of the [ISSA research project](https://github.com/kingsdigitallab/issa). 
+This tool is currently being developed primarily to serve the needs of the [ISSA research project](https://github.com/kingsdigitallab/issa). 
 Tickets related to ISSA will therefore take priority. 
 Unrelated tickets are welcome but we can't guarantee that they will be addressed promptly or at all
 until FrameSense receives more dedicated support (external contributors or additional funding).
@@ -229,7 +229,7 @@ The name is OPERATOR_PARAM,
 where OPERATOR is the uppercase name of the operator,
 and PARAM the uppercase name of the parameter.
 For instance ANSWER_FRAMES_VLM_MODEL="qwen3-vl:2b" 
-to set the `model` param of `answer_frames_vml` to "qwen3-vl:2b".
+to set the `model` param of `answer_frames_vlm` to "qwen3-vl:2b".
 
 ## Operator parameters
 
