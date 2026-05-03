@@ -1,0 +1,77 @@
+from pathlib import Path
+from ..base.operator import Operator
+import json
+
+
+class TimecodeClipFFMPEG(Operator):
+    '''Overlay a running timecode to the top left corner of every frame of a clip'''
+
+    def get_supported_arguments(self):
+        ret = super().get_supported_arguments()
+        ret['redo'] = True
+        ret['filter'] = True
+        return ret
+
+    def _apply(self):
+        ret = None
+
+        for col in self.context['collections']:
+            for video_folder_path in col['attributes']['path'].iterdir():
+                if video_folder_path.is_dir():
+                    for clip_folder_path in video_folder_path.iterdir():
+                        if clip_folder_path.is_dir():
+                            clip_path = self._get_video_file_path(clip_folder_path)
+                            if clip_path:
+                                self._timecode_clip(clip_path)
+
+        return ret
+
+    def _get_video_frame_rate(self, clip_path: Path) -> str:
+        binding = [clip_path.parent, Path('/data')]
+        command_args = [
+            'ffprobe',
+            '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=r_frame_rate',
+            '-of', 'json',
+            clip_path,
+        ]
+        res = self._run_in_operator_container(command_args, binding)
+        metadata = json.loads(res.stdout)
+        rate_str = metadata['streams'][0]['r_frame_rate']
+        num, den = rate_str.split('/')
+        den = int(den)
+        num = int(num)
+        if den == 0:
+            return '25'
+        return str(round(num / den, 3))
+
+    def _timecode_clip(self, clip_path: Path):
+        if not self._is_path_selected(clip_path):
+            return
+
+        output_path = clip_path.parent / f'{clip_path.stem}_timecoded{clip_path.suffix}'
+
+        if self._is_redo() or not output_path.exists():
+            self._log(output_path)
+            fontsize = self.get_param('fontsize')
+            rate = self._get_video_frame_rate(clip_path)
+            vf = (
+                f"drawtext="
+                f"text='':"
+                f"timecode='00\\:00\\:00\\:00':"
+                f"rate={rate}:"
+                f"x=10:y=10:"
+                f"fontsize={fontsize}:"
+                f"fontcolor=white:"
+                f"box=1:"
+                f"boxcolor=black@0.5:"
+                f"boxborderw=5"
+            )
+            command = [
+                'ffmpeg', '-i', clip_path,
+                '-vf', vf,
+                '-c:a', 'copy',
+                output_path,
+            ]
+            self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
