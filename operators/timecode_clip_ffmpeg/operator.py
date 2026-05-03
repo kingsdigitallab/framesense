@@ -61,6 +61,7 @@ class TimecodeClipFFMPEG(Operator):
                 f"text='':"
                 f"timecode='00\\:00\\:00\\:00':"
                 f"rate={rate}:"
+                f"font='DejaVu Sans':"
                 f"x=10:y=10:"
                 f"fontsize={fontsize}:"
                 f"fontcolor=white:"
