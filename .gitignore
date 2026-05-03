@@ -209,3 +209,5 @@ cython_debug/
 /hf_cache
 transcription.json
 *.wav
+/source.ml
+/workshop/collections
