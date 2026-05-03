@@ -30,8 +30,6 @@ class Operator(ABC):
             'filter': False,
             'verbose': False,
             'redo': False,
-            'dry_run': False,
-            'parameters': False,
         }
 
     def get_unsupported_arguments(self):
@@ -679,8 +677,9 @@ class Operator(ABC):
     def _write_data_file(self, data_file_path: Path, content: dict):
         self.write_json(data_file_path, content)
 
-    def _get_operator_parameters(self):
-        return self._get_framesense_argument('parameters')
+    # def _get_operator_parameters(self):
+    #     # deprecated
+    #     return self._get_framesense_argument('parameters')
 
     def _fetch_json(self, url):
         try:
