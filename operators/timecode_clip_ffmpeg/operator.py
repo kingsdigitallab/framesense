@@ -42,6 +42,7 @@ class TimecodeClipFFMPEG(Operator):
             return
 
         self._log(output_path)
+        
         fontsize = self.get_param('fontsize')
         rate = self._get_video_frame_rate(clip_path)
         vf = (

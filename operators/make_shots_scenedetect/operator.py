@@ -13,7 +13,6 @@ class MakeShotsSceneDetect(Operator):
         ret = super().get_supported_arguments()
         ret['redo'] = True
         ret['filter'] = True
-        ret['parameters'] = True
         return ret
 
     def _apply(self):
@@ -24,7 +23,7 @@ class MakeShotsSceneDetect(Operator):
                 if video_folder_path.is_dir():
                     for clip_folder_path in video_folder_path.iterdir():
                         if clip_folder_path.is_dir():
-                            clip_path = self._get_video_file_path(clip_folder_path)
+                            clip_path = self._get_video_file_path(clip_folder_path, True)
                             if clip_path:
                                 self._make_shots(clip_path)
 
