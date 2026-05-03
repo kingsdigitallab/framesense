@@ -12,7 +12,7 @@
 
 Uses ffmpeg's drawtext filter to overlay a running SMPTE timecode (HH:MM:SS:FF) to the top left corner of every frame of a clip. The frame rate of the output video matches the source video.
 
-## Parameters (-p)
+## Parameters
 
 * `fontsize`: font size of the timecode text (default: 24)
 
