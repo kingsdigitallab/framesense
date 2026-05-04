@@ -9,7 +9,6 @@ class MakeFramesFFMPEG(Operator):
         ret = super().get_supported_arguments()
         ret['filter'] = True
         ret['redo'] = True
-        ret['parameters'] = True
         return ret
 
     def _apply(self):

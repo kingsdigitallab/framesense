@@ -13,7 +13,6 @@ class MakeShotsSceneDetect(Operator):
         ret = super().get_supported_arguments()
         ret['redo'] = True
         ret['filter'] = True
-        ret['parameters'] = True
         return ret
 
     def _apply(self):

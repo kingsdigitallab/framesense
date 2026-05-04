@@ -1,7 +1,12 @@
 {
     "meta": {
         "type": "collection",
-        "comment": "test collections"
+        "comment": "test collections",
+        "params": {
+            "transcribe_speech_parakeet": {
+                "cpu_only": 1
+            }
+        }
     },
     "data": [
         {

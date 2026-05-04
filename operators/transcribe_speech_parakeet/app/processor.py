@@ -67,9 +67,14 @@ class Transcriber:
     def __init__(self):
         import nemo.collections.asr as nemo_asr
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cpu'
+        if torch.cuda.is_available() and not PARAMS['cpu_only']:
+            self.device = 'cuda'
 
-        self.model = nemo_asr.models.ASRModel.from_pretrained(model_name=MODEL)
+        self.model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name=MODEL,
+            map_location=self.device
+        )
         # use local attention to avoid OOM errors on long-form audio
         self.model.change_attention_model(self_attention_model="rel_pos_local_attn", att_context_size=[256, 256])
 

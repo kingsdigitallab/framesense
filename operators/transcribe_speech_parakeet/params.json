@@ -1,4 +1,5 @@
 {
     "model": "nvidia/parakeet-tdt-0.6b-v3",
-    "model.large": "nvidia/canary-1b-v2"
+    "model.large": "nvidia/canary-1b-v2",
+    "cpu_only": 0
 }
