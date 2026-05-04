@@ -2,9 +2,7 @@
 
 FrameSense is a highly modular command line tool designed to process your video collections.
 
-**Status**: alpha
-
-**Current focus**: functional minimum viable product. The current implementation is still buggy and slow. Consolidation and optimisation will come at a later stage.
+**Current focus**: consolidation phase aiming to improve stability, performance and architecture.
 
 ## Requirements
 
