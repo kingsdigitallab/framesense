@@ -1,0 +1,36 @@
+{
+    "@context": "https://w3id.org/codemeta/3.0",
+    "applicationCategory": "SoftwareSourceCode",
+    "author": [
+        {
+            "name": "King's Digital Lab",
+            "@id": "https://github.com/kingsdigitallab",
+            "@type": "Organization"
+        }
+    ],
+    "codeRepository": "https://github.com/kingsdigitallab/framesense",
+    "dateCreated": "2025-06-17",
+    "description": "A modular command-line tool to process video collections.",
+    "identifier": "framesense",
+    "keywords": [
+        "command-line-tool",
+        "reusable",
+        "video-processing"
+    ],
+    "license": "https://spdx.org/licenses/MIT",
+    "name": "framesense",
+    "programmingLanguage": "Python",
+    "softwareRequirements": [
+        {
+            "name": "python-dotenv",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "spython",
+            "version": "==0.3.14"
+        },
+        "* python 3.10+ * Docker or Singularity"
+    ],
+    "issueTracker": "https://github.com/kingsdigitallab/framesense/issues",
+    "@type": "SoftwareSourceCode"
+}
