@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: FrameSense
+authors:
+abstract: A modular command-line tool to process video collections.
+repository-code: "https://github.com/kingsdigitallab/framesense"
+type: software
+version: 1.0.0
+license-url: "https://spdx.org/licenses/MIT"
+keywords:
+  - command-line-tool
+  - video-processing
+date-released: 2026-05-04
