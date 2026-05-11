@@ -3,22 +3,47 @@
     "applicationCategory": "SoftwareSourceCode",
     "author": [
         {
+            "affiliation": {
+                "name": "King's Digital Lab, King's College London",
+                "@type": "Organization"
+            },
+            "familyName": "Noël",
+            "givenName": "Geoffroy",
+            "@id": "https://github.com/geoffroy-noel-ddh",
+            "@type": "Person"
+        },
+        {
             "name": "King's Digital Lab",
-            "@id": "https://github.com/kingsdigitallab",
+            "@id": "https://kdl.kcl.ac.uk/",
             "@type": "Organization"
         }
     ],
     "codeRepository": "https://github.com/kingsdigitallab/framesense",
+    "contributor": {
+        "affiliation": {
+            "name": "Department of Digital Humanities, King's College London",
+            "@type": "Organization"
+        },
+        "familyName": "Chavez",
+        "givenName": "Daniel",
+        "@id": "https://orcid.org/0000-0002-9877-7496",
+        "@type": "Person"
+    },
     "dateCreated": "2025-06-17",
+    "dateModified": "2026-05-04",
     "description": "A modular command-line tool to process video collections.",
-    "identifier": "framesense",
+    "downloadUrl": "https://github.com/kingsdigitallab/framesense/archive/refs/tags/v1.0.0.tar.gz",
+    "funder": {
+        "name": "King's College London",
+        "@type": "Organization"
+    },
+    "identifier": "https://github.com/kingsdigitallab/framesense",
     "keywords": [
         "command-line-tool",
-        "reusable",
         "video-processing"
     ],
     "license": "https://spdx.org/licenses/MIT",
-    "name": "framesense",
+    "name": "FrameSense",
     "programmingLanguage": "Python",
     "softwareRequirements": [
         {
@@ -29,8 +54,11 @@
             "name": "spython",
             "version": "==0.3.14"
         },
-        "* python 3.10+ * Docker or Singularity"
+        "Docker or Singularity",
+        "LLM inference engine"
     ],
+    "version": "1.0.0",
+    "developmentStatus": "active",
     "issueTracker": "https://github.com/kingsdigitallab/framesense/issues",
     "@type": "SoftwareSourceCode"
 }
