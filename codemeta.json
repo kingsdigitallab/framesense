@@ -19,16 +19,18 @@
         }
     ],
     "codeRepository": "https://github.com/kingsdigitallab/framesense",
-    "contributor": {
-        "affiliation": {
-            "name": "Department of Digital Humanities, King's College London",
-            "@type": "Organization"
-        },
-        "familyName": "Chavez",
-        "givenName": "Daniel",
-        "@id": "https://orcid.org/0000-0002-9877-7496",
-        "@type": "Person"
-    },
+    "contributor": [
+        {
+            "affiliation": {
+                "name": "Department of Digital Humanities, King's College London",
+                "@type": "Organization"
+            },
+            "familyName": "Chavez",
+            "givenName": "Daniel",
+            "@id": "https://orcid.org/0000-0002-9877-7496",
+            "@type": "Person"
+        }
+    ],
     "dateCreated": "2025-06-17",
     "dateModified": "2026-05-04",
     "description": "A modular command-line tool to process video collections.",
