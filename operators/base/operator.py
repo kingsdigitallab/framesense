@@ -53,7 +53,7 @@ class Operator(ABC):
         return ret
 
     def _serve(self, collection):
-        self._log(f'Service running over collection {collection['id']}. Press CTRL C to stop.')
+        self._log(f'Service running over collection {collection["id"]}. Press CTRL C to stop.')
         ret = self._call_service_processor(None, collection['attributes']['path'])
         try:
             while True:

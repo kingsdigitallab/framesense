@@ -81,7 +81,7 @@ class AnswerFramesVLM(Operator):
                 response = self.send_prompt_to_openai_api_from_params(image_path=frame_file_path)
 
                 if response['error']:
-                    self._error(f'Unexpected error from the LLM inferrence platform ({response['error']})')
+                    self._error(f'Unexpected error from the LLM inferrence platform ({response["error"]})')
 
                 # print(response)
                 answer = response['result']
