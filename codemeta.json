@@ -1,0 +1,66 @@
+{
+    "@context": "https://w3id.org/codemeta/3.0",
+    "applicationCategory": "SoftwareSourceCode",
+    "author": [
+        {
+            "affiliation": {
+                "name": "King's Digital Lab, King's College London",
+                "@type": "Organization"
+            },
+            "familyName": "Noël",
+            "givenName": "Geoffroy",
+            "@id": "https://github.com/geoffroy-noel-ddh",
+            "@type": "Person"
+        },
+        {
+            "name": "King's Digital Lab",
+            "@id": "https://kdl.kcl.ac.uk/",
+            "@type": "Organization"
+        }
+    ],
+    "codeRepository": "https://github.com/kingsdigitallab/framesense",
+    "contributor": [
+        {
+            "affiliation": {
+                "name": "Department of Digital Humanities, King's College London",
+                "@type": "Organization"
+            },
+            "familyName": "Chavez",
+            "givenName": "Daniel",
+            "@id": "https://orcid.org/0000-0002-9877-7496",
+            "@type": "Person"
+        }
+    ],
+    "dateCreated": "2025-06-17",
+    "dateModified": "2026-05-04",
+    "description": "A modular command-line tool to process video collections.",
+    "downloadUrl": "https://github.com/kingsdigitallab/framesense/archive/refs/tags/v1.0.0.tar.gz",
+    "funder": {
+        "name": "King's College London",
+        "@type": "Organization"
+    },
+    "identifier": "https://github.com/kingsdigitallab/framesense",
+    "keywords": [
+        "command-line-tool",
+        "video-processing"
+    ],
+    "license": "https://spdx.org/licenses/MIT",
+    "name": "FrameSense",
+    "programmingLanguage": "Python",
+    "softwareRequirements": [
+        {
+            "name": "python-dotenv",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "spython",
+            "version": "==0.3.14"
+        },
+        "Docker or Singularity",
+        "LLM inference engine"
+    ],
+    "version": "1.0.0",
+    "developmentStatus": "active",
+    "issueTracker": "https://github.com/kingsdigitallab/framesense/issues",
+    "@type": "SoftwareSourceCode"
+}
