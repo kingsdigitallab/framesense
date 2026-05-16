@@ -18,14 +18,14 @@ class Annotations(Operator):
         ret = None
         
         for col in self.context['collections']:
-            print(f'{col["id"]}')
             annotations_path = col["attributes"]["annotations_path"]
+            self._log(f'{col["id"]} under {str(annotations_path)}')
             if not annotations_path:
-                print(f'  annotations_path not provided in collections.json')
+                self._warn(f'  annotations_path not provided in collections.json')
                 continue
 
             if not annotations_path.is_dir():
-                print(f'  annotations_path not found ({str(annotations_path)})')
+                self._warn(f'  annotations_path not found ({str(annotations_path)})')
                 continue
 
             annotation_paths = list(annotations_path.glob('*.json'))
@@ -41,8 +41,8 @@ class Annotations(Operator):
                     if not video_path.is_dir():
                         match_message = NO_VIDEO_FOLDER
 
-                    print(f'  {len(clips):3} clips {match_message:15} "{video_name}"')
+                    self._log(f'  {len(clips):3} clips {match_message:15} "{annotation_path}"')
 
-            print(f'  {len(annotation_paths)} annotation files under {str(annotations_path)}')
+            self._log(f'  {len(annotation_paths)} annotation files')
 
         return ret
