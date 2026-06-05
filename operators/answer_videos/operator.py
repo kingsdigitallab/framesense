@@ -5,7 +5,7 @@ import json
 import datetime
 import hashlib
 
-class AnswerVideosQwen3VL(Operator):
+class AnswerVideos(Operator):
     '''Let a VLM answer a question about a video'''
 
     def get_supported_arguments(self):

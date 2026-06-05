@@ -36,7 +36,7 @@ if [ "$SCENARIO" != "workshop" ]; then
     run_python_script "python framesense.py answer_transcription_ollama"
     run_python_script "python framesense.py transcode_clips_ffmpeg"
 
-    # run_python_script "python framesense.py answer_videos_qwen3vl"
+    # run_python_script "python framesense.py answer_videos"
 fi
 
 echo "-------"
