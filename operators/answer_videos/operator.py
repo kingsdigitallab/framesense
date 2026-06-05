@@ -1,12 +1,13 @@
 from pathlib import Path
+from abc import ABC, abstractmethod
 from ..base.operator import Operator
 import re
 import json
 import datetime
 import hashlib
 
-class AnswerVideos(Operator):
-    '''Let a VLM answer a question about a video'''
+class AnswerVideos(Operator, ABC):
+    '''Let a VLM answer questions about a video'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()
@@ -63,7 +64,8 @@ class AnswerVideos(Operator):
             prompt_length = len(re.findall(r'\w+', prompt))
             self._log(f'{video_path} (question: {question_key}; words in prompt: {prompt_length})')
 
-            response = self._call_service_processor(video_path, collection_path)
+            response = self._get_response_from_model(video_path, collection_path)           
+
             if response['error']:
                 self._error(response['error'])
 
@@ -92,3 +94,7 @@ class AnswerVideos(Operator):
         minutes = int(seconds // 60)
         seconds %= 60
         return f"{hours:02d}:{minutes:02d}:{int(seconds):02d}"
+
+    @abstractmethod
+    def _get_response_from_model(self, video_path, collection_path):
+        raise NotImplementedError
