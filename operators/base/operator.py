@@ -12,7 +12,7 @@ import time
 import re
 import http
 from datetime import datetime
-import shutil
+import base64
 
 ENGINES = ['docker', 'singularity']
 SERVICE_PORT = 5000
@@ -758,9 +758,8 @@ class Operator(ABC):
     def write_json(self, file_path: Path, content):
         file_path.write_text(json.dumps(content, indent=2))
 
-    def get_param(self, name):
-        ret = self.params[name]
-        return ret
+    def get_param(self, name, default=None):
+        return self.params.get(name, default)
 
     def set_param(self, name, value):
         self.params[name] = value
@@ -770,7 +769,8 @@ class Operator(ABC):
         'Convert dirty json to a pythons structure. Handles different formattings.'
         ret = dirty_json
         if isinstance(dirty_json, str):
-            json_blocks = re.sub(r'(?s)```json\b(.*)```', r'\1', dirty_json)
+            # json_blocks = re.sub(r'(?s)```json\b(.*)```', r'\1', dirty_json)
+            json_blocks = re.sub(r'(?s)^.*?```json\b(.*)```.*?$', r'\1', ret)
             clean_json = json_blocks.strip(' \n')
             if (clean_json.startswith('{') and clean_json.endswith('}')) or (clean_json.startswith('[') and clean_json.endswith(']')):
                 try:
@@ -818,18 +818,16 @@ class Operator(ABC):
 
         return ret
 
-    def send_prompt_to_openai_api_from_params(self, image_path=None):
+    def send_prompt_to_openai_api_from_params(self, media_path:Path=None):
+        '''
+            media_path: path to an image or a video (mp4)
+        '''
         import json
         import urllib.request
 
         # Define your parameters and arguments
         # TODO: call  getter instead
         params = self.params
-        # TODO:
-        images = []
-        if image_path:
-            import base64
-            images.append(base64.b64encode(Path(image_path).read_bytes()).decode('utf-8'))
 
         api_base = params['api_base']
         ollama_host = params.get('ollama_host', '')
@@ -839,6 +837,8 @@ class Operator(ABC):
 
         url = api_base.strip('/') + '/chat/completions'
 
+        is_thinking = bool(int(self.get_param('think', 0)))
+
         # Construct the request payload
         payload = {
             'model': params['model'],
@@ -847,23 +847,60 @@ class Operator(ABC):
                     'role': 'user',
                     'content': [
                         {'type': 'text', 'text': params['prompt']},
-                        {'type': 'image_url', 'image_url': f'data:image/png;base64,{images[0]}'}  
                     ],
-                    # 'images': images,
                 },
             ],
             'options': {
                 # works with Ollama's OpenAI API; other engines won't support that
                 'num_ctx': params['context_length'],
-                # works with Ollama's OpenAI API; should work w/ other engines
-                'seed': params['seed'],
+                'seed': self.get_param('seed', 42),
+                'temperature': self.get_param('temperature', 0.7),
+                'presence_penalty': self.get_param('presence_penalty', 0.5),
+                'repetition_penalty': self.get_param('repetition_penalty', 1.1),
+                'top_p': self.get_param('top_p', 0.95), # 
+                'extra_body': {
+                    "top_k": self.get_param('top_k', 40), # model only considers the top_k most likely next tokens
+                    "mm_processor_kwargs": {
+                        "fps": int(self.get_param('fps', 2)),
+                        "do_sample_frames": True
+                    }, # see Qwen3.5 card
+                }            
             },
             # works with Ollama's OpenAI API; not sure if works with others
             # TODO: "reasoning": {"enabled": True}
-            'think': params['think'],
+            'think': is_thinking,
             'stream': False,  # Set to False to get a single JSON response
-            'max_tokens': params['context_length']
+            'max_tokens': params['context_length'] # TODO: max_tokens is actually a limit on OUTPUT tokens
         }
+
+        if not is_thinking:
+            message_content = payload['messages'][0]['content']
+            # not sure which engine respect this one
+            payload['options']['extra_body']['enable_thinking'] = False
+            # sglang will respect that
+            payload['options']['extra_body']['chat_template_kwargs'] = {"enable_thinking": False}
+
+        # Attach media to payload
+        if media_path:
+            is_media_video = Path(media_path).suffix in ['.mp4']
+            message_content = payload['messages'][0]['content']
+            if is_media_video:
+                # TODO: check that API url is local; 
+                # # can't afford to send large video files for every prompt.
+                message_content.insert(0, {
+                    {
+                        "type": "video_url",
+                        "video_url": {
+                            "url": f"file://{media_path.absolute()}"
+                        }
+                    },
+                })
+            else:
+                image_base64 = base64.b64encode(Path(media_path).read_bytes()).decode('utf-8')
+                message_content.insert(0, {
+                    'type': 'image_url',
+                    'image_url': f'data:image/png;base64,{image_base64}'
+                })
 
         # Encode data to bytes
         data = json.dumps(payload).encode('utf-8')
@@ -871,12 +908,13 @@ class Operator(ABC):
         # Create and send the request
         req = urllib.request.Request(url, data=data, method='POST')
         req.add_header('Content-Type', 'application/json')
-        api_key = params['api_key']
+        api_key = self.get_param('api_key', 'unspecified')
         if api_key:
             req.add_header('Authorization', f'Bearer {api_key}')
 
         res = ''
         error = ''
+        usage = {}
         try:
             with urllib.request.urlopen(req) as response:
                 # Parse the JSON response
@@ -897,5 +935,7 @@ class Operator(ABC):
 
         return {
             'error': error,
-            'result': res
+            'result': res,
+            'options': payload['options'],
+            'usage': usage
         }

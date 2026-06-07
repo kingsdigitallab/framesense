@@ -74,8 +74,7 @@ class AnswerVideos(Operator, ABC):
             answers[question_key] = {
                 'answer': self._parse_dirty_json(answer),
                 'model': self.get_param('model'),
-                'max_new_tokens': self.get_param('max_new_tokens'),
-                'seed': self.get_param('seed'),
+                'options': response.get('options', {}),
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
                 'stats': response.get('stats', {})

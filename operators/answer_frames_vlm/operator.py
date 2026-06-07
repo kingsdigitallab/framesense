@@ -78,7 +78,7 @@ class AnswerFramesVLM(Operator):
                 # qwen will hallucinate if transcription is empty;
                 # also saves time;
                 
-                response = self.send_prompt_to_openai_api_from_params(image_path=frame_file_path)
+                response = self.send_prompt_to_openai_api_from_params(media_path=frame_file_path)
 
                 if response['error']:
                     self._error(f'Unexpected error from the LLM inferrence platform ({response["error"]})')
@@ -94,6 +94,8 @@ class AnswerFramesVLM(Operator):
                     'seed': self.get_param('seed'),
                     'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'prompt_hash': prompt_hash,
+                    'options': response.get('options', {}),
+                    'usage': response.get('usage', {})
                 }
                 has_changed = True
                 
