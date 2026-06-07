@@ -829,8 +829,8 @@ class Operator(ABC):
         # TODO: call  getter instead
         params = self.params
 
-        api_base = params['api_base']
-        ollama_host = params.get('ollama_host', '')
+        api_base = self.get_param('api_base', 'http://localhost:11434/v1')
+        ollama_host = self.get_param('ollama_host', '')
         if ollama_host:
             # backward compatibility with legacy parameter
             api_base = ollama_host.strip('/') +  '/v1'
@@ -839,6 +839,9 @@ class Operator(ABC):
 
         is_thinking = bool(int(self.get_param('think', 0)))
 
+        context_length = self.get_param('context_length', '4k')
+        context_length = self.get_byte_size(context_length)
+        
         # Construct the request payload
         payload = {
             'model': params['model'],
@@ -851,8 +854,10 @@ class Operator(ABC):
                 },
             ],
             'options': {
-                # works with Ollama's OpenAI API; other engines won't support that
-                'num_ctx': params['context_length'],
+                # works with Ollama's OpenAI API; other engines won't support that.
+                # But ollama may need it so it loads model w/ enough context.
+                # Default size depends on VRAM - https://docs.ollama.com/context-length
+                'num_ctx': context_length,
                 'seed': self.get_param('seed', 42),
                 'temperature': self.get_param('temperature', 0.7),
                 'presence_penalty': self.get_param('presence_penalty', 0.5),
@@ -870,7 +875,7 @@ class Operator(ABC):
             # TODO: "reasoning": {"enabled": True}
             'think': is_thinking,
             'stream': False,  # Set to False to get a single JSON response
-            'max_tokens': params['context_length'] # TODO: max_tokens is actually a limit on OUTPUT tokens
+            'max_tokens': context_length / 2 # TODO: max_tokens is actually a limit on OUTPUT tokens
         }
 
         if not is_thinking:
@@ -888,12 +893,10 @@ class Operator(ABC):
                 # TODO: check that API url is local; 
                 # # can't afford to send large video files for every prompt.
                 message_content.insert(0, {
-                    {
-                        "type": "video_url",
-                        "video_url": {
-                            "url": f"file://{media_path.absolute()}"
-                        }
-                    },
+                    "type": "video_url",
+                    "video_url": {
+                        "url": f"file://{media_path.absolute()}"
+                    }
                 })
             else:
                 image_base64 = base64.b64encode(Path(media_path).read_bytes()).decode('utf-8')
@@ -939,3 +942,20 @@ class Operator(ABC):
             'options': payload['options'],
             'usage': usage
         }
+        
+    def get_byte_size(self, size):
+        '''e.g. '4.5GB' -> 4718592 '''
+        ret = 0
+               
+        units = ['', 'k', 'm', 'g', 't']
+        match = re.match(r'^([\d.]+)\s*('+'|'.join(units)+')b?$', size.lower())
+    
+        if not match:
+            raise ValueError(f"Invalid size format: '{size}'")
+        
+        ret = float(match.group(1))
+        unit = match.group(2)
+        
+        ret = ret * (1024 ** units.index(unit))
+        
+        return int(ret)

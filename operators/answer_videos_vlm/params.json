@@ -1,5 +1,6 @@
 {
-    "model": "Qwen/Qwen3.5-4B",
+    "model": "Qwen/Qwen3.5-2B",
+    "api_base": "http://localhost:30000/v1",
     "seed": 3407,
     "temperature": 1.0,
     "top_p": 0.8,
