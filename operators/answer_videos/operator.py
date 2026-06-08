@@ -77,7 +77,8 @@ class AnswerVideos(Operator, ABC):
                 'options': response.get('options', {}),
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
-                'stats': response.get('stats', {})
+                'stats': response.get('stats', {}),
+                'usage': response.get('usage', {})
             }
         
             self._write_data_file(video_answers_path, answers_file_content)

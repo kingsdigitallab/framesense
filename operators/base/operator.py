@@ -839,8 +839,12 @@ class Operator(ABC):
 
         is_thinking = bool(int(self.get_param('think', 0)))
 
-        context_length = self.get_param('context_length', '4k')
-        context_length = self.get_byte_size(context_length)
+        max_tokens = self.get_byte_size(self.get_param('max_tokens', '16k'))
+        
+        # works with Ollama's OpenAI API; other engines won't support that.
+        # But ollama may need it so it loads model w/ enough context.
+        # Default size depends on VRAM - https://docs.ollama.com/context-length
+        context_length = self.get_byte_size(self.get_param('context_length', '4k'))
         
         # Construct the request payload
         payload = {
@@ -854,36 +858,33 @@ class Operator(ABC):
                 },
             ],
             'options': {
-                # works with Ollama's OpenAI API; other engines won't support that.
-                # But ollama may need it so it loads model w/ enough context.
-                # Default size depends on VRAM - https://docs.ollama.com/context-length
-                'num_ctx': context_length,
+                'num_ctx': context_length, # only for Ollama
                 'seed': self.get_param('seed', 42),
                 'temperature': self.get_param('temperature', 0.7),
                 'presence_penalty': self.get_param('presence_penalty', 0.5),
                 'repetition_penalty': self.get_param('repetition_penalty', 1.1),
                 'top_p': self.get_param('top_p', 0.95), # 
                 'extra_body': {
+                    "separate_reasoning": True, # qwen, same as --reasoning-parser qwen3 
                     "top_k": self.get_param('top_k', 40), # model only considers the top_k most likely next tokens
+                    # for qwen3.5+ video understanding # see Qwen3.5 card
                     "mm_processor_kwargs": {
                         "fps": int(self.get_param('fps', 2)),
                         "do_sample_frames": True
-                    }, # see Qwen3.5 card
+                    }, 
+                    # ?
+                    'enable_thinking': is_thinking,
+                    'chat_template_kwargs': {
+                        # for sglang/qwen3x
+                        "enable_thinking": is_thinking
+                    }
                 }            
             },
-            # works with Ollama's OpenAI API; not sure if works with others
-            # TODO: "reasoning": {"enabled": True}
-            'think': is_thinking,
+            # "reasoning": {"effort": "low"} # ? openai
+            'think': is_thinking, # for ollama
             'stream': False,  # Set to False to get a single JSON response
-            'max_tokens': context_length / 2 # TODO: max_tokens is actually a limit on OUTPUT tokens
+            'max_tokens': max_tokens # a limit on OUTPUT tokens
         }
-
-        if not is_thinking:
-            message_content = payload['messages'][0]['content']
-            # not sure which engine respect this one
-            payload['options']['extra_body']['enable_thinking'] = False
-            # sglang will respect that
-            payload['options']['extra_body']['chat_template_kwargs'] = {"enable_thinking": False}
 
         # Attach media to payload
         if media_path:
@@ -915,7 +916,8 @@ class Operator(ABC):
         if api_key:
             req.add_header('Authorization', f'Bearer {api_key}')
 
-        res = ''
+        answer = ''
+        res = None
         error = ''
         usage = {}
         try:
@@ -924,11 +926,7 @@ class Operator(ABC):
                 res = response.read().decode('utf-8')
                 # print(res)
                 res = json.loads(res)
-                usage = res['usage']
-                # print(usage)
-                res = res['choices'][0]['message']['content']
-                # res = res['message']['content']
-                # print(res)
+
         except urllib.error.HTTPError as e:
             error = f"HTTP Error: {e.code} - {e.reason}"
             if '404' in error:
@@ -936,9 +934,23 @@ class Operator(ABC):
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
 
+        if res:
+            usage = res.get('usage', {})
+            # print(usage)
+            error = 'Answer is missing from model response'
+            if res.get('choices', None) is not None:
+                first_choice = res['choices'][0]
+                if first_choice['finish_reason'] == 'stop':
+                    error = 'Answer is missing from model response'
+                    answer = first_choice['message']['content']
+                    if answer:
+                        error = ''
+                else:
+                    error = f'Incomplete response, reason: {first_choice['finish_reason']}'
+
         return {
             'error': error,
-            'result': res,
+            'result': answer,
             'options': payload['options'],
             'usage': usage
         }
@@ -948,7 +960,7 @@ class Operator(ABC):
         ret = 0
                
         units = ['', 'k', 'm', 'g', 't']
-        match = re.match(r'^([\d.]+)\s*('+'|'.join(units)+')b?$', size.lower())
+        match = re.match(r'^([\d.]+)\s*('+'|'.join(units)+')b?$', str(size).lower())
     
         if not match:
             raise ValueError(f"Invalid size format: '{size}'")

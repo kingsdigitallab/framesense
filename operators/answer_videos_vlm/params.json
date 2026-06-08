@@ -6,7 +6,7 @@
     "top_p": 0.8,
     "top_k": 20,
     "think": false,
-    "max_new_tokens": 2000,
+    "max_tokens": 2000,
     "questions": {
         "summary": {
             "question": "summarise in two short sentences the content of the video"
