@@ -916,6 +916,8 @@ class Operator(ABC):
         if api_key:
             req.add_header('Authorization', f'Bearer {api_key}')
 
+        t0 = time.time()
+
         answer = ''
         res = None
         error = ''
@@ -933,6 +935,8 @@ class Operator(ABC):
                 self._warn(f'404 error returned by inferrence platform. Check validity of address ({url}) and availability or model ({params["model"]})')
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
+
+        t1 = time.time()
 
         if res:
             usage = res.get('usage', {})
@@ -952,7 +956,10 @@ class Operator(ABC):
             'error': error,
             'result': answer,
             'options': payload['options'],
-            'usage': usage
+            'usage': usage,
+            'stats': {
+                'duration_seconds': t1 - t0
+            }
         }
         
     def get_byte_size(self, size):
