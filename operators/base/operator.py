@@ -941,12 +941,16 @@ class Operator(ABC):
             if res.get('choices', None) is not None:
                 first_choice = res['choices'][0]
                 if first_choice['finish_reason'] == 'stop':
-                    error = 'Answer is missing from model response'
+                    error = 'Answer is empty'
                     answer = first_choice['message']['content']
                     if answer:
                         error = ''
                 else:
                     error = f'Incomplete response, reason: {first_choice['finish_reason']}'
+            
+            if not answer:
+                self._debug(json.dumps(res, indent=2))
+                self._debug(json.dumps(payload, indent=2))
 
         return {
             'error': error,
