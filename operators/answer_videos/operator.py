@@ -40,7 +40,13 @@ class AnswerVideos(Operator, ABC):
         template = self.get_param('prompt_template')
         questions = self.get_param('questions')
 
+        filter_questions = self.get_param('filter_questions', '').split(',')
+        filter_questions = [q.trim() for q in filter_questions]
+
         for question_key, question in questions.items():
+            if filter_questions and question_key not in filter_questions:
+                continue
+
             prompt = template
             prompt = prompt.replace('{question}', question['question'])
 

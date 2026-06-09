@@ -822,8 +822,6 @@ class Operator(ABC):
         '''
             media_path: path to an image or a video (mp4)
         '''
-        import json
-        import urllib.request
 
         # Define your parameters and arguments
         # TODO: call  getter instead
@@ -870,8 +868,12 @@ class Operator(ABC):
                     # for qwen3.5+ video understanding # see Qwen3.5 card
                     "mm_processor_kwargs": {
                         "fps": int(self.get_param('fps', 2)),
-                        "do_sample_frames": True
-                    }, 
+                        "do_sample_frames": True,
+                        "size": {
+                            "longest_edge": self.get_byte_size(self.get_param('video_tokens', '32k')) * 2048, # 469762048,  # Enables 224k video tokens
+                            "shortest_edge": 4096
+                        }
+                    },
                     # ?
                     'enable_thinking': is_thinking,
                     'chat_template_kwargs': {
@@ -916,6 +918,8 @@ class Operator(ABC):
         if api_key:
             req.add_header('Authorization', f'Bearer {api_key}')
 
+        t0 = time.time()
+
         answer = ''
         res = None
         error = ''
@@ -933,6 +937,8 @@ class Operator(ABC):
                 self._warn(f'404 error returned by inferrence platform. Check validity of address ({url}) and availability or model ({params["model"]})')
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
+
+        t1 = time.time()
 
         if res:
             usage = res.get('usage', {})
@@ -956,7 +962,10 @@ class Operator(ABC):
             'error': error,
             'result': answer,
             'options': payload['options'],
-            'usage': usage
+            'usage': usage,
+            'stats': {
+                'duration_seconds': t1 - t0
+            }
         }
         
     def get_byte_size(self, size):

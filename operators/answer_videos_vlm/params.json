@@ -7,6 +7,7 @@
     "top_k": 20,
     "think": false,
     "max_tokens": 2000,
+    "filter_questions": "",
     "questions": {
         "summary": {
             "question": "summarise in two short sentences the content of the video"
