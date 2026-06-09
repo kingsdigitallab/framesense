@@ -41,7 +41,7 @@ class AnswerVideos(Operator, ABC):
         questions = self.get_param('questions')
 
         filter_questions = self.get_param('filter_questions', '').split(',')
-        filter_questions = [q.strip() for q in filter_questions]
+        filter_questions = [q.strip() for q in filter_questions if q.strip()]
 
         for question_key, question in questions.items():
             if filter_questions and question_key not in filter_questions:
