@@ -952,7 +952,7 @@ class Operator(ABC):
                     if answer:
                         error = ''
                 else:
-                    error = f'Incomplete response, reason: {first_choice['finish_reason']}'
+                    error = f'Incomplete response, reason: {first_choice["finish_reason"]}'
             
             if not answer:
                 self._debug(json.dumps(res, indent=2))
