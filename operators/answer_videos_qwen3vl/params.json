@@ -7,7 +7,6 @@
     "repetition_penalty": 1.0,
     "presence_penalty": 1.5,
     "think": false,
-    "max_tokens": 2000,
     "questions": {
         "summary": {
             "question": "summarise in two short sentences the content of the video"

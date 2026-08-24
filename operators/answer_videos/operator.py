@@ -55,7 +55,7 @@ class AnswerVideos(Operator, ABC):
                 for p
                 in [
                    self.get_param('model'), 
-                   self.get_param('max_new_tokens'),
+                   self.get_param('seed'),
                    prompt
                 ]
             ]))
