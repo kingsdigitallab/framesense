@@ -870,7 +870,7 @@ class Operator(ABC):
                         "fps": int(self.get_param('fps', 2)),
                         "do_sample_frames": True,
                         "size": {
-                            "longest_edge": self.get_byte_size(self.get_param('video_tokens', '32k')) * 2048, # 469762048,  # Enables 224k video tokens
+                            "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
                             "shortest_edge": 4096
                         }
                     },
