@@ -895,9 +895,13 @@ class Operator(ABC):
             if is_media_video:
                 # TODO: check that API url is local; 
                 # # can't afford to send large video files for every prompt.
+
+                # "video_url" for vllm and sglang, "input_video" for llama-server
+                # video_type = self.get_param('video_type', "video_url")
+                video_type = self.get_param('video_type', "input_video")
                 message_content.insert(0, {
-                    "type": "video_url",
-                    "video_url": {
+                    "type": video_type,
+                    video_type: {
                         "url": f"file://{media_path.absolute()}"
                     }
                 })
