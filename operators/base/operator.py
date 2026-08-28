@@ -818,7 +818,7 @@ class Operator(ABC):
 
         return ret
 
-    def send_prompt_to_openai_api_from_params(self, media_path:Path=None):
+    def send_prompt_to_openai_api_from_params(self, media_path:Path=None, collection_path:Path=None):
         '''
             media_path: path to an image or a video (mp4)
         '''
@@ -898,14 +898,17 @@ class Operator(ABC):
 
                 # "video_url" for vllm and sglang, "input_video" for llama-server
                 # video_type = self.get_param('video_type', "video_url")
-                video_type = self.get_param('video_type', "input_video")
+                inference_engine = self.get_param('inference_engine', 'llama-server')
+                video_type = 'input_video' if inference_engine == 'llama-server' else 'video_url'
+                video_url = f"file://{media_path.relative_to(collection_path)}" if inference_engine == 'llama-server' else f"file://{media_path.absolute()}"
                 message_content.insert(0, {
                     "type": video_type,
                     video_type: {
-                        "url": f"file://{media_path.absolute()}"
+                        "url": video_url
                     }
                 })
             else:
+                # TODO: could pass a URL if inferer collocated
                 image_base64 = base64.b64encode(Path(media_path).read_bytes()).decode('utf-8')
                 message_content.insert(0, {
                     'type': 'image_url',
