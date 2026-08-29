@@ -898,7 +898,8 @@ class Operator(ABC):
 
                 # "video_url" for vllm and sglang, "input_video" for llama-server
                 # video_type = self.get_param('video_type', "video_url")
-                inference_engine = self.get_param('inference_engine', 'llama-server')
+                # inference_engine = self.get_param('inference_engine', 'llama-server')
+                inference_engine = self.get_param('inference_engine', 'vllm')
                 video_type = 'input_video' if inference_engine == 'llama-server' else 'video_url'
                 video_url = f"file://{media_path.relative_to(collection_path)}" if inference_engine == 'llama-server' else f"file://{media_path.absolute()}"
                 message_content.insert(0, {
