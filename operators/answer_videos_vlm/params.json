@@ -5,8 +5,8 @@
     "temperature": 1.0,
     "top_p": 0.8,
     "top_k": 20,
-    "think": false,
-    "max_tokens": 2000,
+    "reasoning_effort": "none",
+    "max_tokens": "2k",
     "filter_questions": "",
     "video_tokens": "12k",
     "questions": {

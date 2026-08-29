@@ -835,7 +835,7 @@ class Operator(ABC):
 
         url = api_base.strip('/') + '/chat/completions'
 
-        is_thinking = bool(int(self.get_param('think', 0)))
+        # is_thinking = bool(int(self.get_param('think', 0)))
 
         max_tokens = self.get_byte_size(self.get_param('max_tokens', '16k'))
         
@@ -843,6 +843,11 @@ class Operator(ABC):
         # But ollama may need it so it loads model w/ enough context.
         # Default size depends on VRAM - https://docs.ollama.com/context-length
         context_length = self.get_byte_size(self.get_param('context_length', '4k'))
+        reasoning_effort = self.get_param('reasoning_effort', 'none')
+        is_thinking = reasoning_effort not in ['none', '', 'off', '0', None, 0, False]
+        top_k = self.get_param('top_k', 20) # model only considers the top_k most likely next tokens        
+       
+        # https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create
         
         # Construct the request payload
         payload = {
@@ -855,37 +860,35 @@ class Operator(ABC):
                     ],
                 },
             ],
-            'options': {
-                'num_ctx': context_length, # only for Ollama
-                'seed': self.get_param('seed', 42),
-                'temperature': self.get_param('temperature', 0.7),
-                'presence_penalty': self.get_param('presence_penalty', 0.5),
-                'repetition_penalty': self.get_param('repetition_penalty', 1.1),
-                'top_p': self.get_param('top_p', 0.95), # 
-                'extra_body': {
-                    "separate_reasoning": True, # qwen, same as --reasoning-parser qwen3 
-                    "top_k": self.get_param('top_k', 40), # model only considers the top_k most likely next tokens
-                    # for qwen3.5+ video understanding # see Qwen3.5 card
-                    "mm_processor_kwargs": {
-                        "fps": int(self.get_param('fps', 2)),
-                        "do_sample_frames": True,
-                        "size": {
-                            "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
-                            "shortest_edge": 4096
-                        }
-                    },
-                    # ?
-                    'enable_thinking': is_thinking,
-                    'chat_template_kwargs': {
-                        # for sglang/qwen3x
-                        "enable_thinking": is_thinking
-                    }
-                }            
-            },
-            # "reasoning": {"effort": "low"} # ? openai
-            'think': is_thinking, # for ollama
+            'max_tokens': max_tokens, # a limit on OUTPUT tokens # ! Deperacted according to OpenAI doc, max_completion_tokens
+            'num_ctx': context_length, # only for Ollama which loads models dynamically according to total context
+            'seed': self.get_param('seed', 42),
+            # See model card on HF for recommended values
+            'temperature': self.get_param('temperature', 0.7),
+            'presence_penalty': self.get_param('presence_penalty', 0.5),
+            'repetition_penalty': self.get_param('repetition_penalty', 1.1),
+            'top_p': self.get_param('top_p', 0.95), # 
+            'top_k': top_k, # here for sglang
+            
+            "reasoning_effort": reasoning_effort,
+            'enable_thinking': is_thinking,
+
             'stream': False,  # Set to False to get a single JSON response
-            'max_tokens': max_tokens # a limit on OUTPUT tokens
+            
+            'extra_body': {
+                "separate_reasoning": True, # qwen, same as --reasoning-parser qwen3 
+                "include_reasoning": False, # opposite of separate_reasoning but for vllm
+                "top_k": top_k, # here for vllm
+                # for qwen3.5+ video understanding, see Qwen3.5 card; for vllm but TODO: check for sglang
+                "mm_processor_kwargs": {
+                    "fps": int(self.get_param('fps', 2)),
+                    "do_sample_frames": True,
+                    "size": {
+                        "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
+                        "shortest_edge": 4096
+                    }
+                },
+            }            
         }
 
         # Attach media to payload
@@ -901,7 +904,10 @@ class Operator(ABC):
                 # inference_engine = self.get_param('inference_engine', 'llama-server')
                 inference_engine = self.get_param('inference_engine', 'vllm')
                 video_type = 'input_video' if inference_engine == 'llama-server' else 'video_url'
+                # "file:///cephfs/volumes/hpc_data_prj/dh_issa/ca337d95-d1b7-4efe-bfd9-6bb60ea0df32/issa/workshops/ws1/sample11/234552207.32/234552207.32.mp4"
                 video_url = f"file://{media_path.relative_to(collection_path)}" if inference_engine == 'llama-server' else f"file://{media_path.absolute()}"
+                # TODO: remove that hack for HPC scratch
+                video_url = video_url.replace('/cephfs/volumes/hpc_data_prj/dh_issa/ca337d95-d1b7-4efe-bfd9-6bb60ea0df32/', '/scratch/prj/dh_issa/')
                 message_content.insert(0, {
                     "type": video_type,
                     video_type: {
@@ -943,6 +949,8 @@ class Operator(ABC):
             error = f"HTTP Error: {e.code} - {e.reason}"
             if '404' in error:
                 self._warn(f'404 error returned by inferrence platform. Check validity of address ({url}) and availability or model ({params["model"]})')
+            if '400' in error:
+                self._warn(json.dumps(payload, indent=2))
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
 
@@ -966,10 +974,11 @@ class Operator(ABC):
                 self._debug(json.dumps(res, indent=2))
                 self._debug(json.dumps(payload, indent=2))
 
+        payload['messages'] = []
         return {
             'error': error,
             'result': answer,
-            'options': payload['options'],
+            'payload': payload,
             'usage': usage,
             'stats': {
                 'duration_seconds': t1 - t0
