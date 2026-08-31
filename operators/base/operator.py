@@ -850,7 +850,7 @@ class Operator(ABC):
         # https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create
         
         video_processor_options =  {
-            "fps": float(self.get_param('fps', 0.05)),
+            "fps": float(self.get_param('max_fps', 2)),
             # "do_sample_frames": True,
             "size": {
                 "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
@@ -892,24 +892,8 @@ class Operator(ABC):
                 "top_k": top_k, # here for vllm
                 # for qwen3.5+ video understanding, see Qwen3.5 card; for vllm but TODO: check for sglang
                 "mm_processor_kwargs": video_processor_options,
-#                 "mm_processor_kwargs": {
-#                     "fps": int(self.get_param('fps', 2)),
-#                     "do_sample_frames": True,
-#                     "size": {
-#                         "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
-#                         "shortest_edge": 4096
-#                     }
-#                 },
             },
             "mm_processor_kwargs": video_processor_options,
-#                 "fps": int(self.get_param('fps', 2)),
-#                 # "do_sample_frames": True,
-# #                 "size": {
-# #                     "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
-# #                     "shortest_edge": 4096
-# #                 }
-#             },
-
         }
 
         # Attach media to payload
