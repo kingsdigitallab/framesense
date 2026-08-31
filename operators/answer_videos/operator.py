@@ -80,7 +80,7 @@ class AnswerVideos(Operator, ABC):
             answers[question_key] = {
                 'answer': self._parse_dirty_json(answer),
                 'model': self.get_param('model'),
-                'options': response.get('options', {}),
+                'options': response.get('payload', {}),
                 'updated': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'prompt_hash': prompt_hash,
                 'stats': response.get('stats', {}),

@@ -849,6 +849,16 @@ class Operator(ABC):
        
         # https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create
         
+        video_processor_options =  {
+            "fps": float(self.get_param('fps', 0.05)),
+            # "do_sample_frames": True,
+            "size": {
+                "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
+                "shortest_edge": 4096
+            },
+            "max_frames": 8100,
+        }
+        
         # Construct the request payload
         payload = {
             'model': params['model'],
@@ -875,20 +885,31 @@ class Operator(ABC):
 
             'stream': False,  # Set to False to get a single JSON response
             
+            # Ignored by vllm (as confirmed by its DEBUG log)
             'extra_body': {
                 "separate_reasoning": True, # qwen, same as --reasoning-parser qwen3 
                 "include_reasoning": False, # opposite of separate_reasoning but for vllm
                 "top_k": top_k, # here for vllm
                 # for qwen3.5+ video understanding, see Qwen3.5 card; for vllm but TODO: check for sglang
-                "mm_processor_kwargs": {
-                    "fps": int(self.get_param('fps', 2)),
-                    "do_sample_frames": True,
-                    "size": {
-                        "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
-                        "shortest_edge": 4096
-                    }
-                },
-            }            
+                "mm_processor_kwargs": video_processor_options,
+#                 "mm_processor_kwargs": {
+#                     "fps": int(self.get_param('fps', 2)),
+#                     "do_sample_frames": True,
+#                     "size": {
+#                         "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
+#                         "shortest_edge": 4096
+#                     }
+#                 },
+            },
+            "mm_processor_kwargs": video_processor_options,
+#                 "fps": int(self.get_param('fps', 2)),
+#                 # "do_sample_frames": True,
+# #                 "size": {
+# #                     "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
+# #                     "shortest_edge": 4096
+# #                 }
+#             },
+
         }
 
         # Attach media to payload
@@ -951,6 +972,9 @@ class Operator(ABC):
                 self._warn(f'404 error returned by inferrence platform. Check validity of address ({url}) and availability or model ({params["model"]})')
             if '400' in error:
                 self._warn(json.dumps(payload, indent=2))
+                body = e.read().decode('utf-8')
+                self._warn(json.dumps(json.loads(body), indent=2))
+
         except urllib.error.URLError as e:
             error = f"URL Error: {e.reason}"
 
