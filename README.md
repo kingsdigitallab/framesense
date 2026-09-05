@@ -100,6 +100,11 @@ Check the README.md under each operator folder for a specification card. (Work i
 * **collections**:
     List all collections
 
+#### Pipelines
+
+* **[run_pipeline](operators/run_pipeline/)**:
+    Run a series of operators defined in a pipeline of the collections file
+
 #### Segmentation
 
 * **[make_clips_ffmpeg](operators/make_clips_ffmpeg/)**:
@@ -238,6 +243,7 @@ The value of any operator parameter originates from these sources,
 in the following order of precedence:
 * environment variable (see above)
 * variable in `.env` file
+* value under meta.pipelines.<PIPELINE>.operations[<I>].params in the collection json file, when the operator is run by run_pipeline
 * value under meta.params.OPERATOR.PARAM in the collection json file (note that OPERATOR and PARAM values should be in lower case, e.g. `answer_frames_vlm` and `model`)
 * the default value set in the operator's `params.json` file
 
