@@ -658,10 +658,38 @@ class Operator(ABC):
     
     def _is_path_selected(self, path: Path):
         ret = True
-        filter = self._get_framesense_argument('filter')
+        filter = self._get_filter_expression(path)
         if filter:
             filters = [f.strip().lower() for f in filter.split('|') if f.strip()]
             ret = any(f in str(path).lower() for f in filters)
+        return ret
+
+    def _get_filter_expression(self, path: Path):
+        '''Returns the filter expression, after resolution of a filter name declared under the filters attribute of the collection the path belongs to'''
+        ret = self._get_framesense_argument('filter')
+
+        if ret:
+            col = self._get_collection_of_path(path)
+            named_filters = col.get('attributes', {}).get('filters', {}) if col else {}
+
+            if ret in named_filters:
+                expression = named_filters[ret]
+                if not isinstance(expression, str):
+                    self._error(f"The value of filter `{ret}` in collection `{col['id']}` should be a string.")
+                ret = expression
+
+        return ret
+
+    def _get_collection_of_path(self, path: Path):
+        '''Returns the collection which path contains the given path, None if there is none'''
+        ret = None
+
+        for col in self.context['collections']:
+            col_path = col['attributes'].get('path', None)
+            if col_path and path.is_relative_to(col_path):
+                ret = col
+                break
+
         return ret
 
     def _read_data_file(self, data_file_path: Path, is_data_dict=False):

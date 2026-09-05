@@ -66,7 +66,7 @@ For instance, to see the collections and the videos they contain:
 
 ### arguments
 
-* `-f FILTER` : only input files which path contain the FILTER string (case insensitive) will be processed by the operator. FILTER can contain several alternative strings separated by `|`: a file is selected if its path contains any of them
+* `-f FILTER` : only input files which path contain the FILTER string (case insensitive) will be processed by the operator. FILTER can contain several alternative strings separated by `|`: a file is selected if its path contains any of them. If FILTER exactly matches the name of a filter declared under the `filters` attribute of a collection in the collections file (e.g. `"filters": {"ws1": "239343226|234552207"}`), the value of that entry is used as the FILTER expression for the files of this collection (e.g. `-f ws1`)
 * `-r` : forces the operator to **redo** the operation, even if the output already exists. **USE WITH CAUTION** as it can destroy outputs from previous operations
 * `-k` : **skip** inputs that fail processing instead of stopping the operator
 * `-v` : **verbose** mode, print more stuff
