@@ -17,7 +17,7 @@ class ClipFullVideo(Operator):
         ret = None
 
         for col in self.context['collections']:
-            for video_folder_path in col['attributes']['path'].iterdir():
+            for video_folder_path in sorted(col['attributes']['path'].iterdir()):
                 if not video_folder_path.is_dir(): continue
                 video_path = self._get_video_file_path(video_folder_path, direct_child_only=True)
                 if video_path:

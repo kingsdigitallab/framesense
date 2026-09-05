@@ -19,7 +19,7 @@ class ExtractSoundFFMPEG(Operator):
         ret = None
 
         for col in self.context['collections']:
-            for video_folder_path in col['attributes']['path'].iterdir():
+            for video_folder_path in sorted(col['attributes']['path'].iterdir()):
                 if video_folder_path.is_dir():
                     for clip_folder_path in sorted(video_folder_path.iterdir()):
                         if clip_folder_path.is_dir():
@@ -36,10 +36,11 @@ class ExtractSoundFFMPEG(Operator):
         sound_path = clip_path.with_suffix('.wav')
 
         if self._is_redo() or not sound_path.exists():
-            print(sound_path)
+            # print(sound_path)
+            video_folder_path = clip_path.parent.parent
             command = [
                 "ffmpeg",
-                "-i", clip_path,
+                "-i", clip_path.relative_to(video_folder_path),
                 # "-vn", 
                 # "-acodec", "libmp3lame", # mp3
                 # "-acodec", "pcm_s16le", # wav
@@ -51,4 +52,4 @@ class ExtractSoundFFMPEG(Operator):
                 "-y", # overwrite output
                 sound_path
             ]
-            self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
+            self._run_in_operator_container(command, [video_folder_path, '/data'], same_user=True)
