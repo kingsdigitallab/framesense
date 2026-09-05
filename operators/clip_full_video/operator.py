@@ -3,6 +3,7 @@ from ..base.operator import Operator
 import json
 
 CLIP_START_TIME_CODE = '00:00:00'
+CLIP_NAME_SUFFIX = '-full'
 
 class ClipFullVideo(Operator):
     '''Create a clip covering the whole video by symlinking its video file'''
@@ -48,7 +49,7 @@ class ClipFullVideo(Operator):
             self._warn(f'Could not read the duration of the video, clip not created: {video_path}')
             ret = 'skipped'
         else:
-            clip_name = f'{CLIP_START_TIME_CODE.replace(":", ".")}-{duration_seconds}'
+            clip_name = f'{CLIP_START_TIME_CODE.replace(":", ".")}-{duration_seconds}{CLIP_NAME_SUFFIX}'
             clip_folder_path = video_path.parent / clip_name
             clip_file_path = clip_folder_path / f'{clip_name}{video_path.suffix}'
 
