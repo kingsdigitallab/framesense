@@ -850,13 +850,13 @@ class Operator(ABC):
         # https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create
         
         video_processor_options =  {
-            "fps": float(self.get_param('max_fps', 2)),
+            # "fps": float(self.get_param('max_fps', 2)), # not read from here
             # "do_sample_frames": True,
             "size": {
                 "longest_edge": self.get_byte_size(self.get_param('video_tokens', '12k')) * 2048, # 469762048,  # Enables 224k video tokens
                 "shortest_edge": 4096
             },
-            "max_frames": 8100,
+            # "max_frames": 8100, # not read from here
         }
         
         # Construct the request payload
@@ -894,6 +894,14 @@ class Operator(ABC):
                 "mm_processor_kwargs": video_processor_options,
             },
             "mm_processor_kwargs": video_processor_options,
+            "media_io_kwargs": {
+                "video": {
+                    "fps": float(self.get_param('max_fps', 1.0)), 
+                    "num_frames": -1, 
+                    "max_frames": 15000 # number of seconds in the video (to support 1 fps): 8100-135m, 5400-90m, 3600-60m
+                    # "max_frames": 768, # vllm/qwen default
+                }
+            },
         }
 
         # Attach media to payload
