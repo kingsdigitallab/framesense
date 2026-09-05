@@ -30,6 +30,7 @@ class Operator(ABC):
             'filter': False,
             'verbose': False,
             'redo': False,
+            'skip': False,
         }
 
     def get_unsupported_arguments(self):
@@ -384,10 +385,10 @@ class Operator(ABC):
 
         return ret
 
-    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False):
-        return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service, share_network=share_network)
+    def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False, skip=False):
+        return self._run_in_container(self._get_container_image_name(), command_args, binding, same_user, port_mapping, is_service, share_network=share_network, skip=skip)
 
-    def _run_in_container(self, container_image_name, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False):
+    def _run_in_container(self, container_image_name, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False, skip=False):
         '''Runs a command in a new container.
         command_args: list of items
             NO (the first item is the image name)
@@ -518,10 +519,9 @@ class Operator(ABC):
             if is_service:
                 return self._run_service(engine_command_args)
             else:
-                return self._run_command(engine_command_args)
+                return self._run_command(engine_command_args, skip=skip)
 
-    
-    def _run_command(self, command_args: [str]) -> subprocess.CompletedProcess[str]:
+    def _run_command(self, command_args: [str], skip=False) -> subprocess.CompletedProcess[str]:
         res = None
 
         command_as_string = ' '.join([str(a) for a in command_args])
@@ -537,7 +537,10 @@ class Operator(ABC):
                 self._log('[START COMMAND ERROR--------------------')
                 self._log(res.stderr)
                 self._log('END COMMAND ERROR----------------------]')
-                self._error(error_message)
+                if skip:
+                    self._warn(f'{error_message} Continuing anyway.')
+                else:
+                    self._error(error_message)
         except Exception as e:
             self._log(f'{error_message}', 'ERROR')
             raise e
@@ -624,6 +627,9 @@ class Operator(ABC):
 
     def _is_redo(self):
         return bool(self._get_framesense_argument('redo'))
+
+    def _is_skip(self):
+        return bool(self._get_framesense_argument('skip'))
 
     def _get_framesense_argument(self, arg_name, default=''):
         ret = getattr(self.context['command_args'], arg_name, default)

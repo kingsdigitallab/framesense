@@ -8,6 +8,10 @@
 
 * clips (C/C.mp4)
 
+At the end of the run a summary is printed:
+how many clips were created or already existed,
+and how many videos were skipped.
+
 ## Method
 
 For each video V/V.mp4,
@@ -43,3 +47,13 @@ The clip (C/C.mp4) does not already exist.
 
 Will remove and recreate the symlink,
 leaving any other file in the clip folder untouched.
+
+## Skip (-k)
+
+Videos whose duration cannot be read
+(e.g. corrupted or truncated files)
+are skipped with a warning
+and the run continues.
+
+Without -k the operator stops
+on the first unreadable video.

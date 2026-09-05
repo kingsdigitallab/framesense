@@ -68,6 +68,7 @@ For instance, to see the collections and the videos they contain:
 
 * `-f FILTER` : only input files which path contain the FILTER string (case insensitive) will be processed by the operator
 * `-r` : forces the operator to **redo** the operation, even if the output already exists. **USE WITH CAUTION** as it can destroy outputs from previous operations
+* `-k` : **skip** inputs that fail processing instead of stopping the operator
 * `-v` : **verbose** mode, print more stuff
 * `--dry-run` : does not make any change on disk. A way of testing an operation's scope before running it
 
