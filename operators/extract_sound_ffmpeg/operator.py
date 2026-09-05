@@ -40,7 +40,7 @@ class ExtractSoundFFMPEG(Operator):
             video_folder_path = clip_path.parent.parent
             command = [
                 "ffmpeg",
-                "-i", clip_path.relative_to(video_folder_path),
+                "-i", clip_path,
                 # "-vn", 
                 # "-acodec", "libmp3lame", # mp3
                 # "-acodec", "pcm_s16le", # wav
