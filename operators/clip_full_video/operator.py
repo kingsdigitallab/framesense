@@ -4,6 +4,8 @@ import json
 
 CLIP_START_TIME_CODE = '00:00:00'
 CLIP_NAME_SUFFIX = '-full'
+CLIP_NAME_PREFIX = CLIP_START_TIME_CODE.replace(':', '.')
+CLIP_NAME_PATTERN = f'{CLIP_NAME_PREFIX}-*{CLIP_NAME_SUFFIX}'
 
 class ClipFullVideo(Operator):
     '''Create a clip covering the whole video by symlinking its video file'''
@@ -43,28 +45,43 @@ class ClipFullVideo(Operator):
         if not self._is_path_selected(video_path):
             return ret
 
-        duration_seconds = self._get_video_duration_seconds(video_path)
-
-        if duration_seconds is None:
-            self._warn(f'Could not read the duration of the video, clip not created: {video_path}')
-            ret = 'skipped'
+        if not self._is_redo() and self._get_existing_full_clip_folder_path(video_path):
+            ret = 'existing'
         else:
-            clip_name = f'{CLIP_START_TIME_CODE.replace(":", ".")}-{duration_seconds}{CLIP_NAME_SUFFIX}'
-            clip_folder_path = video_path.parent / clip_name
-            clip_file_path = clip_folder_path / f'{clip_name}{video_path.suffix}'
+            duration_seconds = self._get_video_duration_seconds(video_path)
 
-            if self._is_redo():
-                clip_file_path.unlink(missing_ok=True)
-
-            if clip_file_path.exists():
-                ret = 'existing'
+            if duration_seconds is None:
+                self._warn(f'Could not read the duration of the video, clip not created: {video_path}')
+                ret = 'skipped'
             else:
-                if not clip_folder_path.exists():
-                    clip_folder_path.mkdir()
+                clip_name = f'{CLIP_NAME_PREFIX}-{duration_seconds}{CLIP_NAME_SUFFIX}'
+                clip_folder_path = video_path.parent / clip_name
+                clip_file_path = clip_folder_path / f'{clip_name}{video_path.suffix}'
 
-                self._log(f'create new full clip {clip_file_path} symlinking to video {video_path.name}')
-                clip_file_path.symlink_to(Path('..') / video_path.name)
-                ret = 'created'
+                if self._is_redo():
+                    clip_file_path.unlink(missing_ok=True)
+
+                if clip_file_path.exists():
+                    ret = 'existing'
+                else:
+                    if not clip_folder_path.exists():
+                        clip_folder_path.mkdir()
+
+                    self._log(f'create new full clip {clip_file_path} symlinking to video {video_path.name}')
+                    clip_file_path.symlink_to(Path('..') / video_path.name)
+                    ret = 'created'
+
+        return ret
+
+    def _get_existing_full_clip_folder_path(self, video_path: Path):
+        '''Returns the folder of a full clip from a previous run which contains its clip file, None if there is none'''
+        ret = None
+
+        for clip_folder_path in video_path.parent.glob(CLIP_NAME_PATTERN):
+            clip_file_path = clip_folder_path / f'{clip_folder_path.name}{video_path.suffix}'
+            if clip_file_path.is_file():
+                ret = clip_folder_path
+                break
 
         return ret
 

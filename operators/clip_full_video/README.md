@@ -45,6 +45,12 @@ Not supported
 
 The clip (C/C.mp4) does not already exist.
 
+To save time the video duration is not read
+when the video folder already contains
+a full clip folder (00.00.00-*-full) with its clip file in it.
+Use -r to process the video anyway,
+for instance if the video file has changed since.
+
 ## Residue
 
 Full clips created by a previous version
