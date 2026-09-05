@@ -41,7 +41,7 @@ class ClipFullVideo(Operator):
             if not clip_folder_path.exists():
                 clip_folder_path.mkdir()
 
-            print(clip_file_path)
+            self._log(f'create new full clip {clip_file_path} symlinking to video {video_path.name}')
             clip_file_path.symlink_to(Path('..') / video_path.name)
 
     def _get_video_duration_seconds(self, video_path: Path) -> int:
