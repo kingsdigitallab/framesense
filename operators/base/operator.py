@@ -660,7 +660,8 @@ class Operator(ABC):
         ret = True
         filter = self._get_framesense_argument('filter')
         if filter:
-            ret = filter.lower() in str(path).lower()
+            filters = [f.strip().lower() for f in filter.split('|') if f.strip()]
+            ret = any(f in str(path).lower() for f in filters)
         return ret
 
     def _read_data_file(self, data_file_path: Path, is_data_dict=False):
