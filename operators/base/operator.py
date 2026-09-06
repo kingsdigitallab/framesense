@@ -330,7 +330,7 @@ class Operator(ABC):
         self.service_output = ''
         self.service_collection_path = None
     
-    def _call_service_processor(self, input_file_path: Path, collection_path: Path):
+    def _call_service_processor(self, input_file_path: Path, collection_path: Path, skip=False):
         ret = {
             'error': 'unknown error',
             'result': [],
@@ -381,7 +381,11 @@ class Operator(ABC):
                 stack = response.get('stack', '')
                 if stack:
                     self._debug(f'Processing service returned error. Stack = \n\n{stack}')
-                self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
+                if skip:
+                    self._warn(f'Processing service returned error. Input = {input_file_path}; Error = {error}. Continuing anyway.')
+                    ret = response
+                else:
+                    self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
 
         return ret
 

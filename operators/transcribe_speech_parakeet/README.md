@@ -8,6 +8,11 @@
 
 * text file (e.g. `gotdfather/00.00.03-62/transcription.json`)
 
+At the end of the run a summary is printed:
+how many transcriptions were created or already existed,
+how many clips were skipped,
+and how many sound files were not found.
+
 ## Method
 
 Uses speech-to-text parakeet model
@@ -16,11 +21,22 @@ Applies to all clips in the collections.
 
 ## Run if
 
-No sound file already exists.
+No transcription file already exists.
 
 ## Redo (-r)
 
 Supported.
+
+## Skip (-k)
+
+Clips which sound cannot be transcribed
+are skipped with a warning
+and the run continues.
+No transcription file is written for them,
+so they are transcribed again on the next run.
+
+Without -k the operator stops
+on the first failing clip.
 
 ## Filtering (-f)
 
