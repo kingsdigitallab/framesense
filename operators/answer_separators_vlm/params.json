@@ -1,0 +1,30 @@
+{
+    "model": "Qwen/Qwen3.5-2B",
+    "api_base": "http://localhost:30000/v1",
+    "seed": 3407,
+    "temperature": 1.0,
+    "top_p": 0.8,
+    "top_k": 20,
+    "reasoning_effort": "none",
+    "max_tokens": "2k",
+    "filter_questions": "",
+    "video_tokens": "12k",
+    "max_fps": 2.0,
+    "chunk_duration_secs": 900,
+    "chunk_overlap_secs": 120,
+    "questions": {
+        "separators": {
+            "question": "List every separator between distinct programmes: any interruption between two different programmes, such as colour bars, test cards, station idents or logos, black screens, static or noise, countdown leaders, copyright or title slates, 'please stand by' slides, or any other interstitial, whatever the genre, the source or the decade of the programmes."
+        }
+    },
+    "prompt_template_MULTILINES": [
+        "{question}",
+        "",
+        "Give your answer as a json array; each element is an object with three keys:",
+        "- \"start\": the timecode at which the separator begins, in the HH:MM:SS format",
+        "- \"end\": the timecode at which the separator ends, in the HH:MM:SS format",
+        "- \"tag\": a short label describing the nature of the separator",
+        "",
+        "Answer with the json array only, e.g. [{\"start\": \"00:12:34\", \"end\": \"00:12:41\", \"tag\": \"colour bars\"}], or [] if there is no separator."
+    ]
+}

@@ -38,6 +38,7 @@ if [ "$SCENARIO" != "workshop" ]; then
 
     ## Requires vLLM or SGLang inferrence engine and 24+GB VRAM
     # run_python_script "python framesense.py answer_videos_vlm"
+    # run_python_script "python framesense.py answer_separators_vlm"
     ## Requires 24GB VRAM
     # run_python_script "python framesense.py answer_videos_qwen3vl"
 fi

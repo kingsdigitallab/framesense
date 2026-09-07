@@ -139,6 +139,8 @@ Check the README.md under each operator folder for a specification card. (Work i
     Answer questions about a clip transcription using a large language model
 * **[answer_frames_vlm](operators/answer_frames_vlm/)**:
     Answer questions about a frame using a vision language model
+* **[answer_separators_vlm](operators/answer_separators_vlm/)**:
+    List the separators between distinct programmes in a video using a video language model
 
 ### Design principles
 
