@@ -7,6 +7,7 @@ from ..base.operator import Operator
 TRANSCRIPTION_FILE_NAME = 'transcription.json'
 SRT_FILE_NAME = 'transcription.srt'
 SUB_SUFFIX = '-sub'
+TMP_SUFFIX = '-tmp'
 CONTAINER_DATA_PATH = Path('/data')
 # characters which are special to the FFMPEG filter syntax
 FILTER_SPECIAL_CHARACTERS = ['\\', ':', ',', "'"]
@@ -70,6 +71,9 @@ class SubClipsFFMPEG(Operator):
 
                 sub_folder_path.mkdir(exist_ok=True)
 
+                # written to a temporary file in the same folder, renamed on completion, so that the operation is atomic
+                subbed_clip_tmp_path = sub_folder_path / f'{clip_path.stem}{SUB_SUFFIX}{TMP_SUFFIX}{clip_path.suffix}'
+
                 self._log(subbed_clip_path)
 
                 command = [
@@ -78,15 +82,16 @@ class SubClipsFFMPEG(Operator):
                     "-c:a", "copy",
                     "-vf", self._get_subtitles_filter(srt_path, collection_path),
                     "-y",
-                    subbed_clip_path
+                    subbed_clip_tmp_path
                 ]
                 res = self._run_in_operator_container(command, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=self._is_skip())
 
                 if res.returncode > 0:
-                    subbed_clip_path.unlink(missing_ok=True)
+                    subbed_clip_tmp_path.unlink(missing_ok=True)
                     self._warn(f'Subtitles not burned into clip: {clip_path}')
                     ret = 'skipped'
                 else:
+                    subbed_clip_tmp_path.rename(subbed_clip_path)
                     ret = 'created'
             else:
                 ret = 'existing'
