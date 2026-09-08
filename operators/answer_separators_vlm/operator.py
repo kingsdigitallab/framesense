@@ -96,7 +96,9 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
             separators += self._get_chunk_separators(response, start_secs)
 
             for k, v in response.get('usage', {}).items():
-                usage[k] = usage.get(k, 0) + v
+                # usage[k] = usage.get(k, 0) 
+                if isinstance(v, int):
+                    usage[k] = usage.get(k, 0) + v
 
             stats['duration_seconds'] += response.get('stats', {}).get('duration_seconds', 0.0)
 
@@ -156,8 +158,8 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         chunk_path = chunks_folder_path / CHUNK_FILE_NAME_TEMPLATE.format(start=start_secs, end=end_secs)
 
-        if self._is_redo() and chunk_path not in self.cut_chunk_paths:
-            chunk_path.unlink(missing_ok=True)
+#         if self._is_redo() and chunk_path not in self.cut_chunk_paths:
+#             chunk_path.unlink(missing_ok=True)
 
         self.cut_chunk_paths.add(chunk_path)
 
@@ -168,10 +170,11 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
                 '-ss', str(start_secs),
                 '-i', video_path,
                 '-t', str(end_secs - start_secs),
+                '-vf', f"fps={self.get_param('fps', 2)}", # doesn't save much space, but saves 30% time
                 '-c:v', CHUNK_VIDEO_CODEC,
                 '-preset', CHUNK_VIDEO_PRESET,
                 '-crf', CHUNK_VIDEO_CRF,
-                '-c:a', CHUNK_AUDIO_CODEC,
+                # '-c:a', CHUNK_AUDIO_CODEC, # audio not needed beause VML doesn't hear
                 chunk_path,
             ]
             self._run_in_operator_container(command_args, [video_path.parent, Path('/data')], same_user=True)
