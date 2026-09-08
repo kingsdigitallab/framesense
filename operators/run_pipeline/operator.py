@@ -1,5 +1,6 @@
 from ..base.operator import Operator
 from importlib import import_module
+import copy
 import inspect
 import time
 
@@ -12,6 +13,7 @@ class RunPipeline(Operator):
         ret = super().get_supported_arguments()
         ret['filter'] = True
         ret['verbose'] = True
+        ret['skip'] = True
         return ret
 
     def _apply(self):
@@ -120,7 +122,13 @@ class RunPipeline(Operator):
         operator.set_context(operation_run['context'])
 
         if not operator.get_supported_arguments().get('filter', False) and self._get_framesense_argument('filter'):
-            self._warn(f'Operator {operator_name} does not support the -f filter argument; the operation will process all its inputs.')
+            self._error(f'Operator {operator_name} does not support the -f filter argument; the operation will process all its inputs.')
+
+        if not operator.get_supported_arguments().get('skip', False) and self._is_skip():
+            self._warn(f'Operator {operator_name} does not support the -k skip argument; the operation will stop at the first input which fails processing.')
+            args_without_skip = copy.copy(operator.context['command_args'])
+            args_without_skip.skip = False
+            operator.context['command_args'] = args_without_skip
 
         self._log(f'[{position}/{total}] running {operator_name}...')
 

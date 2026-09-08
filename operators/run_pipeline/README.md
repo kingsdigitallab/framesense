@@ -53,7 +53,12 @@ The -f and -v arguments are passed to every operation.
 The -f argument is ignored, with a warning,
 by the operators which don't support it.
 
-The -r and -k arguments are not supported by run_pipeline.
+The -k argument is passed to the operations
+whose operator supports it.
+The other operations run in non-skip mode,
+with a warning.
+
+The -r argument is not supported by run_pipeline.
 To redo an operation, run its operator directly.
 
 ## Parameters
