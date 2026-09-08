@@ -130,6 +130,8 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 * **[transcode_clips_ffmpeg](operators/transcode_clips_ffmpeg/)**:
     Convert a clip from one format to another
+* **[sub_clips_ffmpeg](operators/sub_clips_ffmpeg/)**:
+    Burn the subtitles of a transcription file onto a clip
 
 #### Question answering
 

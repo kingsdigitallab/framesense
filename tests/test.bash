@@ -35,6 +35,7 @@ if [ "$SCENARIO" != "workshop" ]; then
     run_python_script "python framesense.py transcribe_speech_parakeet"
     run_python_script "python framesense.py answer_transcription_ollama"
     run_python_script "python framesense.py transcode_clips_ffmpeg"
+    run_python_script "python framesense.py sub_clips_ffmpeg"
 
     ## Requires vLLM or SGLang inferrence engine and 24+GB VRAM
     # run_python_script "python framesense.py answer_videos_vlm"
