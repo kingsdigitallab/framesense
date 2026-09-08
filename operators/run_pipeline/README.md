@@ -50,8 +50,8 @@ before the first operation is run.
 The pipeline stops at the first operation which fails.
 
 The -f and -v arguments are passed to every operation.
-The -f argument is ignored, with a warning,
-by the operators which don't support it.
+The pipeline stops with an error if the operator
+of an operation doesn't support the -f argument.
 
 The -k argument is passed to the operations
 whose operator supports it.
