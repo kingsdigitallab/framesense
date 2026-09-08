@@ -91,6 +91,8 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
                 ret['error'] = f'Chunk {self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)}: {response["error"]}'
                 break
 
+            ret['payload'] = response.get('payload', {})
+
             separators += self._get_chunk_separators(response, start_secs)
 
             for k, v in response.get('usage', {}).items():
@@ -100,11 +102,8 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         if not ret['error']:
             ret['result'] = self._format_separators(self._merge_separators(separators))
-            ret['payload'] = {
-                'chunks': chunks_info,
-            }
             ret['usage'] = usage
-            ret['stats'] = stats
+            ret['stats'] = dict(stats, chunks=chunks_info)
 
         return ret
 
