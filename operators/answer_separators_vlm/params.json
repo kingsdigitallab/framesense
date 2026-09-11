@@ -1,12 +1,12 @@
 {
     "model": "Qwen/Qwen3.5-2B",
     "api_base": "http://localhost:30000/v1",
-    "seed": 3407,
+    "seed": 1234,
     "temperature": 1.0,
     "top_p": 0.8,
     "top_k": 20,
     "reasoning_effort": "none",
-    "max_tokens": "2k",
+    "max_tokens": "10k",
     "filter_questions": "",
     "video_tokens": "12k",
     "max_fps": 2.0,
@@ -14,7 +14,7 @@
     "chunk_overlap_secs": 120,
     "questions": {
         "separators": {
-            "question": "List every separator between distinct programmes: any interruption between two different programmes, such as colour bars, test cards, station idents or logos, black screens, static or noise, countdown leaders, copyright or title slates, 'please stand by' slides, or any other interstitial, whatever the genre, the source or the decade of the programmes."
+            "question": "List every full-screen separator between distinct programmes. A visual separator usually looks like SMPTE color bars, blank screen, production card, countdown leaders, static or white noise. It is always totally distinct in style from surrounding programmes, usually non-photographic and never intended for public audience. Compare with programmes on either side of the separator to confirm this. Return an empty list if the input doesn't contain any definite separator. Other screens within a programme like ending credits or chapter titles should not be reported as programme separators but may help finding/confirming nearby separators."
         }
     },
     "prompt_template_MULTILINES": [
