@@ -25,6 +25,6 @@
         "- \"end\": the timecode at which the separator ends, in the HH:MM:SS format",
         "- \"tag\": a short label describing the nature of the separator",
         "",
-        "Answer with the json array only, e.g. [{\"start\": \"00:12:34\", \"end\": \"00:12:41\", \"tag\": \"colour bars\"}], or [] if there is no separator."
+        "Answer with the json array only, e.g. [{\"start\": \"00:12:34\", \"end\": \"00:12:41\", \"tag\": \"black screen\"}], or [] if there is no separator."
     ]
 }

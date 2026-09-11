@@ -158,8 +158,9 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         chunk_path = chunks_folder_path / CHUNK_FILE_NAME_TEMPLATE.format(start=start_secs, end=end_secs)
 
-#         if self._is_redo() and chunk_path not in self.cut_chunk_paths:
-#             chunk_path.unlink(missing_ok=True)
+        # TODO: uncomment. Temporarily commented to avoid redoing chunks just b/c we redo prompts
+        if self._is_redo() and chunk_path not in self.cut_chunk_paths:
+            chunk_path.unlink(missing_ok=True)
 
         self.cut_chunk_paths.add(chunk_path)
 
