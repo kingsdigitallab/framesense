@@ -69,16 +69,21 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
         for i, chunk in enumerate(chunks):
             start_secs, end_secs = chunk
 
-            chunk_path = self._make_chunk(video_path, start_secs, end_secs)
-            if chunk_path is None:
-                ret['error'] = f'Could not create the chunk {self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)}'
-                break
-
-            chunks_info.append({
+            chunk_info = {
                 'start': self.get_hhmmss(start_secs),
                 'end': self.get_hhmmss(end_secs),
-                'file': str(chunk_path.relative_to(video_path.parent)),
-            })
+                'file': '',
+                'error': '',
+            }
+            chunks_info.append(chunk_info)
+
+            chunk_path = self._make_chunk(video_path, start_secs, end_secs)
+            if chunk_path is None:
+                chunk_info['error'] = f'Could not create the chunk {self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)}'
+                ret['error'] = chunk_info['error']
+                break
+
+            chunk_info['file'] = str(chunk_path.relative_to(video_path.parent))
 
             self._log(f'{video_path.name}: chunk {i + 1}/{len(chunks)} ({self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)})')
 
@@ -88,12 +93,15 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
             response = self.send_prompt_to_openai_api_from_params(chunk_path, collection_path)
 
             if response['error']:
+                chunk_info['error'] = response['error']
                 ret['error'] = f'Chunk {self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)}: {response["error"]}'
                 break
 
             ret['payload'] = response.get('payload', {})
 
-            separators += self._get_chunk_separators(response, start_secs)
+            chunk_separators, chunk_error = self._get_chunk_separators(response, start_secs)
+            chunk_info['error'] = chunk_error
+            separators += chunk_separators
 
             for k, v in response.get('usage', {}).items():
                 # usage[k] = usage.get(k, 0) 
@@ -102,10 +110,11 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
             stats['duration_seconds'] += response.get('stats', {}).get('duration_seconds', 0.0)
 
+        ret['stats'] = dict(stats, chunks=chunks_info)
+
         if not ret['error']:
             ret['result'] = self._format_separators(self._merge_separators(separators))
             ret['usage'] = usage
-            ret['stats'] = dict(stats, chunks=chunks_info)
 
         return ret
 
@@ -185,9 +194,10 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         return ret
 
-    def _get_chunk_separators(self, response: dict, start_secs: int) -> list:
-        '''Returns the separators listed in a chunk answer, with timecodes converted to seconds relative to the full video'''
+    def _get_chunk_separators(self, response: dict, start_secs: int) -> tuple:
+        '''Returns the separators listed in a chunk answer, with timecodes converted to seconds relative to the full video, and the description of the issues found in the answer ('' if none)'''
         ret = []
+        errors = []
 
         answer = self._parse_dirty_json(response['result'])
 
@@ -197,37 +207,45 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
             answer = lists[0] if lists else None
 
         if not isinstance(answer, list):
+            errors.append('No list of separators could be parsed from the model answer')
             self._warn(f'No list of separators could be parsed from the model answer, chunk ignored ({self.get_hhmmss(start_secs)}): {response["result"]}')
             answer = []
 
         for entry in answer:
-            separator = self._get_separator(entry, start_secs)
+            separator, entry_error = self._get_separator(entry, start_secs)
+            if entry_error:
+                errors.append(entry_error)
             if separator:
                 ret.append(separator)
 
-        return ret
+        return ret, '; '.join(errors)
 
-    def _get_separator(self, entry, start_secs: int):
-        '''Converts an entry of a chunk answer into a separator with timecodes in seconds relative to the full video, None if the entry is invalid'''
-        ret = None
+    def _get_separator(self, entry, start_secs: int) -> tuple:
+        '''Returns a separator with timecodes in seconds relative to the full video (None if the entry is invalid) and the description of the issue with the entry ('' if the entry is valid)'''
+        ret = (None, '')
+        error = ''
 
         if not isinstance(entry, dict):
-            return ret
-
-        start = self._get_seconds_from_timecode(entry.get('start', None))
-        end = self._get_seconds_from_timecode(entry.get('end', None))
-        tag = str(entry.get('tag', '')).strip()
-
-        if start is None or end is None:
-            self._warn(f'Separator entry with missing or invalid timecodes, ignored: {entry}')
-        elif end < start:
-            self._warn(f'Separator entry ending before it starts, ignored: {entry}')
+            error = f'Separator entry is not an object, ignored: {entry}'
         else:
-            ret = {
-                'start': start_secs + start,
-                'end': start_secs + end,
-                'tag': tag,
-            }
+            start = self._get_seconds_from_timecode(entry.get('start', None))
+            end = self._get_seconds_from_timecode(entry.get('end', None))
+            tag = str(entry.get('tag', '')).strip()
+
+            if start is None or end is None:
+                error = f'Separator entry with missing or invalid timecodes, ignored: {entry}'
+            elif end < start:
+                error = f'Separator entry ending before it starts, ignored: {entry}'
+            else:
+                ret = ({
+                    'start': start_secs + start,
+                    'end': start_secs + end,
+                    'tag': tag,
+                }, '')
+
+        if error:
+            self._warn(error)
+            ret = (None, error)
 
         return ret
 
