@@ -817,8 +817,31 @@ class Operator(ABC):
                 except json.decoder.JSONDecodeError:
                     self._warn(f'Invalid JSON format: {ret}')
                     pass
+            else:
+                # some answers are paragraphs of text ending with the json structure
+                trailing_json = self._parse_trailing_json(clean_json)
+                if trailing_json is not None:
+                    ret = trailing_json
         return ret
     
+    def _parse_trailing_json(self, text: str):
+        '''Returns the array or object ending the text, tolerating a trailing ``` fence, None if the text does not end with one'''
+        ret = None
+
+        clean_text = text.rstrip().removesuffix('```').rstrip()
+        decoder = json.JSONDecoder()
+
+        for match in re.finditer(r'[{\[]', clean_text):
+            try:
+                value, end = decoder.raw_decode(clean_text, match.start())
+            except json.decoder.JSONDecodeError:
+                continue
+            if not clean_text[end:].strip():
+                ret = value
+                break
+
+        return ret
+
     def transform_keys_with_suffix(self, data):
         suffix = '_MULTILINES'
 
