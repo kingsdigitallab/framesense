@@ -817,8 +817,9 @@ class Operator(ABC):
                 except json.decoder.JSONDecodeError:
                     self._warn(f'Invalid JSON format: {ret}')
                     pass
-            else:
-                # some answers are paragraphs of text ending with the json structure
+            if isinstance(ret, str):
+                # the answer could not be parsed as a single json structure: some answers
+                # are paragraphs of text (possibly with json-looking fragments), ending with the json structure
                 trailing_json = self._parse_trailing_json(clean_json)
                 if trailing_json is not None:
                     ret = trailing_json

@@ -85,6 +85,24 @@ class ParseDirtyJsonTestCase(unittest.TestCase):
     def test_fully_bare_fenced_json_is_parsed(self):
         self.assertEqual(self.operator._parse_dirty_json('```\n[1, 2]\n```'), [1, 2])
 
+    def test_leading_json_fragment_then_prose_then_array_is_parsed(self):
+        # regression: the leading empty array made the whole answer look like a single
+        # json array, and the failed parse of the whole answer used to skip the fallback
+        answer = ('[]\n\n'
+                  'Wait, let me double-check: there are separators in this excerpt.\n\n'
+                  '[{"start": "00:01:05", "end": "00:01:11", "tag": "SMPTE color bars"}, '
+                  '{"start": "00:05:16", "end": "00:05:21", "tag": "SMPTE color bars"}]')
+        self.assertEqual(self.operator._parse_dirty_json(answer),
+                         [{'start': '00:01:05', 'end': '00:01:11', 'tag': 'SMPTE color bars'},
+                          {'start': '00:05:16', 'end': '00:05:21', 'tag': 'SMPTE color bars'}])
+
+    def test_json_looking_answer_without_recoverable_structure_stays_raw(self):
+        answer = '[] then a truncated [{"a": 1, "b": ]'
+        with redirect_stdout(io.StringIO()) as captured:
+            ret = self.operator._parse_dirty_json(answer)
+        self.assertEqual(ret, answer)
+        self.assertIn('Invalid JSON format', captured.getvalue())
+
 
 class ParseTrailingJsonTestCase(unittest.TestCase):
     '''_parse_trailing_json: answers made of paragraphs ending with an array or an object'''
