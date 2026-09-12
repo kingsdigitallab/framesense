@@ -82,5 +82,12 @@ Supported
 The model is small and runs on CPU,
 so the RAM usage stays low (well under 1 GB).
 
+Detection is effectively single-threaded:
+a clip is processed in a couple of seconds per minute of sound
+on a single CPU core,
+and extra CPU cores do not make it faster.
+On many-core machines it can even be slightly slower
+due to thread contention overhead.
+
 The container image is ~1.5 GB
 (CPU-only torch wheels).
