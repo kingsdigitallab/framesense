@@ -207,7 +207,7 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
             answer = lists[0] if lists else None
 
         if not isinstance(answer, list):
-            errors.append('No list of separators could be parsed from the model answer')
+            errors.append(f'No list of separators could be parsed from the model answer ({response['result']})')
             self._warn(f'No list of separators could be parsed from the model answer, chunk ignored ({self.get_hhmmss(start_secs)}): {response["result"]}')
             answer = []
 
