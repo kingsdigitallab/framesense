@@ -127,6 +127,8 @@ Check the README.md under each operator folder for a specification card. (Work i
     Extract clip audio channel into a sound file
 * **[detect_speech_vad](operators/detect_speech_vad/)**:
     Detect the voice segments of a clip sound file using silero-vad
+* **[transcription_vad_sub](operators/transcription_vad_sub/)**:
+    Write the voice segments of a clip transcription into an srt subtitle file
 
 #### Transcoding
 
