@@ -65,9 +65,12 @@ class RunPipeline(Operator):
 
             self._check_operation_params(operation_params, operator_name, operator)
 
+            operation_exclude = self._check_operation_exclude(operation, position, operator_name, operator)
+
             ret.append({
                 'operator_name': operator_name,
                 'operator': operator,
+                'exclude': operation_exclude,
                 'context': self._make_operation_context(operation_params, operator_name),
             })
 
@@ -82,6 +85,19 @@ class RunPipeline(Operator):
         if unsupported_param_names:
             supported = ', '.join(sorted(supported_param_names)) if supported_param_names else 'none'
             self._error(f'Parameter `{unsupported_param_names[0]}` is not supported by operator {operator_name}. Supported parameters: {supported}')
+
+    def _check_operation_exclude(self, operation, position, operator_name, operator):
+        '''Validates the exclude expression of an operation, returns it ('' when not provided)'''
+        ret = ''
+
+        if 'exclude' in operation:
+            ret = operation['exclude']
+            if not isinstance(ret, str):
+                self._error(f'The exclude of the {position} should be a string.')
+            if not operator.get_supported_arguments().get('filter', False):
+                self._error(f'Operator {operator_name} does not support the -e exclude argument; the {position} will process all its inputs.')
+
+        return ret
 
     def _make_operation_context(self, operation_params, operator_name):
         '''Returns a context where the params of the operation supersede the collections-level params; the environment variables are applied by the operator itself afterwards'''
@@ -123,6 +139,16 @@ class RunPipeline(Operator):
 
         if not operator.get_supported_arguments().get('filter', False) and self._get_framesense_argument('filter'):
             self._error(f'Operator {operator_name} does not support the -f filter argument; the operation will process all its inputs.')
+
+        if not operator.get_supported_arguments().get('filter', False) and self._get_framesense_argument('exclude'):
+            self._error(f'Operator {operator_name} does not support the -e exclude argument; the operation will process all its inputs.')
+
+        operation_exclude = operation_run.get('exclude', '')
+        if operation_exclude:
+            # the exclude expression of the operation is added to the -e one of the command line
+            args_with_exclude = copy.copy(operator.context['command_args'])
+            args_with_exclude.exclude = '|'.join(e for e in [self._get_framesense_argument('exclude'), operation_exclude] if e)
+            operator.context['command_args'] = args_with_exclude
 
         if not operator.get_supported_arguments().get('skip', False) and self._is_skip():
             self._warn(f'Operator {operator_name} does not support the -k skip argument; the operation will stop at the first input which fails processing.')

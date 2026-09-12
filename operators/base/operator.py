@@ -25,7 +25,9 @@ class Operator(ABC):
 
     def get_supported_arguments(self) -> dict[str, bool]:
         '''Returned dict specifies which framesense arguments 
-        are supported (True) by this operator.'''
+        are supported (True) by this operator.
+        A True filter means that both the -f filter argument
+        and the -e exclude argument are supported.'''
         return {
             'filter': False,
             'verbose': False,
@@ -38,6 +40,9 @@ class Operator(ABC):
         for arg_name, is_supported in self.get_supported_arguments().items():
             if not is_supported and self._get_framesense_argument(arg_name):
                 ret.append(arg_name)
+        # the -e exclude argument is governed by the same support flag as the -f filter one
+        if not self.get_supported_arguments().get('filter', False) and self._get_framesense_argument('exclude'):
+            ret.append('exclude')
         return ret
 
     def apply(self):
@@ -666,6 +671,10 @@ class Operator(ABC):
         if filter:
             filters = [f.strip().lower() for f in filter.split('|') if f.strip()]
             ret = any(f in str(path).lower() for f in filters)
+        exclude = self._get_exclude_expression()
+        if ret and exclude:
+            excludes = [e.strip().lower() for e in exclude.split('|') if e.strip()]
+            ret = not any(e in str(path).lower() for e in excludes)
         return ret
 
     def _get_filter_expression(self, path: Path):
@@ -682,6 +691,11 @@ class Operator(ABC):
                     self._error(f"The value of filter `{ret}` in collection `{col['id']}` should be a string.")
                 ret = expression
 
+        return ret
+
+    def _get_exclude_expression(self):
+        '''Returns the exclude expression, a pipe-separated list of keywords'''
+        ret = self._get_framesense_argument('exclude')
         return ret
 
     def _get_collection_of_path(self, path: Path):

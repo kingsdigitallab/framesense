@@ -53,6 +53,24 @@ The -f and -v arguments are passed to every operation.
 When a filter is specified and an operator doesn't support it, 
 the pipeline will stops with an error.
 
+The -e argument follows the same rule:
+it is passed to every operation and,
+when an exclude is specified and an operator doesn't support it,
+the pipeline stops with an error.
+
+An operation can also provide its own exclude expression
+under its `exclude` property:
+
+```json
+{
+    "operator": "transcription_vad_sub",
+    "exclude": "music|intro"
+}
+```
+
+It is added to the -e expression of the command line
+for this operation only.
+
 The -k argument is passed to the operations
 whose operator supports it.
 The other operations run in non-skip mode,

@@ -43,6 +43,7 @@ class FrameSense:
         
         parser.add_argument("operator", help="operator to apply", choices=actions.keys())
         parser.add_argument("-f", "--filter", help="filter paths", default='')
+        parser.add_argument("-e", "--exclude", help="exclude paths, same syntax as --filter", default='')
         parser.add_argument("-v", "--verbose", action='store_true', help="enable verbose output")
         parser.add_argument("-r", "--redo", action='store_true', help="redo")
         parser.add_argument("-k", "--skip", action='store_true', help="skip inputs that fail processing instead of stopping the operator")
