@@ -1,0 +1,4 @@
+{
+    "threshold": 0.65,
+    "min_silence_duration_ms": 500
+}

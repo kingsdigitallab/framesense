@@ -125,6 +125,8 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 * **[extract_sound_ffmpeg](operators/extract_sound_ffmpeg/)**:
     Extract clip audio channel into a sound file
+* **[detect_speech_vad](operators/detect_speech_vad/)**:
+    Detect the voice segments of a clip sound file using silero-vad
 
 #### Transcoding
 

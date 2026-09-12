@@ -1,0 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
+# audio I/O backend of torchaudio 2.9+
+torchcodec
+numpy
+silero-vad==6.2.1
+flask
