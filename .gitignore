@@ -211,3 +211,6 @@ transcription.json
 *.wav
 /source.ml
 /workshop/collections
+
+/batches
+collections-batches.json
