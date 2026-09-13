@@ -110,6 +110,8 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
             stats['duration_seconds'] += response.get('stats', {}).get('duration_seconds', 0.0)
 
+        self._cleanup_chunks(video_path)
+
         ret['stats'] = dict(stats, chunks=chunks_info)
 
         if not ret['error']:
@@ -191,6 +193,22 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         if chunk_path.exists():
             ret = chunk_path
+
+        return ret
+
+    def _cleanup_chunks(self, video_path: Path):
+        '''Removes the video chunks folder when caching is disabled, so that nothing persists on disk. No-op if the folder does not exist.'''
+        ret = None
+
+        # int() keeps the check robust to string values ("0"/"1") coming from environment variables,
+        # whereas bool("0") would wrongly evaluate to True
+        if not int(self.get_param('cache_chunks', 0)):
+            chunks_folder_path = video_path.parent / CHUNKS_FOLDER_NAME
+            if chunks_folder_path.exists():
+                for chunk_file_path in chunks_folder_path.iterdir():
+                    chunk_file_path.unlink(missing_ok=True)
+                if not any(chunks_folder_path.iterdir()):
+                    chunks_folder_path.rmdir()
 
         return ret
 

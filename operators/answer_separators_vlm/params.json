@@ -10,6 +10,7 @@
     "filter_questions": "",
     "video_tokens": "12k",
     "max_fps": 2.0,
+    "cache_chunks": false,
     "chunk_duration_secs": 900,
     "chunk_overlap_secs": 120,
     "questions": {
