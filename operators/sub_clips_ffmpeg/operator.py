@@ -28,6 +28,7 @@ class SubClipsFFMPEG(Operator):
             'existing': 0,
             'skipped': 0,
             'missing': 0,
+            'linked': 0,
         }
 
         for col in self.context['collections']:
@@ -43,7 +44,7 @@ class SubClipsFFMPEG(Operator):
                                 if outcome:
                                     stats[outcome] += 1
 
-        self._log(f"subtitled clips created: {stats['created']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; srt files not found: {stats['missing']}")
+        self._log(f"subtitled clips created: {stats['created']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; srt files not found: {stats['missing']}; empty srt symlinked: {stats['linked']}")
 
         return ret
 
@@ -63,33 +64,57 @@ class SubClipsFFMPEG(Operator):
             sub_folder_path = clip_path.parent.with_name(clip_path.parent.name + SUB_SUFFIX)
             subbed_clip_path = sub_folder_path / f'{clip_path.stem}{SUB_SUFFIX}{clip_path.suffix}'
 
-            if self._is_redo() or not subbed_clip_path.exists():
-                sub_folder_path.mkdir(exist_ok=True)
-
-                # written to a temporary file in the same folder, renamed on completion, so that the operation is atomic
-                subbed_clip_tmp_path = sub_folder_path / f'{clip_path.stem}{SUB_SUFFIX}{TMP_SUFFIX}{clip_path.suffix}'
-
-                self._log(subbed_clip_path)
-
-                command = [
-                    "ffmpeg",
-                    "-i", clip_path,
-                    "-c:a", "copy",
-                    "-vf", self._get_subtitles_filter(srt_path, collection_path),
-                    "-y",
-                    subbed_clip_tmp_path
-                ]
-                res = self._run_in_operator_container(command, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=self._is_skip())
-
-                if res.returncode > 0:
-                    subbed_clip_tmp_path.unlink(missing_ok=True)
-                    self._warn(f'Subtitles not burned into clip: {clip_path}')
-                    ret = 'skipped'
-                else:
-                    subbed_clip_tmp_path.rename(subbed_clip_path)
-                    ret = 'created'
+            if not srt_path.read_text().strip():
+                # no subtitle cues to burn, symlink the clip as is
+                ret = self._link_empty_clip(clip_path, sub_folder_path, subbed_clip_path)
             else:
-                ret = 'existing'
+                if self._is_redo() or not subbed_clip_path.exists():
+                    sub_folder_path.mkdir(exist_ok=True)
+
+                    # written to a temporary file in the same folder, renamed on completion, so that the operation is atomic
+                    subbed_clip_tmp_path = sub_folder_path / f'{clip_path.stem}{SUB_SUFFIX}{TMP_SUFFIX}{clip_path.suffix}'
+
+                    self._log(subbed_clip_path)
+
+                    command = [
+                        "ffmpeg",
+                        "-i", clip_path,
+                        "-c:a", "copy",
+                        "-vf", self._get_subtitles_filter(srt_path, collection_path),
+                        "-y",
+                        subbed_clip_tmp_path
+                    ]
+                    res = self._run_in_operator_container(command, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=self._is_skip())
+
+                    if res.returncode > 0:
+                        subbed_clip_tmp_path.unlink(missing_ok=True)
+                        self._warn(f'Subtitles not burned into clip: {clip_path}')
+                        ret = 'skipped'
+                    else:
+                        subbed_clip_tmp_path.rename(subbed_clip_path)
+                        ret = 'created'
+                else:
+                    ret = 'existing'
+
+        return ret
+
+    def _link_empty_clip(self, clip_path: Path, sub_folder_path: Path, subbed_clip_path: Path):
+        '''For a clip whose srt file is empty, symlinks the clip to a new clip in its own folder next to the original one.
+        Returns the name of the stats counter the clip has been processed with'''
+        ret = 'linked'
+
+        if not self._is_redo() and subbed_clip_path.exists():
+            ret = 'existing'
+        else:
+            sub_folder_path.mkdir(exist_ok=True)
+
+            if self._is_redo():
+                subbed_clip_path.unlink(missing_ok=True)
+
+            self._log(subbed_clip_path)
+
+            # relative symlink to the input clip, e.g. ../<clip>/<clip>.mp4
+            subbed_clip_path.symlink_to(Path('..') / clip_path.parent.name / clip_path.name)
 
         return ret
 
