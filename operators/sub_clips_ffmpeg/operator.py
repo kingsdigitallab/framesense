@@ -97,7 +97,16 @@ class SubClipsFFMPEG(Operator):
         '''Returns the FFMPEG video filter burning an srt file into a clip, the srt path being translated into its container equivalent'''
         ret = None
         container_srt_path = CONTAINER_DATA_PATH / srt_path.relative_to(collection_path)
-        force_style = f'FontSize={self.get_param("font_size")},FontName={self.get_param("font")}'
+        force_style = ','.join([
+            f'FontSize={self.get_param("font_size")}',
+            f'FontName={self.get_param("font")}',
+            f'Bold={self.get_param("bold")}',
+            f'Outline={self.get_param("outline")}',
+            f'Shadow={self.get_param("shadow")}',
+            f'PrimaryColour={self.get_param("text_color")}',
+            f'OutlineColour={self.get_param("outline_color")}',
+            f'BackColour={self.get_param("shadow_color")}',
+        ])
         ret = f"subtitles={self._escape_filter_path(container_srt_path)}:force_style='{force_style}'"
         return ret
 

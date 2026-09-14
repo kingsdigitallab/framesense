@@ -1,4 +1,10 @@
 {
     "font_size": 24,
-    "font": "Sans"
+    "font": "Sans",
+    "bold": 1,
+    "outline": 3,
+    "shadow": 1,
+    "text_color": "&H00FFFFFF",
+    "outline_color": "&H00000000",
+    "shadow_color": "&H00000000"
 }
