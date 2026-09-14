@@ -15,6 +15,10 @@ SUB_SUFFIX = '-sub'
 MIN_OVERLAP_SECONDS = 0.25
 # runs of at least this many consecutive identical cues are collapsed to a single cue
 MAX_REPEAT_RUN = 3
+# pieces longer than this many characters are split into multiple pieces
+MAX_CUE_CHARS = 42
+# pieces shorter than this many words are merged into an adjacent piece
+MIN_CUE_WORDS = 4
 
 
 class TranscriptionVADSub(Operator):
@@ -39,6 +43,7 @@ class TranscriptionVADSub(Operator):
             'unfiltered': 0,
             'short_overlap_dropped': 0,
             'repeated_dropped': 0,
+            'split': 0,
         }
 
         for col in self.context['collections']:
@@ -55,7 +60,7 @@ class TranscriptionVADSub(Operator):
                                     for stat_name, stat_count in dropped_counts.items():
                                         stats[stat_name] += stat_count
 
-        self._log(f"srt files created: {stats['created']}; stale recreated: {stats['stale']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; transcriptions not found: {stats['missing']}; without voice segments: {stats['unfiltered']}; short-overlap cues dropped: {stats['short_overlap_dropped']}; repeated cues collapsed: {stats['repeated_dropped']}")
+        self._log(f"srt files created: {stats['created']}; stale recreated: {stats['stale']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; transcriptions not found: {stats['missing']}; without voice segments: {stats['unfiltered']}; short-overlap cues dropped: {stats['short_overlap_dropped']}; repeated cues collapsed: {stats['repeated_dropped']}; segments split: {stats['split']}")
 
         return ret
 
@@ -83,19 +88,23 @@ class TranscriptionVADSub(Operator):
                 is_unfiltered = False
                 try:
                     transcription = self.read_json(transcription_path)
+                    transcription, split_count = self._split_cues(transcription)
+                    if split_count:
+                        dropped_counts['split'] = split_count
 
                     if voice_segments_path.exists():
                         voice_segments = self.read_json(voice_segments_path)
                         overlapping = [item for item in transcription if self._get_max_overlap(item, voice_segments) > 0]
                         cues = [item for item in overlapping if self._is_speech(item, voice_segments)]
                         dropped_counts['short_overlap_dropped'] = len(overlapping) - len(cues)
+                        cues = self._merge_tiny_cues(cues)
                         collapsed_cues = self._collapse_repeats(cues)
                         dropped_counts['repeated_dropped'] = len(cues) - len(collapsed_cues)
                         cues = collapsed_cues
                     else:
                         # detect_speech_vad has not been run on the clip: all the segments are kept
                         is_unfiltered = True
-                        cues = transcription
+                        cues = self._merge_tiny_cues(transcription)
 
                     self._generate_srt(cues, srt_path)
                 except Exception as e:
@@ -162,6 +171,120 @@ class TranscriptionVADSub(Operator):
                 i = run_end + 1
             ret = collapsed
 
+        return ret
+
+    def _split_cues(self, cues: list):
+        '''Returns a (cues, split_count) tuple with the transcription items split into cue-sized pieces
+        when the split_long_segments parameter is enabled (except when split is disabled, the cues are
+        returned unchanged and split_count is 0)'''
+        ret = (cues, 0)
+        if self.get_param('split_long_segments', False):
+            split_cues = []
+            split_count = 0
+            for item in cues:
+                pieces = self._split_cue(item)
+                if len(pieces) > 1:
+                    split_count += 1
+                split_cues.extend(pieces)
+            ret = (split_cues, split_count)
+        return ret
+
+    def _split_cue(self, item: dict):
+        '''Splits a transcription item into pieces of at most max_cue_chars characters, breakable at
+        the sentence boundaries of the text and at word boundaries inside too long sentences, with the
+        item duration distributed over the pieces proportionally to their number of characters'''
+        ret = [item]
+        pieces = self._split_text(item['segment'])
+        if len(pieces) > 1:
+            ret = self._allocate_pieces_time(item, pieces)
+        return ret
+
+    def _split_text(self, text: str):
+        '''Splits a text into pieces of at most max_cue_chars characters, breakable at its sentence
+        boundaries and at word boundaries inside too long sentences'''
+        ret = []
+        sentences = [sentence.strip() for sentence in re.split(r'(?<=[.!?;:])\s+', text.strip()) if sentence.strip()]
+        for sentence in sentences:
+            ret.extend(self._wrap_text(sentence))
+        return ret or [text.strip()]
+
+    def _wrap_text(self, text: str):
+        '''Wraps a text into pieces of at most max_cue_chars characters, preferring a break after a
+        comma, a semicolon or a filler word'''
+        ret = []
+        remaining = text
+        while len(remaining) > self.get_param('max_cue_chars', MAX_CUE_CHARS):
+            cut = self._find_cut_point(remaining)
+            ret.append(remaining[:cut].strip())
+            remaining = remaining[cut:].strip()
+        if remaining:
+            ret.append(remaining)
+        return ret
+
+    def _find_cut_point(self, text: str):
+        '''Returns the index of the preferred word-break in a text too long for a single piece,
+        the index of its end if no break is found'''
+        ret = None
+        best_separator_index = -1
+        best_separator = None
+        for separator in [', ', '; ', '-- ', ' and ', ' but ', ' that ']:
+            separator_index = text.rfind(separator, 0, self.get_param('max_cue_chars', MAX_CUE_CHARS))
+            if separator_index > best_separator_index:
+                best_separator_index = separator_index
+                best_separator = separator
+        if best_separator:
+            ret = best_separator_index + len(best_separator)
+        else:
+            space_index = text.rfind(' ', 0, self.get_param('max_cue_chars', MAX_CUE_CHARS))
+            if space_index > -1:
+                ret = space_index + 1
+            else:
+                ret = self.get_param('max_cue_chars', MAX_CUE_CHARS)
+        return ret
+
+    def _allocate_pieces_time(self, item: dict, pieces: list):
+        '''Distributes the duration of a transcription item over its pieces proportionally to their
+        number of characters, keeping the pieces in order'''
+        ret = []
+        total_chars = sum(len(piece) for piece in pieces)
+        duration = item['end'] - item['start']
+        start = item['start']
+        for piece in pieces:
+            piece_duration = duration * len(piece) / total_chars
+            ret.append({'start': start, 'end': start + piece_duration, 'segment': piece})
+            start += piece_duration
+        return ret
+
+    def _merge_tiny_cues(self, cues: list):
+        '''Merges each surviving cue shorter than min_cue_words words into an adjacent cue, to avoid
+        unreadable single-word subtitles; a merged cue keeps at most two lines of subtitles'''
+        ret = cues
+        if self.get_param('split_long_segments', False):
+            max_merged_chars = 2 * self.get_param('max_cue_chars', MAX_CUE_CHARS)
+            merged_cues = []
+            for cue in cues:
+                previous_cue = merged_cues[-1] if merged_cues else None
+                if previous_cue and self._is_tiny_cue(cue) and self._can_merge(previous_cue, cue, max_merged_chars):
+                    previous_cue['segment'] += ' ' + cue['segment']
+                    previous_cue['end'] = cue['end']
+                else:
+                    merged_cues.append(dict(cue))
+            if len(merged_cues) > 1 and self._is_tiny_cue(merged_cues[0]):
+                if self._can_merge(merged_cues[0], merged_cues[1], max_merged_chars):
+                    merged_cues[1]['segment'] = merged_cues[0]['segment'] + ' ' + merged_cues[1]['segment']
+                    merged_cues[1]['start'] = merged_cues[0]['start']
+                    del merged_cues[0]
+            ret = merged_cues
+        return ret
+
+    def _can_merge(self, first: dict, second: dict, max_chars: int):
+        '''Returns True if the two cues can be joined into a piece of at most max_chars characters'''
+        ret = len(first['segment']) + 1 + len(second['segment']) <= max_chars
+        return ret
+
+    def _is_tiny_cue(self, cue: dict):
+        '''Returns True if the cue is shorter than min_cue_words words'''
+        ret = len(cue['segment'].split()) < self.get_param('min_cue_words', MIN_CUE_WORDS)
         return ret
 
     def _normalize(self, text: str) -> str:

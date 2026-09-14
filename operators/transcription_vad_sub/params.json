@@ -1,4 +1,7 @@
 {
     "min_overlap_seconds": 0.25,
-    "max_repeat_run": 3
+    "max_repeat_run": 3,
+    "split_long_segments": 0,
+    "max_cue_chars": 42,
+    "min_cue_words": 4
 }

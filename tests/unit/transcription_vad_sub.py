@@ -149,5 +149,108 @@ class CollapseRepeatsTestCase(unittest.TestCase):
         self.assertEqual(self.operator._normalize('   UPPER Case -- . , '), 'upper case')
 
 
+class SplitLongSegmentsTestCase(unittest.TestCase):
+    '''_split_text, _split_cue, _split_cues and _merge_tiny_cues'''
+
+    def setUp(self):
+        self.operator = _ConcreteOperator()
+        self.operator.params = {'split_long_segments': 1}
+
+    def test_split_text_splits_at_sentence_boundaries(self):
+        self.assertEqual(self.operator._split_text('One. Two. Three.'), ['One.', 'Two.', 'Three.'])
+
+    def test_split_text_wraps_too_long_sentences(self):
+        text = 'The quick brown fox jumps over the lazy dog and runs away quickly to the woods deep down the hill every single evening.'
+        pieces = self.operator._split_text(text)
+        self.assertGreater(len(pieces), 1)
+        self.assertTrue(all(len(piece) <= 42 for piece in pieces))
+        self.assertEqual(' '.join(piece for piece in pieces), text)
+
+    def test_split_text_respects_max_cue_chars_parameter(self):
+        self.operator.params['max_cue_chars'] = 20
+        pieces = self.operator._split_text('The quick brown fox jumps over the lazy dog and runs away quickly.')
+        self.assertTrue(all(len(piece) <= 20 for piece in pieces))
+
+    def test_split_cue_keeps_unchanged_short_items(self):
+        item = {'start': 10, 'end': 12, 'segment': 'Hello.'}
+        self.assertEqual(self.operator._split_cue(item), [item])
+
+    def test_split_cue_distributes_time_proportionally(self):
+        item = {'start': 10, 'end': 20, 'segment': 'Aaa. Bbbb.'}
+        pieces = self.operator._split_cue(item)
+        self.assertEqual([p['segment'] for p in pieces], ['Aaa.', 'Bbbb.'])
+        self.assertAlmostEqual(pieces[0]['start'], 10)
+        self.assertAlmostEqual(pieces[-1]['end'], 20)
+        self.assertEqual([p['end'] - p['start'] for p in pieces], [10 * 4 / 9, 10 * 5 / 9])
+        self.assertTrue(all(p['start'] < p['end'] for p in pieces))
+
+    def test_split_cues_passthrough_when_disabled(self):
+        self.operator.params = {}
+        items = [{'start': 0, 'end': 10, 'segment': 'One. Two. Three Four Five Six Seven Eight Nine Ten.'}]
+        self.assertEqual(self.operator._split_cues(items), (items, 0))
+
+    def test_split_cues_splits_and_counts_when_enabled(self):
+        items = [
+            {'start': 0, 'end': 10, 'segment': 'One. Two. Three Four Five Six Seven Eight Nine Ten Eleven Twelve.'},
+            {'start': 10, 'end': 11, 'segment': 'Short.'},
+        ]
+        cues, split_count = self.operator._split_cues(items)
+        self.assertEqual(split_count, 1)
+        self.assertGreater(len(cues), len(items))
+
+    def test_merge_tiny_cues_merges_into_previous(self):
+        cues = [{'start': 10, 'end': 12, 'segment': 'This is a normal sized subtitle piece.'},
+                {'start': 12, 'end': 13, 'segment': 'Yes.'}]
+        merged = self.operator._merge_tiny_cues(cues)
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]['segment'], 'This is a normal sized subtitle piece. Yes.')
+        self.assertEqual(merged[0]['start'], 10)
+        self.assertEqual(merged[0]['end'], 13)
+
+    def test_merge_tiny_cues_merges_leading_cue_forward(self):
+        cues = [{'start': 10, 'end': 11, 'segment': 'Yes.'},
+                {'start': 11, 'end': 13, 'segment': 'This is a normal sized subtitle piece.'}]
+        merged = self.operator._merge_tiny_cues(cues)
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]['segment'], 'Yes. This is a normal sized subtitle piece.')
+        self.assertEqual(merged[0]['start'], 10)
+        self.assertEqual(merged[0]['end'], 13)
+
+    def test_merge_tiny_cues_keeps_two_lines_short(self):
+        long_cue = 'This is a subtitle piece almost reaching the two lines limit of the subtitle player.'
+        self.assertEqual(len(long_cue), 84)
+        cues = [{'start': 10, 'end': 12, 'segment': long_cue},
+                {'start': 12, 'end': 13, 'segment': 'Yes.'}]
+        merged = self.operator._merge_tiny_cues(cues)
+        self.assertEqual(len(merged), 2)
+
+    def test_merge_tiny_cues_passthrough_when_disabled(self):
+        self.operator.params = {}
+        cues = [{'start': 10, 'end': 12, 'segment': 'This is a normal sized subtitle piece.'},
+                {'start': 12, 'end': 13, 'segment': 'Yes.'}]
+        self.assertEqual(self.operator._merge_tiny_cues(cues), cues)
+
+    def test_merge_tiny_cues_does_not_mutate_input(self):
+        cues = [{'start': 10, 'end': 12, 'segment': 'This is a normal sized subtitle piece.'},
+                {'start': 12, 'end': 13, 'segment': 'Yes.'}]
+        self.operator._merge_tiny_cues(cues)
+        self.assertEqual(cues[0]['segment'], 'This is a normal sized subtitle piece.')
+        self.assertEqual(cues[1]['segment'], 'Yes.')
+
+    def test_split_before_filter_drops_hallucinated_tail(self):
+        transcription = [{'start': 0, 'end': 10, 'segment': 'Genuine speech at the start of the clip. The hallucinated tail of the segment is on silence.'}]
+        voice_segments = [{'start': 0.2, 'end': 3.0}]
+        over_duration = 3.0 - 0.2
+        split_cues, _ = self.operator._split_cues(transcription)
+        self.assertGreater(len(split_cues), 1)
+        kept = [cue for cue in split_cues if self.operator._get_max_overlap(cue, voice_segments) > 0]
+        kept = [cue for cue in kept if self.operator._is_speech(cue, voice_segments)]
+        merged = self.operator._merge_tiny_cues(kept)
+        self.assertEqual(' '.join(c['segment'] for c in merged), 'Genuine speech at the start of the clip.')
+        self.assertGreater(over_duration, 0.25)
+        self.assertEqual(self.operator._get_max_overlap(transcription[0], voice_segments), over_duration)
+        self.assertTrue(self.operator._is_speech(transcription[0], voice_segments))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -30,7 +30,9 @@ how many clips were skipped,
 how many transcriptions were not found,
 how many clips had no voice segments,
 and how many cues were dropped by the
-hallucination filters (short-overlap and repeated).
+hallucination filters (short-overlap and repeated),
+and how many transcription segments were split
+by the line-splitting feature.
 
 ## Method
 
@@ -61,6 +63,29 @@ i.e. older than its `transcription.json`
 this makes previously unfiltered srt files
 voice-filtered once their inputs are updated.
 
+When the `split_long_segments` parameter is enabled,
+the transcription segments are first split into
+cue-sized pieces (before the voice filtering):
+
+* each segment is split at its sentence boundaries;
+* pieces still longer than `max_cue_chars` characters
+  are wrapped at word boundaries, preferring a break
+  after a comma, a semicolon or a filler word;
+* the segment duration is distributed over the pieces
+  proportionally to their number of characters;
+* after the voice filtering, pieces shorter than
+  `min_cue_words` words are merged into an adjacent
+  piece, to avoid unreadable single-word subtitles
+  (a merged piece keeps at most two subtitle lines).
+
+Splitting before the voice filtering makes the
+hallucination filters more effective: a long
+transcription segment whose text spills over
+non-speech parts (e.g. a hallucinated tail after
+a few real words) is dropped piece by piece,
+instead of being kept because a small part of it
+overlaps a voice segment.
+
 Applies to all clips in the collections.
 
 ## Parameters
@@ -72,12 +97,25 @@ Applies to all clips in the collections.
 * `max_repeat_run`: runs of at least this many
   consecutive identical segments are collapsed to a
   single segment (default `3`).
+* `split_long_segments`: enables the splitting of
+  long transcription segments into cue-sized pieces
+  before the voice filtering, to keep the subtitles
+  short and to drop the hallucinated parts of a
+  segment (default `0`).
+* `max_cue_chars`: longest split piece in characters,
+  one subtitle line (default `42`).
+* `min_cue_words`: pieces shorter than this many
+  words are merged into an adjacent piece after the
+  voice filtering (default `4`).
 
 They can be overridden in the `params` of the collections file,
 in the `params` of a pipeline operation,
 or with the environment variables
-`TRANSCRIPTION_VAD_SUB_MIN_OVERLAP_SECONDS`
-and `TRANSCRIPTION_VAD_SUB_MAX_REPEAT_RUN`.
+`TRANSCRIPTION_VAD_SUB_MIN_OVERLAP_SECONDS`,
+`TRANSCRIPTION_VAD_SUB_MAX_REPEAT_RUN`,
+`TRANSCRIPTION_VAD_SUB_SPLIT_LONG_SEGMENTS`,
+`TRANSCRIPTION_VAD_SUB_MAX_CUE_CHARS`
+and `TRANSCRIPTION_VAD_SUB_MIN_CUE_WORDS`.
 
 ## Run if
 
