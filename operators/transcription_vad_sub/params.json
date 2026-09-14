@@ -1,0 +1,4 @@
+{
+    "min_overlap_seconds": 0.25,
+    "max_repeat_run": 3
+}
