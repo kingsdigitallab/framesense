@@ -5,7 +5,6 @@ from pathlib import Path
 from ..base.operator import Operator
 import re
 import json
-import shlex
 
 PROG_SUFFIX = '-prog'
 TMP_SUFFIX = '-tmp'
@@ -15,15 +14,11 @@ QUESTION_KEY = 'sep1'
 DEFAULT_MIN_SEGMENT_SECONDS = 1
 CONTAINER_DATA_PATH = Path('/data')
 DEFAULT_CUT_MODE = 'smart'
-# second-accurate lossless generation of the -prog clips:
-# only the first and last GOP of each segment are re-encoded, the rest is stream-copied
+# the smart cut re-encodes the whole segment with a non-lossy quality (crf 0), in a single
+# ffmpeg command, so that the output is second-accurate and always playable
+DEFAULT_SMART_CRF = 0
 SMART_CUT_VIDEO_CODEC = 'libx264'
-SMART_CUT_CRF = '0'
 SMART_CUT_PRESET = 'ultrafast'
-SMART_CUT_PART_SUFFIX = '-part'
-SMART_CUT_COMBINED_SUFFIX = '-combined'
-SMART_CUT_LIST_SUFFIX = '-list'
-SMART_CUT_SEGMENT_EXTENSION = '.ts'
 
 
 class SeparateClipsFFMPEG(Operator):
@@ -133,9 +128,6 @@ class SeparateClipsFFMPEG(Operator):
             ret['missing'] = 1
             return ret
 
-        cut_mode = self.get_param('cut_mode', DEFAULT_CUT_MODE)
-        keyframes = self._get_keyframes(clip_path) if cut_mode == 'smart' else None
-
         inside_separators = [
             separator
             for separator in separators
@@ -153,7 +145,7 @@ class SeparateClipsFFMPEG(Operator):
                 if (end_secs - start_secs) < min_segment_secs:
                     continue
 
-                outcome = self._make_prog_clip(clip_path, start_secs, end_secs, collection_path, keyframes)
+                outcome = self._make_prog_clip(clip_path, start_secs, end_secs, collection_path)
                 if outcome:
                     ret[outcome] = ret.get(outcome, 0) + 1
 
@@ -183,7 +175,7 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _make_prog_clip(self, clip_path: Path, start_secs: int, end_secs: int, collection_path: Path, keyframes=None):
+    def _make_prog_clip(self, clip_path: Path, start_secs: int, end_secs: int, collection_path: Path):
         '''Cuts the segment of the clip between two programme separators into a new -prog clip, placed in its own folder next to the original one.
         Returns the name of the stats counter the clip has been processed with, None if not processed'''
         ret = None
@@ -202,7 +194,7 @@ class SeparateClipsFFMPEG(Operator):
             self._log(prog_clip_path)
 
             cut_mode = self.get_param('cut_mode', DEFAULT_CUT_MODE)
-            succeeded = self._cut_clip(clip_path, keyframes, start_secs, end_secs, prog_clip_tmp_path, collection_path, cut_mode)
+            succeeded = self._cut_clip(clip_path, start_secs, end_secs, prog_clip_tmp_path, collection_path, cut_mode)
 
             if succeeded:
                 prog_clip_tmp_path.rename(prog_clip_path)
@@ -216,13 +208,13 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _cut_clip(self, clip_path: Path, keyframes, start_secs: int, end_secs: int, output_path: Path, collection_path: Path, cut_mode: str):
+    def _cut_clip(self, clip_path: Path, start_secs: int, end_secs: int, output_path: Path, collection_path: Path, cut_mode: str):
         '''Cuts the segment of a clip into the output file with the requested cut mode, falling back to re-encoding all of it if the smart mode fails.
         Returns True if the output file was produced'''
         ret = False
 
         if cut_mode == 'smart':
-            ret = self._cut_clip_smart(clip_path, keyframes or [], start_secs, end_secs, output_path, collection_path)
+            ret = self._cut_clip_smart(clip_path, start_secs, end_secs, output_path, collection_path)
             if not ret:
                 self._warn(f'Smart cut failed, falling back to re-encoding the clip: {clip_path}')
                 ret = self._cut_clip_reencode(clip_path, start_secs, end_secs, output_path, collection_path)
@@ -250,148 +242,31 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _cut_clip_smart(self, clip_path: Path, keyframes: list, start_secs: int, end_secs: int, output_path: Path, collection_path: Path):
-        '''Cuts the segment of a clip into the output file, second-accurate with a non-lossy image quality: the first and last GOP around the cut points are re-encoded losslessly, the rest is stream-copied through an intermediate transport stream.
+    def _cut_clip_smart(self, clip_path: Path, start_secs: int, end_secs: int, output_path: Path, collection_path: Path):
+        '''Cuts the segment of a clip into the output file by re-encoding its whole video stream with a non-lossy quality and copying its audio stream.
+        A single ffmpeg command is used so that the output is one uniform stream: second-accurate and always playable.
         Returns True if the output file was produced'''
         ret = False
 
-        sections = self._plan_cut_sections(start_secs, end_secs, keyframes)
-        if not sections:
-            return ret
+        smart_crf = int(self.get_param('smart_crf', DEFAULT_SMART_CRF))
 
-        prog_folder_path = output_path.parent
-        stem = output_path.stem
-        part_paths = [
-            prog_folder_path / f'{stem}{SMART_CUT_PART_SUFFIX}{i}{SMART_CUT_SEGMENT_EXTENSION}'
-            for i in range(len(sections))
-        ]
-        combined_path = prog_folder_path / f'{stem}{SMART_CUT_COMBINED_SUFFIX}{SMART_CUT_SEGMENT_EXTENSION}'
-        list_path = prog_folder_path / f'{stem}{SMART_CUT_LIST_SUFFIX}.txt'
-
-        try:
-            clip_container_path = self._get_container_path(clip_path, collection_path)
-
-            commands = []
-            for (kind, start_part_secs, end_part_secs), part_path in zip(sections, part_paths):
-                command_args = [
-                    'ffmpeg', '-y',
-                    '-ss', self._format_seconds(start_part_secs),
-                    '-i', clip_container_path,
-                    '-t', self._format_seconds(end_part_secs - start_part_secs),
-                ]
-                if kind == 'copy':
-                    command_args += ['-c', 'copy']
-                else:
-                    command_args += [
-                        '-c:v', SMART_CUT_VIDEO_CODEC,
-                        '-crf', SMART_CUT_CRF,
-                        '-preset', SMART_CUT_PRESET,
-                        '-c:a', 'copy',
-                    ]
-                command_args.append(self._get_container_path(part_path, collection_path))
-                commands.append(self._to_shell_command(command_args))
-
-            list_container_path = self._get_container_path(list_path, collection_path)
-            list_path.write_text(''.join([f"file '{self._get_container_path(part_path, collection_path)}'\n" for part_path in part_paths]))
-
-            commands.append(self._to_shell_command([
-                'ffmpeg', '-y',
-                '-f', 'concat',
-                '-safe', '0',
-                '-i', list_container_path,
-                '-c', 'copy',
-                self._get_container_path(combined_path, collection_path),
-            ]))
-            commands.append(self._to_shell_command([
-                'ffmpeg', '-y',
-                '-i', self._get_container_path(combined_path, collection_path),
-                '-c', 'copy',
-                self._get_container_path(output_path, collection_path),
-            ]))
-
-            script = ' && '.join(commands)
-            # the container call itself cannot fail the operator run: when the smart cut fails, we fall back to re-encoding
-            res = self._run_in_operator_container(['sh', '-c', script], [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=True)
-
-            ret = res.returncode == 0 and output_path.exists()
-        finally:
-            for part_path in part_paths:
-                part_path.unlink(missing_ok=True)
-            combined_path.unlink(missing_ok=True)
-            list_path.unlink(missing_ok=True)
-
-        return ret
-
-    def _plan_cut_sections(self, start_secs: int, end_secs: int, keyframes: list) -> list:
-        '''Returns the sections the cut of the segment [start, end) is planned as (kind, start, end), the edge parts being re-encoded losslessly and the middle one stream-copied, [] if the segment cannot be planned and should be re-encoded entirely'''
-        ret = []
-
-        inside_secs = sorted(keyframe for keyframe in keyframes if start_secs < keyframe <= end_secs)
-        if not inside_secs:
-            return ret
-
-        kb2_secs = inside_secs[0]
-        ke_secs = inside_secs[-1]
-
-        if start_secs in keyframes:
-            if ke_secs > start_secs:
-                ret.append(('copy', start_secs, ke_secs))
-            if end_secs > ke_secs:
-                ret.append(('reencode', ke_secs, end_secs))
-            return ret
-
-        if ke_secs == kb2_secs:
-            return ret
-
-        if start_secs < kb2_secs:
-            ret.append(('reencode', start_secs, kb2_secs))
-        if ke_secs > kb2_secs:
-            ret.append(('copy', kb2_secs, ke_secs))
-        if end_secs > ke_secs:
-            ret.append(('reencode', ke_secs, end_secs))
-
-        return ret
-
-    def _get_keyframes(self, clip_path: Path) -> list:
-        '''Returns the times in seconds of the keyframes of the video stream of the clip, [] if they could not be read'''
-        ret = []
-
-        binding = [clip_path.parent, Path('/data')]
         command_args = [
-            'ffprobe',
-            '-v', 'error',
-            '-select_streams', 'v:0',
-            '-show_packets',
-            '-show_entries', 'format=duration:packet=pts_time,flags',
-            '-of', 'json',
-            clip_path,
+            'ffmpeg',
+            '-y',
+            '-ss', str(start_secs),
+            '-i', clip_path,
+            '-t', str(end_secs - start_secs),
+            '-c:v', SMART_CUT_VIDEO_CODEC,
+            '-crf', str(smart_crf),
+            '-preset', SMART_CUT_PRESET,
+            '-c:a', 'copy',
+            output_path,
         ]
-        res = self._run_in_operator_container(command_args, binding, skip=self._is_skip())
+        # the container call itself cannot fail the operator run: when the smart cut fails, we fall back to re-encoding
+        res = self._run_in_operator_container(command_args, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=True)
 
-        if res.returncode == 0:
-            try:
-                metadata = json.loads(res.stdout)
-                for packet in metadata.get('packets', []):
-                    if 'K' in str(packet.get('flags', '')):
-                        ret.append(float(packet['pts_time']))
-            except (json.JSONDecodeError, KeyError, ValueError, TypeError):
-                pass
+        ret = res.returncode == 0 and output_path.exists()
 
-        return ret
-
-    def _get_container_path(self, path: Path, collection_path: Path) -> str:
-        '''Returns the path of a file under the collection as seen from inside the operator container'''
-        ret = str(CONTAINER_DATA_PATH / path.relative_to(collection_path))
-        return ret
-
-    def _to_shell_command(self, args) -> str:
-        '''Formats a command line as a shell-safe string'''
-        ret = ' '.join(shlex.quote(str(a)) for a in args)
-        return ret
-
-    def _format_seconds(self, secs) -> str:
-        '''Formats a duration in seconds as a decimal string accepted as an ffmpeg time value'''
-        ret = f'{float(secs):.3f}'
         return ret
 
     def _link_whole_clip(self, clip_path: Path):
