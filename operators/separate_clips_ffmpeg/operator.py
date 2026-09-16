@@ -53,12 +53,6 @@ class SeparateClipsFFMPEG(Operator):
                 if not video_folder_path.is_dir():
                     continue
 
-                separators = self._get_separators(video_folder_path)
-                if separators is None:
-                    stats['missing'] += 1
-                    self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of video {video_folder_path.name}, video skipped')
-                    continue
-
                 for clip_folder_path in sorted(video_folder_path.iterdir()):
                     # only the -prog clip folders created by this operator are skipped
                     if not clip_folder_path.is_dir() or clip_folder_path.name.endswith(PROG_SUFFIX) or clip_folder_path.name == CHUNKS_FOLDER_NAME:
@@ -68,7 +62,7 @@ class SeparateClipsFFMPEG(Operator):
                     if not clip_path:
                         continue
 
-                    outcomes = self._split_clip(clip_path, separators, collection_path)
+                    outcomes = self._split_clip(clip_path, collection_path)
                     for outcome, count in outcomes.items():
                         stats[outcome] += count
 
@@ -118,7 +112,7 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _split_clip(self, clip_path: Path, separators: list, collection_path: Path) -> dict:
+    def _split_clip(self, clip_path: Path, collection_path: Path) -> dict:
         '''Splits a clip around the programme separators into -prog clips placed in sibling folders next to the original one.
         Returns a dict of stats counters and their number of occurrences'''
         ret = {}
@@ -130,6 +124,13 @@ class SeparateClipsFFMPEG(Operator):
         if clip_duration_secs is None:
             self._warn(f'Could not read the duration of the clip, not split: {clip_path}')
             ret['skipped'] = 1
+            return ret
+        
+        video_folder_path = clip_path.parent
+        separators = self._get_separators(video_folder_path.parent)
+        if separators is None:
+            self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of video {video_folder_path.name}, video skipped')
+            ret['missing'] = 1
             return ret
 
         cut_mode = self.get_param('cut_mode', DEFAULT_CUT_MODE)
