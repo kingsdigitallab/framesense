@@ -1,3 +1,4 @@
 {
-    "min_segment_seconds": 1
+    "min_segment_seconds": 1,
+    "cut_mode": "smart"
 }

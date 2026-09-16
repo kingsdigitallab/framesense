@@ -28,8 +28,20 @@ New clips keep the suffix of the original clip and add the `-prog` suffix:
 
 A clip without any separator in it is symlinked as a single `-prog` clip.
 
+The `cut_mode` parameter selects how each -prog clip is cut:
+* `smart` (default): second-accurate with a non-lossy image quality. The first
+  and last GOP around the cut points are re-encoded losslessly (`crf 0`), the
+  rest of the segment is stream-copied through an intermediate transport stream.
+  Falls back to `reencode` when a segment cannot be planned or ffmpeg fails.
+* `reencode`: the whole segment is re-encoded by ffmpeg, second-accurate but
+  lossy.
+
+The keyframes of the video stream of each clip are read once at the beginning
+of its processing, with a single ffprobe packet scan.
+
 ## Parameters (-p)
 * `min_segment_seconds` (int, default 1): minimum length in seconds of a new -prog clip
+* `cut_mode` (str, default smart): `smart` for a second-accurate non-lossy cut, `reencode` to re-encode the whole segment
 
 ## Run if
 A -prog clip does not already exist for a segment.
