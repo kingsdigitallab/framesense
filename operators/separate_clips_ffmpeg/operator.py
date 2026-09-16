@@ -121,8 +121,8 @@ class SeparateClipsFFMPEG(Operator):
             ret['skipped'] = 1
             return ret
         
-        video_folder_path = clip_path.parent
-        separators = self._get_separators(video_folder_path.parent)
+        video_folder_path = clip_path.parent.parent
+        separators = self._get_separators(video_folder_path)
         if separators is None:
             self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of video {video_folder_path.name}, video skipped')
             ret['missing'] = 1
