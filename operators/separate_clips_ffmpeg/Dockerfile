@@ -1,0 +1,2 @@
+FROM linuxserver/ffmpeg
+ENTRYPOINT []
