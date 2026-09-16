@@ -126,7 +126,7 @@ class SeparateClipsFFMPEG(Operator):
         if not self._is_path_selected(clip_path):
             return ret
 
-        clip_duration_secs = self._get_clip_duration_seconds(clip_path)
+        clip_duration_secs = self.get_duration_seconds_from_clip_path(clip_path)
         if clip_duration_secs is None:
             self._warn(f'Could not read the duration of the clip, not split: {clip_path}')
             ret['skipped'] = 1
@@ -427,7 +427,7 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _get_clip_duration_seconds(self, clip_path: Path):
+    def _get_clip_duration_seconds_old(self, clip_path: Path):
         '''Returns the duration of the clip in seconds, None if it could not be read'''
         ret = None
 

@@ -1094,3 +1094,16 @@ class Operator(ABC):
         ret = ret * (1024 ** units.index(unit))
         
         return int(ret)
+
+    def get_duration_seconds_from_clip_path(self, clip_path):
+        # eg. '00.00.00-6582-full.mp4' -> 6582
+        ret = None
+
+        match = re.search(r'\d+\.\d+\.\d+-(\d+)', str(clip_path))
+        if match:
+            ret = int(match.group(1))
+        else:
+            self._error(f'Can\'t extract duration from clip path: {str(clip_path)}')
+
+        return ret
+
