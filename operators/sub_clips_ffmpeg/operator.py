@@ -79,6 +79,9 @@ class SubClipsFFMPEG(Operator):
                     command = [
                         "ffmpeg",
                         "-i", clip_path,
+                        "-c:v", str(self.get_param("video_codec")),
+                        "-crf", str(self.get_param("crf")),
+                        "-preset", str(self.get_param("preset")),
                         "-c:a", "copy",
                         "-vf", self._get_subtitles_filter(srt_path, collection_path),
                         "-y",

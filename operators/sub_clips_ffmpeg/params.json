@@ -6,5 +6,8 @@
     "shadow": 1,
     "text_color": "&H00FFFFFF",
     "outline_color": "&H00000000",
-    "shadow_color": "&H00000000"
+    "shadow_color": "&H00000000",
+    "video_codec": "libx264",
+    "crf": 20,
+    "preset": "veryfast"
 }
