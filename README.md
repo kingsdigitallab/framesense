@@ -49,6 +49,8 @@ In the above tree, a file or folder name in capital can be name whichever way yo
 File or folder with an asterisk are mandatory. Names in lowercase are predefined, you can't change them.
 Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or at least one clip file (e.g. godfather/godfather/baptism/baptism.mp4).
 
+Any file or folder whose name starts with an underscore (`_`) is treated as internal data: it is excluded from any video or clip selection by every operator, whatever the `-f` filter (e.g. the `_chunks` folders of temporary chunks created by `answer_separators_vlm`).
+
 ![image](https://github.com/user-attachments/assets/c3d8ae45-505c-4ade-b0b0-58b0ccd4759e)
 
 
