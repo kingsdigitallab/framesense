@@ -2,14 +2,14 @@
 
 ## Input
 * clips (C/C.mp4) in the video folders of a collection
-* video_answers.json with a sep1 answer listing the programme separators of each video
+* clip_answers.json with a sep1 answer listing the programme separators of each clip
 
 ## Output
 * -prog clips (P/P.mp4) placed in sibling folders of the original clip
 
 ## Method
 Use ffmpeg to split each clip into new clips around the programme separators
-listed in the sep1 answer of the video_answers.json of the video it belongs to.
+listed in the sep1 answer of the clip_answers.json placed alongside the clip.
 
 Separator timecodes are assumed to be relative to the beginning of each clip
 (no offset, the start or duration of the clip is not used to place them).

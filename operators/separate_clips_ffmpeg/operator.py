@@ -1,5 +1,5 @@
 # Script created by opencode:opencode/big-pickle
-# New operator separate_clips_ffmpeg splitting the clips of a video around the programme separators (sep1 answer in video_answers.json) into new -prog clips.
+# New operator separate_clips_ffmpeg splitting the clips of a video around the programme separators (sep1 answer in clip_answers.json) into new -prog clips.
 
 from pathlib import Path
 from ..base.operator import Operator
@@ -9,7 +9,7 @@ import json
 PROG_SUFFIX = '-prog'
 TMP_SUFFIX = '-tmp'
 CHUNKS_FOLDER_NAME = 'chunks'
-ANSWERS_FILE_NAME = 'video_answers.json'
+ANSWERS_FILE_NAME = 'clip_answers.json'
 QUESTION_KEY = 'sep1'
 DEFAULT_MIN_SEGMENT_SECONDS = 1
 CONTAINER_DATA_PATH = Path('/data')
@@ -22,7 +22,7 @@ SMART_CUT_VIDEO_CODEC = 'libx264'
 
 
 class SeparateClipsFFMPEG(Operator):
-    '''Split clips around the programme separators of the sep1 answer in video_answers.json into new -prog clips'''
+    '''Split clips around the programme separators of the sep1 answer in clip_answers.json into new -prog clips'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()
@@ -61,15 +61,15 @@ class SeparateClipsFFMPEG(Operator):
                     for outcome, count in outcomes.items():
                         stats[outcome] += count
 
-        self._log(f"prog clips created: {stats['created']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; whole clips symlinked: {stats['linked']}; videos without separators answer: {stats['missing']}")
+        self._log(f"prog clips created: {stats['created']}; already existing: {stats['existing']}; clips skipped: {stats['skipped']}; whole clips symlinked: {stats['linked']}; clips without separators answer: {stats['missing']}")
 
         return ret
 
-    def _get_separators(self, video_folder_path: Path):
-        '''Returns the programme separators of the sep1 answer as a list of (start, end) seconds relative to the clips, None if there is no sep1 answer for the video'''
+    def _get_separators(self, clip_folder_path: Path):
+        '''Returns the programme separators of the sep1 answer as a list of (start, end) seconds relative to the clip, None if there is no sep1 answer for the clip'''
         ret = None
 
-        answers_path = video_folder_path / ANSWERS_FILE_NAME
+        answers_path = clip_folder_path / ANSWERS_FILE_NAME
         if answers_path.is_file():
             answers = self._read_data_file(answers_path, is_data_dict=True)
             sep1 = answers['data'].get(QUESTION_KEY, None)
@@ -77,14 +77,14 @@ class SeparateClipsFFMPEG(Operator):
                 answer = sep1.get('answer', []) if isinstance(sep1, dict) else sep1
                 ret = []
                 if not isinstance(answer, list):
-                    self._warn(f'Invalid {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of video {video_folder_path.name}, video skipped')
+                    self._warn(f'Invalid {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of clip {clip_folder_path.name}, clip skipped')
                     ret = None
                 else:
                     for entry in answer:
                         separator = self._get_separator(entry)
                         if separator:
                             ret.append(separator)
-                    self._log(f'{video_folder_path.name}: {len(ret)} programme separators')
+                    self._log(f'{clip_folder_path.name}: {len(ret)} programme separators')
 
         return ret
 
@@ -121,10 +121,10 @@ class SeparateClipsFFMPEG(Operator):
             ret['skipped'] = 1
             return ret
         
-        video_folder_path = clip_path.parent.parent
-        separators = self._get_separators(video_folder_path)
+        clip_folder_path = clip_path.parent
+        separators = self._get_separators(clip_folder_path)
         if separators is None:
-            self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of video {video_folder_path.name}, video skipped')
+            self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of clip {clip_folder_path.name}, clip skipped')
             ret['missing'] = 1
             return ret
 

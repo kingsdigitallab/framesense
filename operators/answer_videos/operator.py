@@ -7,7 +7,7 @@ import datetime
 import hashlib
 
 class AnswerVideos(Operator, ABC):
-    '''Let a VLM answer questions about a video'''
+    '''Let a VLM answer questions about a clip'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()
@@ -20,21 +20,26 @@ class AnswerVideos(Operator, ABC):
 
         for col in self.context['collections']:
             collection_path = col['attributes']['path']
-            for video_folder_path in collection_path.iterdir():
-                video_path = self._get_video_file_path(video_folder_path, direct_child_only=True)
-                if video_path is None: 
+            for video_folder_path in sorted(collection_path.iterdir()):
+                if not video_folder_path.is_dir():
                     continue
-                self._question_video(video_path, collection_path)
+                for clip_folder_path in sorted(video_folder_path.iterdir()):
+                    if not clip_folder_path.is_dir():
+                        continue
+                    clip_path = self._get_video_file_path(clip_folder_path, direct_child_only=True)
+                    if clip_path is None:
+                        continue
+                    self._question_clip(clip_path, collection_path)
 
         return ret
 
-    def _question_video(self, video_path: Path, collection_path: Path, unit='video'):
-        if not self._is_path_selected(video_path):
+    def _question_clip(self, clip_path: Path, collection_path: Path, unit='clip'):
+        if not self._is_path_selected(clip_path):
             return
 
-        video_answers_path = video_path.parent / f'{unit}_answers.json'
+        clip_answers_path = clip_path.parent / f'{unit}_answers.json'
 
-        answers_file_content = self._read_data_file(video_answers_path, is_data_dict=True)
+        answers_file_content = self._read_data_file(clip_answers_path, is_data_dict=True)
         answers = answers_file_content['data']
 
         template = self.get_param('prompt_template')
@@ -68,9 +73,9 @@ class AnswerVideos(Operator, ABC):
             self.set_param('prompt', prompt)
 
             prompt_length = len(re.findall(r'\w+', prompt))
-            self._log(f'{video_path} (question: {question_key}; words in prompt: {prompt_length})')
+            self._log(f'{clip_path} (question: {question_key}; words in prompt: {prompt_length})')
 
-            response = self._get_response_from_model(video_path, collection_path)           
+            response = self._get_response_from_model(clip_path, collection_path)           
 
             if response['error']:
                 self._error(response['error'])
@@ -87,7 +92,7 @@ class AnswerVideos(Operator, ABC):
                 'usage': response.get('usage', {})
             }
         
-            self._write_data_file(video_answers_path, answers_file_content)
+            self._write_data_file(clip_answers_path, answers_file_content)
 
     def short_hash(self, s, length=8):
         hash_object = hashlib.sha256(s.encode('utf-8'))
@@ -102,5 +107,5 @@ class AnswerVideos(Operator, ABC):
         return f"{hours:02d}:{minutes:02d}:{int(seconds):02d}"
 
     @abstractmethod
-    def _get_response_from_model(self, video_path, collection_path):
+    def _get_response_from_model(self, clip_path, collection_path):
         raise NotImplementedError
