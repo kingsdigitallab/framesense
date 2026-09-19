@@ -14,11 +14,11 @@ QUESTION_KEY = 'sep1'
 DEFAULT_MIN_SEGMENT_SECONDS = 1
 CONTAINER_DATA_PATH = Path('/data')
 DEFAULT_CUT_MODE = 'smart'
-# the smart cut re-encodes the whole segment with a non-lossy quality (crf 0), in a single
+# the smart cut re-encodes the whole segment with a near-lossless quality, in a single
 # ffmpeg command, so that the output is second-accurate and always playable
-DEFAULT_SMART_CRF = 0
+DEFAULT_SMART_CRF = 18
+DEFAULT_SMART_PRESET = 'veryfast'
 SMART_CUT_VIDEO_CODEC = 'libx264'
-SMART_CUT_PRESET = 'ultrafast'
 
 
 class SeparateClipsFFMPEG(Operator):
@@ -243,7 +243,7 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _cut_clip_smart(self, clip_path: Path, start_secs: int, end_secs: int, output_path: Path, collection_path: Path):
-        '''Cuts the segment of a clip into the output file by re-encoding its whole video stream with a non-lossy quality and copying its audio stream.
+        '''Cuts the segment of a clip into the output file by re-encoding its whole video stream with a near-lossless quality and copying its audio stream.
         A single ffmpeg command is used so that the output is one uniform stream: second-accurate and always playable.
         Returns True if the output file was produced'''
         ret = False
@@ -258,7 +258,7 @@ class SeparateClipsFFMPEG(Operator):
             '-t', str(end_secs - start_secs),
             '-c:v', SMART_CUT_VIDEO_CODEC,
             '-crf', str(smart_crf),
-            '-preset', SMART_CUT_PRESET,
+            '-preset', str(self.get_param('smart_preset', DEFAULT_SMART_PRESET)),
             '-c:a', 'copy',
             output_path,
         ]

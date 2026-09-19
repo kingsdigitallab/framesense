@@ -1,5 +1,6 @@
 {
     "min_segment_seconds": 1,
     "cut_mode": "smart",
-    "smart_crf": 0
+    "smart_crf": 18,
+    "smart_preset": "veryfast"
 }

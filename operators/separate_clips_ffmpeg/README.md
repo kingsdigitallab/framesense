@@ -29,18 +29,19 @@ New clips keep the suffix of the original clip and add the `-prog` suffix:
 A clip without any separator in it is symlinked as a single `-prog` clip.
 
 The `cut_mode` parameter selects how each -prog clip is cut:
-* `smart` (default): second-accurate with a non-lossy image quality. The whole
-  segment is re-encoded in a single ffmpeg command with a non-lossy `crf`
-  (default 0) and `-preset ultrafast`, while its audio stream is copied. A
-  single stream is produced, so the -prog clip is always playable.
+* `smart` (default): second-accurate with a near-lossless image quality. The whole
+  segment is re-encoded in a single ffmpeg command with a near-lossless `crf`
+  (default 18) and `smart_preset` (default `veryfast`), while its audio stream is
+  copied. A single stream is produced, so the -prog clip is always playable.
   Falls back to `reencode` when ffmpeg fails.
 * `reencode`: the whole segment is re-encoded by ffmpeg, second-accurate but
   lossy.
 
 ## Parameters (-p)
 * `min_segment_seconds` (int, default 1): minimum length in seconds of a new -prog clip
-* `cut_mode` (str, default smart): `smart` for a second-accurate non-lossy cut, `reencode` to re-encode the whole segment
-* `smart_crf` (int, default 0): `crf` of the video re-encoding of the `smart` cut, 0 being visually lossless; higher values trade image quality for speed and file size
+* `cut_mode` (str, default smart): `smart` for a second-accurate near-lossless cut, `reencode` to re-encode the whole segment
+* `smart_crf` (int, default 18): `crf` of the video re-encoding of the `smart` cut, 0 being lossless; higher values trade image quality for file size
+* `smart_preset` (str, default veryfast): `-preset` of the video re-encoding of the `smart` cut, faster presets trade file size for encoding speed
 
 ## Run if
 A -prog clip does not already exist for a segment.
