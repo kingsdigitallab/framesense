@@ -24,6 +24,7 @@ class ClipFullVideo(Operator):
             'created': 0,
             'existing': 0,
             'skipped': 0,
+            'missing': 0,
         }
 
         for col in self.context['collections']:
@@ -35,7 +36,7 @@ class ClipFullVideo(Operator):
                     if outcome:
                         stats[outcome] += 1
 
-        self._log(f"clips created: {stats['created']}; already existing: {stats['existing']}; videos skipped: {stats['skipped']}")
+        self._log(f"clips created: {stats['created']}; already existing: {stats['existing']}; videos skipped: {stats['skipped']}; videos missing: {stats['missing']}")
 
         return ret
 
@@ -44,8 +45,11 @@ class ClipFullVideo(Operator):
 
         if not self._is_path_selected(video_path):
             return ret
-
-        if not self._is_redo() and self._get_existing_full_clip_folder_path(video_path):
+        
+        # self._warn(f'{str(video_path)}')
+        if not video_path.exists():
+            ret = 'missing'
+        elif not self._is_redo() and self._get_existing_full_clip_folder_path(video_path):
             ret = 'existing'
         else:
             duration_seconds = self._get_video_duration_seconds(video_path)
