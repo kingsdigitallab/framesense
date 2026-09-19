@@ -16,6 +16,7 @@ import base64
 
 ENGINES = ['docker', 'singularity']
 SERVICE_PORT = 5000
+PATH_FRAGMENT_TO_IGNORE = '/_'
 
 
 class Operator(ABC):
@@ -650,7 +651,6 @@ class Operator(ABC):
     def _get_video_file_path(self, parent_folder_path: Path, direct_child_only=False):
         video_extensions = [".mp4", ".mkv"]        
         
-        parent_folder_path.stat
         pattern = '**/*'
         if direct_child_only:
             pattern = '*'
@@ -660,13 +660,15 @@ class Operator(ABC):
             if any(
                 p.suffix.lower() == ext 
                 for ext in video_extensions
-            )
+            ) and not PATH_FRAGMENT_TO_IGNORE in str(p.absolute())
         ]
         
         return max(videos, key=lambda v: v.stat().st_size) if videos else None
     
     def _is_path_selected(self, path: Path):
         ret = True
+        if PATH_FRAGMENT_TO_IGNORE in str(path.absolute()):
+            return False
         filter = self._get_filter_expression(path)
         if filter:
             filters = [f.strip().lower() for f in filter.split('|') if f.strip()]

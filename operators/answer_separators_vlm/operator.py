@@ -1,7 +1,7 @@
 # Script created by opencode:e-research/arc:apex
 # Prompt: create a FrameSense operator inheriting from answer_videos_vlm that splits a video
 # into overlapping chunks, asks a VLM for the separators between distinct programmes found in
-# each chunk, and merges all chunk answers into video_answers.json.
+# each chunk, and merges all chunk answers into clip_answers.json.
 
 from pathlib import Path
 # the parent class is imported through its module, not bound directly in this module:
@@ -11,7 +11,7 @@ from ..answer_videos_vlm import operator as answer_videos_vlm_operator
 import re
 import json
 
-CHUNKS_FOLDER_NAME = 'chunks'
+CHUNKS_FOLDER_NAME = '_chunks'
 CHUNK_FILE_NAME_TEMPLATE = '{start:08d}-{end:08d}.mp4'
 CHUNK_VIDEO_CODEC = 'libx264'
 CHUNK_VIDEO_PRESET = 'veryfast'
@@ -27,14 +27,14 @@ A separator truncated by the beginning or the end of the excerpt must be listed 
 
 
 class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
-    '''Split a video into overlapping chunks and let a VLM behind an openai-compatible API list the separators between distinct programmes'''
+    '''Split a clip into overlapping chunks and let a VLM behind an openai-compatible API list the separators between distinct programmes'''
 
     def set_context(self, context):
         # chunks already cut during the current run, so that -r does not cut them again
         self.cut_chunk_paths = set()
         super().set_context(context)
 
-    def _get_response_from_model(self, video_path, collection_path):
+    def _get_response_from_model(self, clip_path, collection_path):
         ret = {
             'error': '',
             'result': [],
@@ -49,12 +49,12 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
         if chunk_overlap_secs < 0 or chunk_duration_secs <= chunk_overlap_secs:
             self._error(f'Invalid chunking parameters: chunk_duration_secs ({chunk_duration_secs}) must be greater than chunk_overlap_secs ({chunk_overlap_secs}).')
 
-        video_duration_secs = self._get_video_duration_seconds(video_path)
-        if video_duration_secs is None:
-            self._error(f'Could not read the duration of the video: {video_path}')
+        clip_duration_secs = self._get_clip_duration_seconds(clip_path)
+        if clip_duration_secs is None:
+            self._error(f'Could not read the duration of the clip: {clip_path}')
 
-        chunks = self._compute_chunks(video_duration_secs, chunk_duration_secs, chunk_overlap_secs)
-        self._log(f'{video_path.name}: {len(chunks)} chunks of up to {chunk_duration_secs} s. with {chunk_overlap_secs} s. of overlap')
+        chunks = self._compute_chunks(clip_duration_secs, chunk_duration_secs, chunk_overlap_secs)
+        self._log(f'{clip_path.name}: {len(chunks)} chunks of up to {chunk_duration_secs} s. with {chunk_overlap_secs} s. of overlap')
 
         base_prompt = self.get_param('prompt')
 
@@ -77,15 +77,15 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
             }
             chunks_info.append(chunk_info)
 
-            chunk_path = self._make_chunk(video_path, start_secs, end_secs)
+            chunk_path = self._make_chunk(clip_path, start_secs, end_secs)
             if chunk_path is None:
                 chunk_info['error'] = f'Could not create the chunk {self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)}'
                 ret['error'] = chunk_info['error']
                 break
 
-            chunk_info['file'] = str(chunk_path.relative_to(video_path.parent))
+            chunk_info['file'] = str(chunk_path.relative_to(clip_path.parent))
 
-            self._log(f'{video_path.name}: chunk {i + 1}/{len(chunks)} ({self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)})')
+            self._log(f'{clip_path.name}: chunk {i + 1}/{len(chunks)} ({self.get_hhmmss(start_secs)}-{self.get_hhmmss(end_secs)})')
 
             chunk_prompt = base_prompt + '\n\n' + CHUNK_PROMPT_SUFFIX.format(duration_secs=end_secs - start_secs)
             self.set_param('prompt', chunk_prompt)
@@ -110,7 +110,7 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
             stats['duration_seconds'] += response.get('stats', {}).get('duration_seconds', 0.0)
 
-        self._cleanup_chunks(video_path)
+        self._cleanup_chunks(clip_path)
 
         ret['stats'] = dict(stats, chunks=chunks_info)
 
@@ -120,33 +120,33 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         return ret
 
-    def _compute_chunks(self, video_duration_secs: int, chunk_duration_secs: int, chunk_overlap_secs: int) -> list:
-        '''Returns the (start, end) timecodes in seconds of the chunks covering the whole video, consecutive chunks overlapping by chunk_overlap_secs'''
+    def _compute_chunks(self, clip_duration_secs: int, chunk_duration_secs: int, chunk_overlap_secs: int) -> list:
+        '''Returns the (start, end) timecodes in seconds of the chunks covering the whole clip, consecutive chunks overlapping by chunk_overlap_secs'''
         ret = []
 
         step_secs = chunk_duration_secs - chunk_overlap_secs
 
         start_secs = 0
         while True:
-            end_secs = min(start_secs + chunk_duration_secs, video_duration_secs)
+            end_secs = min(start_secs + chunk_duration_secs, clip_duration_secs)
             ret.append((start_secs, end_secs))
-            if end_secs >= video_duration_secs:
+            if end_secs >= clip_duration_secs:
                 break
             start_secs += step_secs
 
         return ret
 
-    def _get_video_duration_seconds(self, video_path: Path):
-        '''Returns the duration of the video in seconds, None if it could not be read'''
+    def _get_clip_duration_seconds(self, clip_path: Path):
+        '''Returns the duration of the clip in seconds, None if it could not be read'''
         ret = None
 
-        binding = [video_path.parent, Path('/data')]
+        binding = [clip_path.parent, Path('/data')]
         command_args = [
             'ffprobe',
             '-v', 'error',
             '-show_entries', 'format=duration',
             '-of', 'json',
-            video_path,
+            clip_path,
         ]
         res = self._run_in_operator_container(command_args, binding)
 
@@ -159,11 +159,11 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
 
         return ret
 
-    def _make_chunk(self, video_path: Path, start_secs: int, end_secs: int):
-        '''Cuts the chunk of the video with ffmpeg and returns its path, None if it failed. An existing chunk is reused, except on -r.'''
+    def _make_chunk(self, clip_path: Path, start_secs: int, end_secs: int):
+        '''Cuts the chunk of the clip with ffmpeg and returns its path, None if it failed. An existing chunk is reused, except on -r.'''
         ret = None
 
-        chunks_folder_path = video_path.parent / CHUNKS_FOLDER_NAME
+        chunks_folder_path = clip_path.parent / CHUNKS_FOLDER_NAME
         if not chunks_folder_path.exists():
             chunks_folder_path.mkdir()
 
@@ -180,7 +180,7 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
                 'ffmpeg',
                 '-y',
                 '-ss', str(start_secs),
-                '-i', video_path,
+                '-i', clip_path,
                 '-t', str(end_secs - start_secs),
                 '-vf', f"fps={self.get_param('fps', 2)}", # doesn't save much space, but saves 30% time
                 '-c:v', CHUNK_VIDEO_CODEC,
@@ -189,21 +189,21 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
                 # '-c:a', CHUNK_AUDIO_CODEC, # audio not needed beause VML doesn't hear
                 chunk_path,
             ]
-            self._run_in_operator_container(command_args, [video_path.parent, Path('/data')], same_user=True)
+            self._run_in_operator_container(command_args, [clip_path.parent, Path('/data')], same_user=True)
 
         if chunk_path.exists():
             ret = chunk_path
 
         return ret
 
-    def _cleanup_chunks(self, video_path: Path):
-        '''Removes the video chunks folder when caching is disabled, so that nothing persists on disk. No-op if the folder does not exist.'''
+    def _cleanup_chunks(self, clip_path: Path):
+        '''Removes the clip chunks folder when caching is disabled, so that nothing persists on disk. No-op if the folder does not exist.'''
         ret = None
 
         # int() keeps the check robust to string values ("0"/"1") coming from environment variables,
         # whereas bool("0") would wrongly evaluate to True
         if not int(self.get_param('cache_chunks', 0)):
-            chunks_folder_path = video_path.parent / CHUNKS_FOLDER_NAME
+            chunks_folder_path = clip_path.parent / CHUNKS_FOLDER_NAME
             if chunks_folder_path.exists():
                 for chunk_file_path in chunks_folder_path.iterdir():
                     chunk_file_path.unlink(missing_ok=True)
@@ -213,7 +213,7 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
         return ret
 
     def _get_chunk_separators(self, response: dict, start_secs: int) -> tuple:
-        '''Returns the separators listed in a chunk answer, with timecodes converted to seconds relative to the full video, and the description of the issues found in the answer ('' if none)'''
+        '''Returns the separators listed in a chunk answer, with timecodes converted to seconds relative to the clip, and the description of the issues found in the answer ('' if none)'''
         ret = []
         errors = []
 
@@ -239,7 +239,7 @@ class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
         return ret, '; '.join(errors)
 
     def _get_separator(self, entry, start_secs: int) -> tuple:
-        '''Returns a separator with timecodes in seconds relative to the full video (None if the entry is invalid) and the description of the issue with the entry ('' if the entry is valid)'''
+        '''Returns a separator with timecodes in seconds relative to the clip (None if the entry is invalid) and the description of the issue with the entry ('' if the entry is valid)'''
         ret = (None, '')
         error = ''
 
