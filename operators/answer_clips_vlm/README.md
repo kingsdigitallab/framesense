@@ -1,4 +1,4 @@
-# answer_videos
+# answer_clips_vlm
 
 ## Input
 
@@ -11,12 +11,9 @@
 
 ## Method
 
-Uses Qwen video language model run with Hugging face transformers API.
+Uses video language model behind an openai-compatible inferrence engine.
 
 Applies to all clips in the collections.
-
-Note that qwen models require a GPU with a lot of VRAM (60-85 GB).
-We recommend qwen3-vl-32b-instruct for best results.
 
 ## Run if
 
@@ -29,4 +26,3 @@ Supported.
 ## Filtering (-f)
 
 Supported
-

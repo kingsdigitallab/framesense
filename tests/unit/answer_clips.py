@@ -1,5 +1,5 @@
 # Script created by opencode:e-research/arc:apex
-# Prompt: unit tests for the clip walk and the per-clip answers of the answer_videos operator
+# Prompt: unit tests for the clip walk and the per-clip answers of the answer_clips operator
 # (every folder with a media file answered, clip_answers.json alongside each clip, prompt-hash
 # caching and redo), plus the reading of clip_answers.json by separate_clips_ffmpeg.
 
@@ -14,7 +14,7 @@ from types import SimpleNamespace
 # import the operators from the repository root, whatever the working directory
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from operators.answer_videos.operator import AnswerVideos
+from operators.answer_clips.operator import AnswerClips
 from operators.separate_clips_ffmpeg.operator import SeparateClipsFFMPEG
 
 TEST_MODEL = 'm'
@@ -26,7 +26,7 @@ CLIP_FOLDER_NAME = '00.00.00-62-full'
 CLIP_FILE_NAME = f'{CLIP_FOLDER_NAME}.mp4'
 
 
-class _ConcreteAnswerVideos(AnswerVideos):
+class _ConcreteAnswerClips(AnswerClips):
     '''The abstract answering operator reduced to a canned model response, recording the media it is asked about'''
 
     def _get_response_from_model(self, clip_path, collection_path):
@@ -61,7 +61,7 @@ class _AnsweringTestCase(unittest.TestCase):
     '''Common setup: a collection with one video folder, and the params of a single question'''
 
     def setUp(self):
-        self.operator = _ConcreteAnswerVideos()
+        self.operator = _ConcreteAnswerClips()
         self.operator.questioned_clip_paths = []
         self.operator.params = {
             'model': TEST_MODEL,

@@ -142,14 +142,14 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 #### Question answering
 
-* **[answer_videos](operators/answer_videos/)**:
-    Answer questions about a video file using a video/vision language model
+* **[answer_clips](operators/answer_clips/)**:
+    Answer questions about a clip file using a video/vision language model
 * **[answer_transcription_ollama](operators/answer_transcription_ollama/)**:
     Answer questions about a clip transcription using a large language model
 * **[answer_frames_vlm](operators/answer_frames_vlm/)**:
     Answer questions about a frame using a vision language model
 * **[answer_separators_vlm](operators/answer_separators_vlm/)**:
-    List the separators between distinct programmes in a video using a video language model
+    List the separators between distinct programmes in a clip using a video language model
 
 ### Design principles
 

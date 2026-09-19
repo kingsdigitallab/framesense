@@ -6,8 +6,8 @@
 from pathlib import Path
 # the parent class is imported through its module, not bound directly in this module:
 # the operator discovery picks the first concrete Operator class found in the module,
-# and a directly imported concrete parent (such as AnswerVideosVLM) would shadow this operator
-from ..answer_videos_vlm import operator as answer_videos_vlm_operator
+# and a directly imported concrete parent (such as AnswerClipsVLM) would shadow this operator
+from ..answer_clips_vlm import operator as answer_clips_vlm_operator
 import re
 import json
 
@@ -26,7 +26,7 @@ All timecodes must be given relative to the first frame of the excerpt: the firs
 A separator truncated by the beginning or the end of the excerpt must be listed too, covering its visible part only.'''
 
 
-class AnswerSeparatorsVLM(answer_videos_vlm_operator.AnswerVideosVLM):
+class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
     '''Split a clip into overlapping chunks and let a VLM behind an openai-compatible API list the separators between distinct programmes'''
 
     def set_context(self, context):

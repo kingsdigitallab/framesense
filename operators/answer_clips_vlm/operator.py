@@ -1,6 +1,6 @@
-from ..answer_videos.operator import AnswerVideos
+from ..answer_clips.operator import AnswerClips
 
-class AnswerVideosVLM(AnswerVideos):
+class AnswerClipsVLM(AnswerClips):
     '''Let a VLM behind an openai-compatible API answer questions about a clip'''
 
     def _get_response_from_model(self, clip_path, collection_path):

@@ -40,10 +40,10 @@ if [ "$SCENARIO" != "workshop" ]; then
     run_python_script "python framesense.py sub_clips_ffmpeg"
 
     ## Requires vLLM or SGLang inferrence engine and 24+GB VRAM
-    # run_python_script "python framesense.py answer_videos_vlm"
+    # run_python_script "python framesense.py answer_clips_vlm"
     # run_python_script "python framesense.py answer_separators_vlm"
     ## Requires 24GB VRAM
-    # run_python_script "python framesense.py answer_videos_qwen3vl"
+    # run_python_script "python framesense.py answer_clips_qwen3vl"
 fi
 
 echo "-------"

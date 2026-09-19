@@ -13,7 +13,7 @@
 
 The clip is split into chunks of `chunk_duration_secs` seconds (15 minutes by default), consecutive chunks overlapping by `chunk_overlap_secs` seconds (2 minutes by default). Chunks are cut with ffmpeg: the seek is fast and the chunk is re-encoded (`libx264`, `veryfast`, crf 28) so that cut points are frame-accurate. When `cache_chunks` is true, existing chunks are reused across runs and kept on disk; when it is false (default), the chunks are removed once the clip has been processed.
 
-Each chunk is passed to a VLM behind an openai-compatible API (inherited from [answer_videos_vlm](../answer_videos_vlm/)) with a prompt asking for the list of the separators between distinct programmes: colour bars, test cards, idents, black screens, static, countdown leaders, slates, or any other interstitial, whatever the genre, the source or the decade of the programmes. For each separator the model returns the start and end timecodes relative to the chunk, plus a tag describing its nature.
+Each chunk is passed to a VLM behind an openai-compatible API (inherited from [answer_clips_vlm](../answer_clips_vlm/)) with a prompt asking for the list of the separators between distinct programmes: colour bars, test cards, idents, black screens, static, countdown leaders, slates, or any other interstitial, whatever the genre, the source or the decade of the programmes. For each separator the model returns the start and end timecodes relative to the chunk, plus a tag describing its nature.
 
 Timecodes are converted back to the clip and the answers of all the chunks are combined; a separator seen twice (in the overlapping region of two neighbouring chunks) is merged, keeping the longest version.
 
@@ -21,7 +21,7 @@ Applies to all clips in the collections.
 
 ## Parameters
 
-Same parameters as [answer_videos_vlm](../answer_videos_vlm/), plus:
+Same parameters as [answer_clips_vlm](../answer_clips_vlm/), plus:
 
 * `chunk_duration_secs`: duration of a chunk, in seconds (default: 900)
 * `chunk_overlap_secs`: duration of the overlap between two consecutive chunks, in seconds (default: 120)

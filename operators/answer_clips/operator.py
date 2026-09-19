@@ -6,7 +6,7 @@ import json
 import datetime
 import hashlib
 
-class AnswerVideos(Operator, ABC):
+class AnswerClips(Operator, ABC):
     '''Let a VLM answer questions about a clip'''
 
     def get_supported_arguments(self):
