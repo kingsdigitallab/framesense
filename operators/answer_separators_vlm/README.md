@@ -7,7 +7,7 @@
 ## Output
 
 * answers in a json file `clip_answers.json` placed alongside each clip: the combined list of the separators between distinct programmes, each with its start and end timecodes (HH:MM:SS, relative to the clip) and a tag describing its nature
-* the clip chunks in a `chunks/` folder next to the clip file, e.g. `chunks/00000000-00000900.mp4` (this folder persists only when `cache_chunks` is true; otherwise the chunks are removed once the clip has been processed)
+* the clip chunks in a `_chunks/` folder next to the clip file, e.g. `_chunks/00000000-00000900.mp4` (this folder persists only when `cache_chunks` is true; otherwise the chunks are removed once the clip has been processed)
 
 ## Method
 

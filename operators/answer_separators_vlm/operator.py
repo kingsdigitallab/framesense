@@ -11,7 +11,7 @@ from ..answer_videos_vlm import operator as answer_videos_vlm_operator
 import re
 import json
 
-CHUNKS_FOLDER_NAME = 'chunks'
+CHUNKS_FOLDER_NAME = '_chunks'
 CHUNK_FILE_NAME_TEMPLATE = '{start:08d}-{end:08d}.mp4'
 CHUNK_VIDEO_CODEC = 'libx264'
 CHUNK_VIDEO_PRESET = 'veryfast'
