@@ -671,11 +671,11 @@ class Operator(ABC):
             return False
         filter = self._get_filter_expression(path)
         if filter:
-            filters = [f.strip().lower() for f in filter.split('|') if f.strip()]
+            filters = [f.lower() for f in filter.split('|') if f.strip()]
             ret = any(f in str(path).lower() for f in filters)
         exclude = self._get_exclude_expression()
         if ret and exclude:
-            excludes = [e.strip().lower() for e in exclude.split('|') if e.strip()]
+            excludes = [e.lower() for e in exclude.split('|') if e.strip()]
             ret = not any(e in str(path).lower() for e in excludes)
         return ret
 
