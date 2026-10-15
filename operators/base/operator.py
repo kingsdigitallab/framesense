@@ -8,6 +8,7 @@ import sys
 import os
 import json
 import urllib.request
+from urllib.parse import quote
 import time
 import re
 import http
@@ -378,7 +379,7 @@ class Operator(ABC):
             input_file_path_in_container = binding[1] / input_file_path.relative_to(binding[0])
             
             self._log(input_file_path.relative_to(binding[0]))
-            response = self._fetch_json(f'http://localhost:{SERVICE_PORT}/process?input_path={input_file_path_in_container}')
+            response = self._fetch_json(self._make_service_process_url(input_file_path_in_container))
 
             error = response.get('error', '')
             if not error:
@@ -393,6 +394,10 @@ class Operator(ABC):
                 else:
                     self._error(f'Processing service returned error. Input = {input_file_path}; Error = {error}.')
 
+        return ret
+
+    def _make_service_process_url(self, input_file_path_in_container: Path):
+        ret = f'http://localhost:{SERVICE_PORT}/process?input_path={quote(str(input_file_path_in_container))}'
         return ret
 
     def _run_in_operator_container(self, command_args: [str], binding: Tuple[Path, Path] = None, same_user=False, port_mapping=None, is_service=False, share_network=False, skip=False):
