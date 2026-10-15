@@ -49,6 +49,22 @@ before the first operation is run.
 
 The pipeline stops at the first operation which fails.
 
+The pipeline can also be stopped before an operation,
+either with the `stop_before` property of that operation:
+
+```json
+{
+    "operator": "transcription_vad_sub",
+    "params": {},
+    "stop_before": true
+}
+```
+
+or with the stop_before parameter of run_pipeline,
+set to the name of an operator:
+the pipeline then stops with a warning before
+the first operation using this operator.
+
 The -f and -v arguments are passed to every operation.
 When a filter is specified and an operator doesn't support it, 
 the pipeline will stops with an error.
@@ -82,6 +98,7 @@ To redo an operation, run its operator directly.
 ## Parameters
 
 * pipeline: name of the pipeline to run, as defined under meta.pipelines in the collections file. Default: default
+* stop_before: name of an operator; the pipeline stops before the first operation using it. Default: empty (no stop)
 
 ## Run if
 
