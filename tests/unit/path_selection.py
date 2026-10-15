@@ -53,8 +53,9 @@ class IsPathSelectedTestCase(unittest.TestCase):
         self.assertTrue(self._is_selected('/data/godfather/00.00.03-62/clip.mp4', filter='matrix|godfather'))
         self.assertFalse(self._is_selected('/data/godfather/00.00.03-62/clip.mp4', filter='matrix|avatar'))
 
-    def test_filter_is_case_insensitive_and_trims_spaces(self):
-        self.assertTrue(self._is_selected('/data/GodFather/clip.mp4', filter=' godfather '))
+    def test_filter_is_case_insensitive_and_keeps_white_spaces(self):
+        self.assertFalse(self._is_selected('/data/GodFather/clip.mp4', filter=' godfather '))
+        self.assertTrue(self._is_selected('/data/my godfather 2/clip.mp4', filter=' godfather '))
         self.assertTrue(self._is_selected('/data/godfather/clip.mp4', filter='GODFATHER'))
 
     def test_empty_filter_keywords_are_ignored(self):
@@ -72,8 +73,10 @@ class IsPathSelectedTestCase(unittest.TestCase):
         self.assertFalse(self._is_selected('/data/godfather/promo/clip.mp4', exclude='ads|promo'))
         self.assertTrue(self._is_selected('/data/godfather/promo/clip.mp4', exclude='ads|trailer'))
 
-    def test_exclude_is_case_insensitive_and_trims_spaces(self):
-        self.assertFalse(self._is_selected('/data/godfather/PROMO/clip.mp4', exclude=' promo '))
+    def test_exclude_is_case_insensitive_and_keeps_white_spaces(self):
+        self.assertFalse(self._is_selected('/data/godfather/PROMO/clip.mp4', exclude='promo'))
+        self.assertTrue(self._is_selected('/data/godfather/promo/clip.mp4', exclude=' promo '))
+        self.assertFalse(self._is_selected('/data/my promo 2/clip.mp4', exclude=' promo '))
 
     def test_empty_exclude_keywords_are_ignored(self):
         self.assertTrue(self._is_selected('/data/godfather/promo/clip.mp4', exclude='| |'))
