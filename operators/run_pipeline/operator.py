@@ -49,6 +49,10 @@ class RunPipeline(Operator):
 
             if not isinstance(operation, dict):
                 self._error(f'The {position} should be an object.')
+                
+            if operation.get('stop', 0):
+                self._warn(f'STOP at {position}')
+                break
 
             operator_name = operation.get('operator', None)
             if not operator_name or not isinstance(operator_name, str):
