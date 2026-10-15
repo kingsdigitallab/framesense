@@ -44,19 +44,21 @@ class RunPipeline(Operator):
         '''Validates all the operations before running any of them, then returns the operator instances and contexts to run'''
         ret = []
 
+        stop_before_operator_name = self.get_param('stop_before', '')
+
         for i, operation in enumerate(operations):
             position = f'operation #{i + 1} of pipeline "{pipeline_name}"'
 
             if not isinstance(operation, dict):
                 self._error(f'The {position} should be an object.')
                 
-            if operation.get('stop', 0):
-                self._warn(f'STOP at {position}')
-                break
-
             operator_name = operation.get('operator', None)
             if not operator_name or not isinstance(operator_name, str):
                 self._error(f'The {position} is missing its operator property.')
+
+            if operation.get('stop_before', 0) or operator_name == stop_before_operator_name:
+                self._warn(f'STOP before {position}')
+                break
 
             if operator_name == self._get_operator_name():
                 self._error(f'Pipelines cannot run other pipelines (the {position} uses {operator_name}).')

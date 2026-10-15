@@ -1,3 +1,4 @@
 {
-    "pipeline": "default"
+    "pipeline": "default",
+    "stop_before": ""
 }
