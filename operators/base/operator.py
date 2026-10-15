@@ -474,11 +474,7 @@ class Operator(ABC):
                 for a in command_args
             ]
         
-            flag = '-v'
-            if engine == 'singularity':
-                flag = '-B'
-
-            engine_command_args += [flag, f'{mounted_path}:{abinding[1]}']
+            engine_command_args += self._get_bind_args(engine, mounted_path, abinding[1])
         
         if engine == 'docker':
             engine_command_args.append('--rm')
@@ -535,6 +531,22 @@ class Operator(ABC):
                 return self._run_service(engine_command_args)
             else:
                 return self._run_command(engine_command_args, skip=skip)
+
+    def _get_bind_args(self, engine, mounted_path, container_path):
+        '''Returns the engine arguments binding a host path to a container path.
+        A singularity -B value is a comma-separated list of binds, so the paths with a comma in them
+        use the --mount flag instead, with its source field quoted following the CSV rules'''
+        ret = None
+
+        if engine != 'singularity':
+            ret = ['-v', f'{mounted_path}:{container_path}']
+        elif ',' not in str(mounted_path) and '"' not in str(mounted_path):
+            ret = ['-B', f'{mounted_path}:{container_path}']
+        else:
+            src = str(mounted_path).replace('"', '""')
+            ret = ['--mount', f'type=bind,"src={src}",dst={container_path}']
+
+        return ret
 
     def _run_command(self, command_args: [str], skip=False) -> subprocess.CompletedProcess[str]:
         res = None
