@@ -128,7 +128,13 @@ if __name__ == '__main__':
                 # yes... Flask does NOT have a shutdown function.
                 os.kill(os.getpid(), signal.SIGINT)
 
-            app.run(debug=True, host='0.0.0.0', port=PORT)
+            # use_reloader=False b/c in debug mode Flask re-executes the whole
+            # script, reloading the model a second time and delaying the port
+            # binding (so the requests could be answered by any older process
+            # still holding the port); keep debug=True for the traceback pages
+            app.run(debug=True, use_reloader=False, host='0.0.0.0', port=PORT)
+            # app.run(debug=True, host='0.0.0.0', port=PORT)
+
         elif first_arg == 'load_model':
             response = {
                 'error': '',
