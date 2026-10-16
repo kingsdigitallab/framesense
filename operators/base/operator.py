@@ -49,14 +49,19 @@ class Operator(ABC):
 
     def apply(self):
         self._before_apply()
-        
-        collection = self.get_service_collection()
-        if collection:
-            ret = self._serve(collection)
-        else:
-            ret = self._apply()
-        
-        self._after_apply()
+
+        try:
+            collection = self.get_service_collection()
+            if collection:
+                ret = self._serve(collection)
+            else:
+                ret = self._apply()
+        finally:
+            # _after_apply stops the service; it is called from a finally clause b/c
+            # errors handled by _error() exit the process through sys.exit() and
+            # would otherwise leave the service running behind this process,
+            # its port bound by an orphaned process
+            self._after_apply()
 
         return ret
 
