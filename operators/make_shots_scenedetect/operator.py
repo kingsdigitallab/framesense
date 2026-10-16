@@ -53,7 +53,8 @@ class MakeShotsSceneDetect(Operator):
         # if framesense_parameters:
         #     detection_parameters = re.split(r'\s+', framesense_parameters)
 
-        binding = [clip_path.parent, Path('/data')]
+        # bind the video folder, not the clip folder: the clip file may be a symlink to a file in it
+        binding = [clip_path.parent.parent, Path('/data')]
         command_args = [
             'scenedetect',
             '--input', clip_path,

@@ -54,4 +54,5 @@ class TranscodeClipsFFMPEG(Operator):
                 for p 
                 in command
             ]
-            self._run_in_operator_container(command, [clip_path.parent, '/data'], same_user=True)
+            # bind the video folder, not the clip folder: the clip file may be a symlink to a file in it
+            self._run_in_operator_container(command, [clip_path.parent.parent, Path('/data')], same_user=True)

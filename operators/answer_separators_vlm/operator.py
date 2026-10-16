@@ -140,7 +140,9 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
         '''Returns the duration of the clip in seconds, None if it could not be read'''
         ret = None
 
-        binding = [clip_path.parent, Path('/data')]
+        # bind the video folder, not the clip folder: -full and -prog clip files are symlinks
+        # to files in the video folder, which must be mounted for the links to resolve in the container
+        binding = [clip_path.parent.parent, Path('/data')]
         command_args = [
             'ffprobe',
             '-v', 'error',
@@ -189,7 +191,8 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
                 # '-c:a', CHUNK_AUDIO_CODEC, # audio not needed beause VML doesn't hear
                 chunk_path,
             ]
-            self._run_in_operator_container(command_args, [clip_path.parent, Path('/data')], same_user=True)
+            # bind the video folder, not the clip folder: the clip file may be a symlink to a file in it
+            self._run_in_operator_container(command_args, [clip_path.parent.parent, Path('/data')], same_user=True)
 
         if chunk_path.exists():
             ret = chunk_path
