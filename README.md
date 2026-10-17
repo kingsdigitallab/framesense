@@ -127,6 +127,8 @@ Check the README.md under each operator folder for a specification card. (Work i
 
 * **[scale_frames_sssabet](operators/scale_frames_sssabet)**:
     Shot scale classification from frames based on https://github.com/sssabet/Shot_Type_Classification
+* **[detect_subs_tesseract](operators/detect_subs_tesseract/)**:
+    Detect the periods of burned-in subtitles in clips using tesseract OCR
 
 #### Sound
 
