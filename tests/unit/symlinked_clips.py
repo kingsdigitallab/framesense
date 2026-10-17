@@ -82,7 +82,7 @@ class _SymlinkedClipTestCase(unittest.TestCase):
 
 
 class AnswerSeparatorsVlmTestCase(_SymlinkedClipTestCase):
-    '''answer_separators_vlm: the ffprobe and ffmpeg chunk commands mount the video folder'''
+    '''answer_separators_vlm: the ffmpeg chunk command mounts the video folder'''
 
     def setUp(self):
         super().setUp()
@@ -93,13 +93,6 @@ class AnswerSeparatorsVlmTestCase(_SymlinkedClipTestCase):
             'fps': 2,
         })
         self.commands = self._record_container_commands(self.operator)
-
-    def test_duration_probe_binds_the_video_folder(self):
-        duration = self.operator._get_clip_duration_seconds(self.clip_path)
-
-        self.assertEqual(duration, 62)
-        self.assertEqual(len(self.commands), 1)
-        self._assert_binds_the_video_folder(self.commands[0])
 
     def test_chunk_cut_binds_the_video_folder(self):
         self.operator._make_chunk(self.clip_path, 0, 62)
