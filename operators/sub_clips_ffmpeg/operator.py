@@ -7,8 +7,22 @@ from ..base.operator import Operator
 SUB_SUFFIX = '-sub'
 TMP_SUFFIX = '-tmp'
 CONTAINER_DATA_PATH = Path('/data')
-# characters which are special to the FFMPEG filter syntax
-FILTER_SPECIAL_CHARACTERS = ['\\', ':', ',', "'"]
+BACKSLASH = '\\'
+# a path embedded in a FFMPEG filter value is unescaped twice: once when the filter graph
+# is parsed (its filter chains are separated by , or ; and its stream labels wrapped in [ or ]),
+# once when the filter options are parsed (separated by : and their keys from their values by =).
+# So [ ] , ; need one backslash, : = need two, one consumed by each unescaping, and ' \ need
+# three and four, as they are special to both parsers
+FILTER_SPECIAL_CHARACTERS = {
+    '[': BACKSLASH + '[',
+    ']': BACKSLASH + ']',
+    ',': BACKSLASH + ',',
+    ';': BACKSLASH + ';',
+    ':': 2 * BACKSLASH + ':',
+    '=': 2 * BACKSLASH + '=',
+    "'": 3 * BACKSLASH + "'",
+    '\\': 4 * BACKSLASH,
+}
 
 class SubClipsFFMPEG(Operator):
     '''Burn the subtitles of an srt file onto clips using FFMPEG'''
@@ -140,8 +154,12 @@ class SubClipsFFMPEG(Operator):
 
     def _escape_filter_path(self, path: Path) -> str:
         '''Escapes the characters of a path which are special to the FFMPEG filter syntax'''
-        ret = str(path)
-        for character in FILTER_SPECIAL_CHARACTERS:
-            ret = ret.replace(character, f'\\{character}')
+        ret = ''
+
+        # a single pass over the characters, so that the backslashes inserted
+        # by the escapes are never escaped in turn
+        for character in str(path):
+            ret += FILTER_SPECIAL_CHARACTERS.get(character, character)
+
         return ret
 
