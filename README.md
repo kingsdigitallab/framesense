@@ -30,11 +30,11 @@ A video can be manually annotated in an `annotation file` that contains a list o
 
 * COLLECTIONS
     * collections.json*
-    * COLLECTION1*
-        * VIDEO1*
-            * VIDEO1.mp4
-            * CLIP1
-                * CLIP1.mp4
+    * COLLECTION_NAME*
+        * VIDEO1_NAME
+            * VIDEO1_NAME.mp4
+            * HH.MM.SS-D-TAGS
+                * HH.MM.SS-D-TAGS.mp4
                 * shots
                     * SHOT_INDEX # three digits, zero-padded
                         * shot.mp4
@@ -42,12 +42,16 @@ A video can be manually annotated in an `annotation file` that contains a list o
                         * 02-XXX.jpg # middle frame
                         * 03-XXX.jpg # last frame
                         * frames.json
-    * ANNOTATIONS1
-        * VIDEO1.json
+    * ANNOTATIONS
+        * VIDEO1_NAME.json
 
-In the above tree, a file or folder name in capital can be name whichever way you like. 
 File or folder with an asterisk are mandatory. Names in lowercase are predefined, you can't change them.
-Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or at least one clip file (e.g. godfather/godfather/baptism/baptism.mp4).
+
+Initially each video folder must have either a video file (e.g. godfather/godfather.mp4) or at least one clip file (e.g. godfather/godfather/01.32.01-420-baptism/01.32.01-420-baptism.mp4).
+
+Clip folders and names use this prefix: `HH.MM.SS-D` where HH.MM.SS is the time code of the beginning of the clip relative to the whole video. And D is the duration in seconds.
+
+Suffix for clips is a - separated list of tags. E.g. 00.01.34-325-full-prog has two tags: full and prog. An operator can append a tag at the end. This convention helps expose the sequence of operators a clip was built from. It also helps with including/excluding source clips via filters (-f) when calling an operator.
 
 Any file or folder whose name starts with an underscore (`_`) is treated as internal data: it is excluded from any video or clip selection by every operator, whatever the `-f` filter (e.g. the `_chunks` folders of temporary chunks created by `answer_separators_vlm`).
 
@@ -158,11 +162,13 @@ It is expected that each operator:
 * is atomic (only valid and complete output are persisted);
 * implements a single method or strategy;
 * should only process the input if its output doesn't already exist;
+* never modifies its input files;
 * uses containers to isolate its software dependencies;
 * works on all files at one specific level in the hierarchy (e.g. make_shots splits all your clips into shots);
 * has a name which reflects what it does, on what unit, with which method (e.g. make_clips_ffmpeg);
 * is written as a Python class within a module `operator.py` under a package which name matches the name of the operator (e.g. `operators/make_clips_ffmpeg/operator.py`);
 * inherits from the [base operator](operators/base/operator.py);
+* has default parameter values that work well on low-end compute and a variety of input;
 
 ### Containers
 
@@ -254,8 +260,8 @@ The value of any operator parameter originates from these sources,
 in the following order of precedence:
 * environment variable (see above)
 * variable in `.env` file
-* value under meta.pipelines.<PIPELINE>.operations[<I>].params in the collection json file, when the operator is run by run_pipeline
-* value under meta.params.OPERATOR.PARAM in the collection json file (note that OPERATOR and PARAM values should be in lower case, e.g. `answer_frames_vlm` and `model`)
+* value under `meta.pipelines.<PIPELINE>.operations[<I>].params` in the collection json file, when the operator is run by run_pipeline
+* value under `meta.params.OPERATOR.PARAM` in the collection json file (note that OPERATOR and PARAM values should be in lower case, e.g. `answer_frames_vlm` and `model`)
 * the default value set in the operator's `params.json` file
 
 ## GPU access
