@@ -226,8 +226,8 @@ until FrameSense receives more dedicated support (external contributors or addit
 
 ## Performance and HPC
 
-We are aiming to support low end (laptop) and high end (HPCs) compute environment. 
-However at the moment support is limited and the operators are very slow.
+We are aiming to support low end (laptop) and high end (HPCs) compute environments. 
+Some operators require a GPU.
 
 ## Testing
 
