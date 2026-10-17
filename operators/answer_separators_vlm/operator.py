@@ -9,7 +9,6 @@ from pathlib import Path
 # and a directly imported concrete parent (such as AnswerClipsVLM) would shadow this operator
 from ..answer_clips_vlm import operator as answer_clips_vlm_operator
 import re
-import json
 
 CHUNKS_FOLDER_NAME = '_chunks'
 CHUNK_FILE_NAME_TEMPLATE = '{start:08d}-{end:08d}.mp4'
@@ -49,7 +48,7 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
         if chunk_overlap_secs < 0 or chunk_duration_secs <= chunk_overlap_secs:
             self._error(f'Invalid chunking parameters: chunk_duration_secs ({chunk_duration_secs}) must be greater than chunk_overlap_secs ({chunk_overlap_secs}).')
 
-        clip_duration_secs = self._get_clip_duration_seconds(clip_path)
+        clip_duration_secs = self.get_duration_seconds_from_clip_path(clip_path)
         if clip_duration_secs is None:
             self._error(f'Could not read the duration of the clip: {clip_path}')
 
@@ -133,31 +132,6 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
             if end_secs >= clip_duration_secs:
                 break
             start_secs += step_secs
-
-        return ret
-
-    def _get_clip_duration_seconds(self, clip_path: Path):
-        '''Returns the duration of the clip in seconds, None if it could not be read'''
-        ret = None
-
-        # bind the video folder, not the clip folder: -full and -prog clip files are symlinks
-        # to files in the video folder, which must be mounted for the links to resolve in the container
-        binding = [clip_path.parent.parent, Path('/data')]
-        command_args = [
-            'ffprobe',
-            '-v', 'error',
-            '-show_entries', 'format=duration',
-            '-of', 'json',
-            clip_path,
-        ]
-        res = self._run_in_operator_container(command_args, binding)
-
-        if res and res.returncode == 0:
-            try:
-                metadata = json.loads(res.stdout)
-                ret = int(float(metadata['format']['duration']))
-            except (json.JSONDecodeError, KeyError, ValueError, TypeError):
-                pass
 
         return ret
 
