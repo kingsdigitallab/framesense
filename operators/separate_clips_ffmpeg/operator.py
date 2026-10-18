@@ -22,7 +22,8 @@ SMART_CUT_VIDEO_CODEC = 'libx264'
 
 
 class SeparateClipsFFMPEG(Operator):
-    '''Split clips around the programme separators of the sep1 answer in clip_answers.json into new -prog clips'''
+    '''Split clips around the programme separators of the sep1 answer 
+    in clip_answers.json into new -prog clips'''
 
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()
@@ -66,7 +67,9 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _get_separators(self, clip_folder_path: Path):
-        '''Returns the programme separators of the sep1 answer as a list of (start, end) seconds relative to the clip, None if there is no sep1 answer for the clip'''
+        '''Returns the programme separators of the sep1 answer 
+        as a list of (start, end) seconds relative to the clip, 
+        None if there is no sep1 answer for the clip'''
         ret = None
 
         answers_path = clip_folder_path / ANSWERS_FILE_NAME
@@ -89,7 +92,8 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _get_separator(self, entry):
-        '''Returns the separator of an answer entry as a (start, end) couple of seconds, None if invalid'''
+        '''Returns the separator of an answer entry 
+        as a (start, end) couple of seconds, None if invalid'''
         ret = None
 
         if not isinstance(entry, dict):
@@ -108,7 +112,8 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _split_clip(self, clip_path: Path, collection_path: Path) -> dict:
-        '''Splits a clip around the programme separators into -prog clips placed in sibling folders next to the original one.
+        '''Splits a clip around the programme separators into -prog clips 
+        placed in sibling folders next to the original one.
         Returns a dict of stats counters and their number of occurrences'''
         ret = {}
 
@@ -152,7 +157,9 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _compute_segments(self, clip_duration_secs: int, separators: list) -> list:
-        '''Returns the (start, end) segments of the clip free of programme separators, the separators timecodes being relative to the clip'''
+        '''Returns the (start, end) segments of the clip 
+        free of programme separators, 
+        the separators timecodes being relative to the clip'''
         ret = []
 
         boundaries = []
@@ -176,8 +183,10 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _make_prog_clip(self, clip_path: Path, start_secs: int, end_secs: int, collection_path: Path):
-        '''Cuts the segment of the clip between two programme separators into a new -prog clip, placed in its own folder next to the original one.
-        Returns the name of the stats counter the clip has been processed with, None if not processed'''
+        '''Cuts the segment of the clip between two programme separators 
+        into a new -prog clip, placed in its own folder next to the original one.
+        Returns the name of the stats counter the clip has been processed with, 
+        None if not processed'''
         ret = None
 
         duration_secs = end_secs - start_secs
@@ -209,7 +218,8 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _cut_clip(self, clip_path: Path, start_secs: int, end_secs: int, output_path: Path, collection_path: Path, cut_mode: str):
-        '''Cuts the segment of a clip into the output file with the requested cut mode, falling back to re-encoding all of it if the smart mode fails.
+        '''Cuts the segment of a clip into the output file with the requested cut mode, 
+        falling back to re-encoding all of it if the smart mode fails.
         Returns True if the output file was produced'''
         ret = False
 
@@ -243,7 +253,9 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _cut_clip_smart(self, clip_path: Path, start_secs: int, end_secs: int, output_path: Path, collection_path: Path):
-        '''Cuts the segment of a clip into the output file by re-encoding its whole video stream with a near-lossless quality and copying its audio stream.
+        '''Cuts the segment of a clip into the output file 
+        by re-encoding its whole video stream with a near-lossless quality 
+        and copying its audio stream.
         A single ffmpeg command is used so that the output is one uniform stream: second-accurate and always playable.
         Returns True if the output file was produced'''
         ret = False
@@ -270,7 +282,8 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _link_whole_clip(self, clip_path: Path):
-        '''For a clip without any programme separator in it, symlinks the clip to a new -prog clip in its own folder next to the original one.
+        '''For a clip without any programme separator in it, 
+        symlinks the clip to a new -prog clip in its own folder next to the original one.
         Returns the name of the stats counter the clip has been processed with'''
         ret = 'linked'
 
@@ -294,7 +307,9 @@ class SeparateClipsFFMPEG(Operator):
         return ret
 
     def _get_clip_suffix(self, clip_path: Path) -> str:
-        '''Returns the suffix of the clip folder name after its timecodes, '' if there is none, e.g. -full for 00.00.00-6582-full'''
+        '''Returns the suffix of the clip folder name after its timecodes, 
+        '' if there is none, 
+        e.g. -full for 00.00.00-6582-full'''
         ret = ''
 
         match = re.match(r'^\d{2}\.\d{2}\.\d{2}-\d+(?P<suffix>-[^0-9].*)?$', clip_path.parent.name)
@@ -303,31 +318,9 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _get_clip_duration_seconds_old(self, clip_path: Path):
-        '''Returns the duration of the clip in seconds, None if it could not be read'''
-        ret = None
-
-        binding = [clip_path.parent, Path('/data')]
-        command_args = [
-            'ffprobe',
-            '-v', 'error',
-            '-show_entries', 'format=duration',
-            '-of', 'json',
-            clip_path,
-        ]
-        res = self._run_in_operator_container(command_args, binding, skip=self._is_skip())
-
-        if res.returncode == 0:
-            try:
-                metadata = json.loads(res.stdout)
-                ret = int(float(metadata['format']['duration']))
-            except (json.JSONDecodeError, KeyError, ValueError, TypeError):
-                pass
-
-        return ret
-
     def _get_seconds_from_timecode(self, timecode):
-        '''Converts a timecode into seconds; accepts HH:MM:SS, MM:SS or plain seconds; None if invalid'''
+        '''Converts a timecode into seconds; 
+        accepts HH:MM:SS, MM:SS or plain seconds; None if invalid'''
         ret = None
 
         if isinstance(timecode, (int, float)):
