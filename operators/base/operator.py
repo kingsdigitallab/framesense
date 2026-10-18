@@ -14,6 +14,7 @@ import re
 import http
 from datetime import datetime
 import base64
+from typing import Any
 
 ENGINES = ['docker', 'singularity']
 SERVICE_PORT = 5000
@@ -835,7 +836,7 @@ class Operator(ABC):
     def write_json(self, file_path: Path, content):
         file_path.write_text(json.dumps(content, indent=2))
 
-    def get_param(self, name, default=None):
+    def get_param(self, name, default=None) -> Any:
         return self.params.get(name, default)
 
     def set_param(self, name, value):
@@ -1131,3 +1132,37 @@ class Operator(ABC):
 
         return ret
 
+    def get_hhmmss(self, seconds):
+        '''Formats a duration in seconds as HH:MM:SS'''
+        hours = int(seconds // 3600)
+        seconds %= 3600
+        minutes = int(seconds // 60)
+        seconds %= 60
+        ret = f'{hours:02d}:{minutes:02d}:{int(seconds):02d}'
+        return ret
+
+    def get_clip_suffix(self, clip_path: Path) -> str:
+        '''Returns the suffix of the clip folder name after its timecodes, 
+        '' if there is none, 
+        e.g. -full for 00.00.00-6582-full'''
+        ret = ''
+
+        match = re.match(r'^\d{2}\.\d{2}\.\d{2}-\d+(?P<suffix>-[^0-9].*)?$', clip_path.parent.name)
+        if match and match.group('suffix'):
+            ret = match.group('suffix')
+
+        return ret
+
+    def get_seconds_from_timecode(self, timecode):
+        '''Converts a timecode into seconds; 
+        accepts HH:MM:SS, MM:SS or plain seconds; None if invalid'''
+        ret = None
+
+        if isinstance(timecode, (int, float)):
+            ret = int(timecode)
+        else:
+            match = re.match(r'^\s*(?:(\d+):)?(\d{1,2}):(\d{1,2})(?:[.,]\d+)?\s*$', str(timecode))
+            if match:
+                ret = int(match.group(1) or 0) * 3600 + int(match.group(2)) * 60 + int(match.group(3))
+
+        return ret

@@ -1,10 +1,11 @@
 # Script created by opencode:opencode/big-pickle
 # New operator separate_clips_ffmpeg splitting the clips of a video around the programme separators (sep1 answer in clip_answers.json) into new -prog clips.
 
-from pathlib import Path
-from ..base.operator import Operator
 import re
-import json
+from pathlib import Path
+
+from ..base.operator import Operator
+import itertools
 
 PROG_SUFFIX = '-prog'
 TMP_SUFFIX = '-tmp'
@@ -44,7 +45,7 @@ class SeparateClipsFFMPEG(Operator):
         }
 
         for col in self.context['collections']:
-            collection_path = col['attributes']['path']
+            collection_path: Path = col['attributes']['path']
             for video_folder_path in sorted(collection_path.iterdir()):
                 if not video_folder_path.is_dir():
                     continue
@@ -99,8 +100,8 @@ class SeparateClipsFFMPEG(Operator):
         if not isinstance(entry, dict):
             self._warn(f'Separator entry is not an object, ignored: {entry}')
         else:
-            start = self._get_seconds_from_timecode(entry.get('start', None))
-            end = self._get_seconds_from_timecode(entry.get('end', None))
+            start = self.get_seconds_from_timecode(entry.get('start', None))
+            end = self.get_seconds_from_timecode(entry.get('end', None))
 
             if start is None or end is None:
                 self._warn(f'Separator entry with missing or invalid timecodes, ignored: {entry}')
@@ -173,7 +174,7 @@ class SeparateClipsFFMPEG(Operator):
             if boundaries[0][0] > 0:
                 ret.append((0, boundaries[0][0]))
 
-            for previous, current in zip(boundaries, boundaries[1:]):
+            for previous, current in itertools.pairwise(boundaries):
                 if previous[1] < current[0]:
                     ret.append((previous[1], current[0]))
 
@@ -190,7 +191,7 @@ class SeparateClipsFFMPEG(Operator):
         ret = None
 
         duration_secs = end_secs - start_secs
-        name = f'{self._get_hhmmss(start_secs).replace(":", ".")}-{duration_secs}{self._get_clip_suffix(clip_path)}{PROG_SUFFIX}'
+        name = f'{self.get_hhmmss(start_secs).replace(":", ".")}-{duration_secs}{self.get_clip_suffix(clip_path)}{PROG_SUFFIX}'
         prog_folder_path = clip_path.parent.parent / name
         prog_clip_path = prog_folder_path / f'{name}{clip_path.suffix}'
 
@@ -246,7 +247,7 @@ class SeparateClipsFFMPEG(Operator):
             '-t', str(end_secs - start_secs),
             output_path,
         ]
-        res = self._run_in_operator_container(command_args, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=self._is_skip())
+        res = self._run_in_operator_container(command_args, (collection_path, CONTAINER_DATA_PATH), same_user=True, skip=self._is_skip())
 
         ret = res.returncode == 0 and output_path.exists()
 
@@ -275,7 +276,7 @@ class SeparateClipsFFMPEG(Operator):
             output_path,
         ]
         # the container call itself cannot fail the operator run: when the smart cut fails, we fall back to re-encoding
-        res = self._run_in_operator_container(command_args, [collection_path, CONTAINER_DATA_PATH], same_user=True, skip=True)
+        res = self._run_in_operator_container(command_args, (collection_path, CONTAINER_DATA_PATH), same_user=True, skip=True)
 
         ret = res.returncode == 0 and output_path.exists()
 
@@ -306,37 +307,3 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
-    def _get_clip_suffix(self, clip_path: Path) -> str:
-        '''Returns the suffix of the clip folder name after its timecodes, 
-        '' if there is none, 
-        e.g. -full for 00.00.00-6582-full'''
-        ret = ''
-
-        match = re.match(r'^\d{2}\.\d{2}\.\d{2}-\d+(?P<suffix>-[^0-9].*)?$', clip_path.parent.name)
-        if match and match.group('suffix'):
-            ret = match.group('suffix')
-
-        return ret
-
-    def _get_seconds_from_timecode(self, timecode):
-        '''Converts a timecode into seconds; 
-        accepts HH:MM:SS, MM:SS or plain seconds; None if invalid'''
-        ret = None
-
-        if isinstance(timecode, (int, float)):
-            ret = int(timecode)
-        else:
-            match = re.match(r'^\s*(?:(\d+):)?(\d{1,2}):(\d{1,2})(?:[.,]\d+)?\s*$', str(timecode))
-            if match:
-                ret = int(match.group(1) or 0) * 3600 + int(match.group(2)) * 60 + int(match.group(3))
-
-        return ret
-
-    def _get_hhmmss(self, seconds):
-        '''Formats a duration in seconds as HH:MM:SS'''
-        hours = int(seconds // 3600)
-        seconds %= 3600
-        minutes = int(seconds // 60)
-        seconds %= 60
-        ret = f'{hours:02d}:{minutes:02d}:{int(seconds):02d}'
-        return ret
