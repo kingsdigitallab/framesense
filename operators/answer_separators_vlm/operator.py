@@ -166,7 +166,7 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
                 chunk_path,
             ]
             # bind the video folder, not the clip folder: the clip file may be a symlink to a file in it
-            self._run_in_operator_container(command_args, [clip_path.parent.parent, Path('/data')], same_user=True)
+            self._run_in_operator_container(command_args, (clip_path.parent.parent, Path('/data')), same_user=True)
 
         if chunk_path.exists():
             ret = chunk_path
@@ -223,9 +223,9 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
         if not isinstance(entry, dict):
             error = f'Separator entry is not an object, ignored: {entry}'
         else:
-            start = self._get_seconds_from_timecode(entry.get('start', None))
-            end = self._get_seconds_from_timecode(entry.get('end', None))
-            tag = str(entry.get('tag', '')).strip()
+            start = self.get_seconds_from_timecode(entry.get('start', None))
+            end = self.get_seconds_from_timecode(entry.get('end', None))
+            tag = str(entry.get('tag') or '').strip()
 
             if start is None or end is None:
                 error = f'Separator entry with missing or invalid timecodes, ignored: {entry}'
@@ -236,24 +236,12 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
                     'start': start_secs + start,
                     'end': start_secs + end,
                     'tag': tag,
+                    'prod': str(entry.get('prod') or '').strip(),
                 }, '')
 
         if error:
             self._warn(error)
             ret = (None, error)
-
-        return ret
-
-    def _get_seconds_from_timecode(self, timecode):
-        '''Converts a timecode into seconds; accepts HH:MM:SS, MM:SS or plain seconds; None if invalid'''
-        ret = None
-
-        if isinstance(timecode, (int, float)):
-            ret = int(timecode)
-        else:
-            match = re.match(r'^\s*(?:(\d+):)?(\d{1,2}):(\d{1,2})(?:[.,]\d+)?\s*$', str(timecode))
-            if match:
-                ret = int(match.group(1) or 0) * 3600 + int(match.group(2)) * 60 + int(match.group(3))
 
         return ret
 
@@ -263,6 +251,8 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
 
         for separator in sorted(separators, key=lambda s: s['start']):
             if ret and (separator['start'] - ret[-1]['start']) <= SEPARATOR_MERGE_TOLERANCE_SECS:
+                # concatenate prod from both seps
+                separator['prod'] = (str(ret[-1].get('prod', '')) + ' ' + str(separator.get('prod', ''))).strip()
                 # keep the longer of the two versions, as it is less likely to be truncated at a chunk boundary
                 if (separator['end'] - separator['start']) > (ret[-1]['end'] - ret[-1]['start']):
                     ret[-1] = separator
@@ -280,7 +270,8 @@ class AnswerSeparatorsVLM(answer_clips_vlm_operator.AnswerClipsVLM):
             ret.append({
                 'start': self.get_hhmmss(separator['start']),
                 'end': self.get_hhmmss(separator['end']),
-                'tag': separator['tag'],
+                'tag': separator.get('tag') or '',
+                'prod': separator.get('prod') or '',
             })
 
         return ret

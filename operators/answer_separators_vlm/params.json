@@ -21,11 +21,12 @@
     "prompt_template_MULTILINES": [
         "{question}",
         "",
-        "Give your answer as a json array; each element is an object with three keys:",
+        "Give your answer as a json array; each element is an object with four keys:",
         "- \"start\": the timecode at which the separator begins, in the HH:MM:SS format",
         "- \"end\": the timecode at which the separator ends, in the HH:MM:SS format",
         "- \"tag\": a short label describing the nature of the separator",
+        "- \"prod\": production information about the upcoming programme (e.g. channel, producer, year); \"\" if no information within the separator",
         "",
-        "Answer with the json array only, e.g. [{\"start\": \"00:12:34\", \"end\": \"00:12:41\", \"tag\": \"black screen\"}], or [] if there is no separator."
+        "Answer with the json array only, e.g. [{\"start\": \"00:12:34\", \"end\": \"00:12:41\", \"tag\": \"black screen\", \"prod\": \"\"}], or [] if there is no separator."
     ]
 }
