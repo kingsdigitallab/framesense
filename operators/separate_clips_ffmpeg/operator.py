@@ -67,6 +67,20 @@ class SeparateClipsFFMPEG(Operator):
 
         return ret
 
+    def _get_nearest_separators(self, clip_folder_path: Path):
+        '''search for separators in ANSWERS_FILE_NAME
+        starting from the given clip_folder_path 
+        then iteratively trying sibling folders 
+        by removing on tag from the suffic each time.
+        '''
+        ret = None
+        path = clip_folder_path
+        while path.is_dir():
+            ret = self._get_separators(path)
+            if ret: break
+            path = path.with_name('-'.join(path.name.split('-')[:-1]))
+        return ret
+
     def _get_separators(self, clip_folder_path: Path):
         '''Returns the programme separators of the sep1 answer 
         as a list of (start, end) seconds relative to the clip, 
@@ -128,7 +142,7 @@ class SeparateClipsFFMPEG(Operator):
             return ret
         
         clip_folder_path = clip_path.parent
-        separators = self._get_separators(clip_folder_path)
+        separators = self._get_nearest_separators(clip_folder_path)
         if separators is None:
             self._warn(f'No {QUESTION_KEY} answer in {ANSWERS_FILE_NAME} of clip {clip_folder_path.name}, clip skipped')
             ret['missing'] = 1
