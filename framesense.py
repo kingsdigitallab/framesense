@@ -15,10 +15,11 @@ if dotenv_path:
         print(f'ERROR: custom .env file not found in specified path ({dotenv_path}) by FRAMESENSE_DOTENV_PATH')
         exit(1)
 else:
-    dotenv_path = find_dotenv()
+    dotenv_path = find_dotenv(usecwd=True)
 
 if dotenv_path:
     dotenv_path = Path(dotenv_path).absolute().resolve()
+    print(f'INFO: load dotenv "{dotenv_path}"')
     load_dotenv(dotenv_path=dotenv_path)
 
 class FrameSense:
