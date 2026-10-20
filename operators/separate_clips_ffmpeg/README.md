@@ -19,6 +19,13 @@ Each new clip is split into:
 * one segment between each pair of consecutive separators
 * a tail segment after the last separator (if any)
 
+When a separator carries production information in its `prod` field, the segment
+that follows it starts up to `sep_prod_absorb_seconds` (default 2) seconds before
+the separator ends, so that the production card visible at the end of the separator
+is included in the programme clip. The start never reaches back before the separator
+that precedes it (nor before the beginning of the clip), and only the start of a
+segment is ever extended, never its end.
+
 Segments shorter than the `min_segment_seconds` parameter (default 1 second)
 are discarded.
 
@@ -39,6 +46,7 @@ The `cut_mode` parameter selects how each -prog clip is cut:
 
 ## Parameters (-p)
 * `min_segment_seconds` (int, default 1): minimum length in seconds of a new -prog clip
+* `sep_prod_absorb_seconds` (int, default 2): number of seconds at the end of a separator, carrying a `prod`, that are absorbed at the start of the following -prog clip so its production card is available to the programme; set to 0 to disable
 * `cut_mode` (str, default smart): `smart` for a second-accurate near-lossless cut, `reencode` to re-encode the whole segment
 * `smart_crf` (int, default 18): `crf` of the video re-encoding of the `smart` cut, 0 being lossless; higher values trade image quality for file size
 * `smart_preset` (str, default veryfast): `-preset` of the video re-encoding of the `smart` cut, faster presets trade file size for encoding speed

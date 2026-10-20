@@ -13,6 +13,7 @@ CHUNKS_FOLDER_NAME = 'chunks'
 ANSWERS_FILE_NAME = 'clip_answers.json'
 QUESTION_KEY = 'sep1'
 DEFAULT_MIN_SEGMENT_SECONDS = 1
+DEFAULT_SEP_PROD_ABSORB_SECONDS = 2
 CONTAINER_DATA_PATH = Path('/data')
 DEFAULT_CUT_MODE = 'smart'
 # the smart cut re-encodes the whole segment with a near-lossless quality, in a single
@@ -83,7 +84,8 @@ class SeparateClipsFFMPEG(Operator):
 
     def _get_separators(self, clip_folder_path: Path):
         '''Returns the programme separators of the sep1 answer 
-        as a list of (start, end) seconds relative to the clip, 
+        as a list of (start, end, prod) tuples, 
+        with the timecodes in seconds relative to the clip and prod the production information, 
         None if there is no sep1 answer for the clip'''
         ret = None
 
@@ -108,7 +110,9 @@ class SeparateClipsFFMPEG(Operator):
 
     def _get_separator(self, entry):
         '''Returns the separator of an answer entry 
-        as a (start, end) couple of seconds, None if invalid'''
+        as a (start, end, prod) tuple, 
+        with the timecodes in seconds and prod the production information ('' if none), 
+        None if invalid'''
         ret = None
 
         if not isinstance(entry, dict):
@@ -116,13 +120,14 @@ class SeparateClipsFFMPEG(Operator):
         else:
             start = self.get_seconds_from_timecode(entry.get('start', None))
             end = self.get_seconds_from_timecode(entry.get('end', None))
+            prod = str(entry.get('prod') or '').strip()
 
             if start is None or end is None:
                 self._warn(f'Separator entry with missing or invalid timecodes, ignored: {entry}')
             elif end < start:
                 self._warn(f'Separator entry ending before it starts, ignored: {entry}')
             else:
-                ret = (start, end)
+                ret = (start, end, prod)
 
         return ret
 
@@ -174,23 +179,37 @@ class SeparateClipsFFMPEG(Operator):
     def _compute_segments(self, clip_duration_secs: int, separators: list) -> list:
         '''Returns the (start, end) segments of the clip 
         free of programme separators, 
-        the separators timecodes being relative to the clip'''
+        the separators timecodes being relative to the clip.
+        The start of a segment is moved back into the preceding separator when it carries
+        production information, up to sep_prod_absorb_seconds, so that the production card
+        visible at the end of the separator is included in the programme clip;
+        it never starts before the previous separator.'''
         ret = []
 
+        absorb_secs = int(self.get_param('sep_prod_absorb_seconds', DEFAULT_SEP_PROD_ABSORB_SECONDS))
+
         boundaries = []
-        for start_secs, end_secs in sorted(separators, key=lambda s: s[0]):
+        for start_secs, end_secs, prod in sorted(separators, key=lambda s: s[0]):
             clipped_start = max(start_secs, 0)
             clipped_end = min(end_secs, clip_duration_secs)
             if clipped_start < clipped_end:
-                boundaries.append((clipped_start, clipped_end))
+                boundaries.append((clipped_start, clipped_end, prod))
 
         if boundaries:
             if boundaries[0][0] > 0:
                 ret.append((0, boundaries[0][0]))
 
-            for previous, current in itertools.pairwise(boundaries):
+            for i, current in enumerate(boundaries[1:]):
+                previous = boundaries[i]
                 if previous[1] < current[0]:
-                    ret.append((previous[1], current[0]))
+                    start_secs = previous[1]
+                    if previous[2] and absorb_secs > 0:
+                        # move the start back into the tail of the preceding separator
+                        # to include its production card, without reaching the separator
+                        # before it (or before the beginning of the clip)
+                        floor_secs = boundaries[i - 1][1] if i > 0 else 0
+                        start_secs = max(floor_secs, previous[0], previous[1] - absorb_secs)
+                    ret.append((start_secs, current[0]))
 
             if boundaries[-1][1] < clip_duration_secs:
                 ret.append((boundaries[-1][1], clip_duration_secs))

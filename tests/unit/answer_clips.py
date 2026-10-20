@@ -220,7 +220,13 @@ class GetSeparatorsTestCase(unittest.TestCase):
             {'start': '00:00:05', 'end': '00:00:09', 'tag': 'bars'},
             {'start': '00:01:00', 'end': '00:01:11', 'tag': 'static'},
         ]}})
-        self.assertEqual(self.operator._get_separators(self.clip_folder_path), [(5, 9), (60, 71)])
+        self.assertEqual(self.operator._get_separators(self.clip_folder_path), [(5, 9, ''), (60, 71, '')])
+
+    def test_keeps_the_prod_of_a_separator(self):
+        self._write_answers({'sep1': {'answer': [
+            {'start': '00:00:05', 'end': '00:00:09', 'tag': 'bars', 'prod': ' BBC 1972 '},
+        ]}})
+        self.assertEqual(self.operator._get_separators(self.clip_folder_path), [(5, 9, 'BBC 1972')])
 
     def test_none_without_answers_file(self):
         self.assertIsNone(self.operator._get_separators(self.clip_folder_path))
@@ -238,7 +244,57 @@ class GetSeparatorsTestCase(unittest.TestCase):
         self._write_answers({'sep1': [
             {'start': '00:00:05', 'end': '00:00:09', 'tag': 'bars'},
         ]})
-        self.assertEqual(self.operator._get_separators(self.clip_folder_path), [(5, 9)])
+        self.assertEqual(self.operator._get_separators(self.clip_folder_path), [(5, 9, '')])
+
+
+class ComputeSegmentsTestCase(unittest.TestCase):
+    '''separate_clips_ffmpeg._compute_segments: absorbing the production card of a separator into the following -prog'''
+
+    def setUp(self):
+        self.operator = SeparateClipsFFMPEG()
+
+    def _set_absorb(self, seconds):
+        self.operator.params = {'sep_prod_absorb_seconds': seconds}
+
+    def test_segment_start_is_pulled_back_into_a_prod_separator(self):
+        self._set_absorb(2)
+        separators = [(10, 20, 'BBC'), (60, 70, '')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (18, 60), (70, 100)],
+        )
+
+    def test_segment_start_is_unchanged_without_prod(self):
+        self._set_absorb(2)
+        separators = [(10, 20, ''), (60, 70, '')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (20, 60), (70, 100)],
+        )
+
+    def test_absorb_is_clamped_to_the_separator_start(self):
+        self._set_absorb(5)
+        separators = [(10, 12, 'BBC'), (60, 70, '')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (10, 60), (70, 100)],
+        )
+
+    def test_absorb_never_reaches_before_the_previous_separator(self):
+        self._set_absorb(5)
+        separators = [(10, 40, 'BBC'), (42, 60, '')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (35, 42), (60, 100)],
+        )
+
+    def test_absorb_can_be_disabled(self):
+        self._set_absorb(0)
+        separators = [(10, 20, 'BBC'), (60, 70, '')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (20, 60), (70, 100)],
+        )
 
 
 if __name__ == '__main__':
