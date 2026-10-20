@@ -5,6 +5,9 @@
         "params": {
             "transcribe_speech_parakeet": {
                 "cpu_only": 1
+            },
+            "transcribe_vad_parakeet": {
+                "cpu_only": 1
             }
         }
     },
