@@ -296,6 +296,30 @@ class ComputeSegmentsTestCase(unittest.TestCase):
             [(0, 10), (20, 60), (70, 100)],
         )
 
+    def test_trailing_segment_start_is_pulled_back_into_a_prod_separator(self):
+        self._set_absorb(2)
+        separators = [(10, 20, ''), (60, 70, 'BBC')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (20, 60), (68, 100)],
+        )
+
+    def test_trailing_absorb_is_clamped_to_the_separator_start(self):
+        self._set_absorb(5)
+        separators = [(60, 70, 'BBC')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 60), (65, 100)],
+        )
+
+    def test_trailing_absorb_never_reaches_before_the_previous_separator(self):
+        self._set_absorb(5)
+        separators = [(10, 40, ''), (42, 60, 'BBC')]
+        self.assertEqual(
+            self.operator._compute_segments(100, separators),
+            [(0, 10), (40, 42), (55, 100)],
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

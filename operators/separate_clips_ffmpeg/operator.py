@@ -196,6 +196,10 @@ class SeparateClipsFFMPEG(Operator):
                 boundaries.append((clipped_start, clipped_end, prod))
 
         if boundaries:
+            # the end of the clip acts as a final separator, so the trailing programme
+            # is built by the same loop and absorbs the production card like the inner ones
+            boundaries.append((clip_duration_secs, clip_duration_secs, ''))
+
             if boundaries[0][0] > 0:
                 ret.append((0, boundaries[0][0]))
 
@@ -210,9 +214,6 @@ class SeparateClipsFFMPEG(Operator):
                         floor_secs = boundaries[i - 1][1] if i > 0 else 0
                         start_secs = max(floor_secs, previous[0], previous[1] - absorb_secs)
                     ret.append((start_secs, current[0]))
-
-            if boundaries[-1][1] < clip_duration_secs:
-                ret.append((boundaries[-1][1], clip_duration_secs))
 
         return ret
 
