@@ -244,9 +244,11 @@ class Operator(ABC):
         return ret
     
     def _is_logged_into_singularity_remote(self):
+        '''As of OCt 2026, default singularity cloud service cloud.sylabs.io 
+        has been discontinued. Causing this command to return an error.'''        
         ret = False
 
-        res = self._run_command(['singularity', 'remote', 'status'])
+        res = self._run_command(['singularity', 'remote', 'status'], skip=True)
 
         if "logged in as" in res.stdout.lower():
             ret = True
