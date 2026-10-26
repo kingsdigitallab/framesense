@@ -9,6 +9,7 @@ class Collections(Operator):
     def get_supported_arguments(self):
         ret = super().get_supported_arguments()
         ret['verbose'] = True
+        ret['filter'] = True
         return ret
 
     def _apply(self):
@@ -19,10 +20,10 @@ class Collections(Operator):
             is_dir = (col_path).is_dir()
             video_paths = []
             if is_dir:
-                for video_folder_path in col_path.iterdir():
+                for video_folder_path in sorted(col_path.iterdir()):
                     if video_folder_path.is_dir():
                         video_path = self._get_video_file_path(video_folder_path, True)
-                        if video_path:
+                        if video_path and self._is_path_selected(video_path):                            
                             video_paths.append(video_path)
                 col_summary = f'has {len(video_paths)} videos under {col_path}'
             else:
@@ -31,7 +32,6 @@ class Collections(Operator):
 
             if self._is_verbose():
                 for video_path in sorted(video_paths):
-
                     self._log(f'  {video_path.stat().st_size / 1024 / 1024 / 1024:7.3f} GB  {video_path.relative_to(col_path)}')
 
         return ret
