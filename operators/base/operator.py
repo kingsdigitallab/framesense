@@ -1002,8 +1002,10 @@ class Operator(ABC):
                 "video": {
                     "fps": float(self.get_param('max_fps', 1.0)), 
                     "num_frames": -1, 
-                    "max_frames": 15000 # number of seconds in the video (to support 1 fps): 8100-135m, 5400-90m, 3600-60m
+                    "max_frames": 15000, # number of seconds in the video (to support 1 fps): 8100-135m, 5400-90m, 3600-60m
                     # "max_frames": 768, # vllm/qwen default
+                    "backend": "torchcodec", # vllm's default is opencv, which can segfault on 2^31-big video
+                    "seek_mode": "exact", # exact|approximate; approximate would use info from headers
                 }
             },
         }
